@@ -12,6 +12,15 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Prisma 8 emits generated artifacts.
+    "src/prisma/**",
+    "migrations/**",
+    // Vendored agent skill directories and their bundled example scripts.
+    ".claude/**",
+    ".agents/**",
+    ".cursor/**",
+    ".devin/**",
+    ".opencode/**",
   ]),
 ]);
 

@@ -1,44 +1,15 @@
-import { NextResponse } from "next/server";
 import { projectService } from "../../../infrastructure/services";
+import { requireUser } from "../../../lib/require-auth";
+import { wrapHttpError } from "../../../lib/http";
 
-export async function GET() {
-  const projects = await projectService.list();
-
-  return NextResponse.json({
-    projects,
-  });
-}
-
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   try {
-    const body = await request.json();
+    const { user } = await requireUser(request);
 
-    const project = await projectService.create({
-      name: body?.name,
-      sources: Array.isArray(body?.sources)
-        ? body.sources
-        : [],
-    });
+    const projects = await projectService.listForUser(user.id);
 
-    return NextResponse.json(
-      {
-        project,
-      },
-      {
-        status: 201,
-      },
-    );
+    return Response.json({ projects });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to create project",
-      },
-      {
-        status: 400,
-      },
-    );
+    return wrapHttpError(error);
   }
 }

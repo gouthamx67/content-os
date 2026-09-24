@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# agent harness skill installs
+.claude/
+.agents/
+.cursor/
+.devin/
+.opencode/

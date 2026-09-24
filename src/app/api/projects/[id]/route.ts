@@ -1,5 +1,9 @@
-import { NextResponse } from "next/server";
-import { projectService } from "../../../../infrastructure/services";
+import { assetService, projectService, sourceService } from "../../../../infrastructure/services";
+import { requireUser } from "../../../../lib/require-auth";
+import {
+  parseJsonBody,
+  wrapHttpError,
+} from "../../../../lib/http";
 
 type RouteContext = {
   params: Promise<{
@@ -8,25 +12,54 @@ type RouteContext = {
 };
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: RouteContext,
 ) {
-  const { id } = await context.params;
+  try {
+    const { user } = await requireUser(request);
 
-  const project = await projectService.get(id);
+    const { id } = await context.params;
 
-  if (!project) {
-    return NextResponse.json(
-      {
-        error: "Project not found",
-      },
-      {
-        status: 404,
-      },
+    const project = await projectService.getAuthorized(
+      id,
+      user.id,
     );
-  }
 
-  return NextResponse.json({
-    project,
-  });
+    const [sources, assets] = await Promise.all([
+      sourceService.list(project.id, user.id),
+      assetService.list(project.id, user.id),
+    ]);
+
+    return Response.json({
+      project: { ...project, sources, assets },
+    });
+  } catch (error) {
+    return wrapHttpError(error);
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  context: RouteContext,
+) {
+  try {
+    const { user } = await requireUser(request);
+
+    const { id } = await context.params;
+
+    const body = await parseJsonBody(request);
+
+    const project = await projectService.updateAuthorized(
+      id,
+      {
+        name:
+          typeof body?.name === "string" ? body.name : undefined,
+      },
+      user.id,
+    );
+
+    return Response.json({ project });
+  } catch (error) {
+    return wrapHttpError(error);
+  }
 }

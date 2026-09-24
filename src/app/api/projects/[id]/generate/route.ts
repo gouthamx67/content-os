@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import {
   generationService,
-  projectService,
 } from "../../../../../infrastructure/services";
+import { requireUser } from "../../../../../lib/require-auth";
+import { projectService } from "../../../../../infrastructure/services";
 
 type RouteContext = {
   params: Promise<{
@@ -16,20 +17,11 @@ export async function POST(
 ) {
   const { id } = await context.params;
 
-  const project = await projectService.get(id);
-
-  if (!project) {
-    return NextResponse.json(
-      {
-        error: "Project not found",
-      },
-      {
-        status: 404,
-      },
-    );
-  }
-
   try {
+    const { user } = await requireUser(request);
+
+    await projectService.getAuthorized(id, user.id);
+
     const body = await request.json();
 
     const job = await generationService.createJob({

@@ -1,14 +1,13 @@
 import { container } from "./container";
-import { ProjectService } from "../core/services/project-service";
-import { GenerationService } from "../core/services/generation-service";
 
-export const projectService = new ProjectService(
-  container.repositories.projects,
-);
+export const projectService = container.services.projects;
 
-export const generationService = new GenerationService(
-  container.repositories.projects,
-  container.repositories.jobs,
-  container.providers.ai,
-  container.providers.renderer,
-);
+export const generationService = container.services.generation;
+
+export const authService = container.services.auth;
+
+export const workspaceService = container.services.workspaces;
+
+export const sourceService = container.services.sources;
+
+export const assetService = container.services.assets;

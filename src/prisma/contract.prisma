@@ -1,0 +1,150 @@
+// use prisma-8
+enum WorkspaceRole {
+  @@type("pg/text@1")
+
+  OWNER = "OWNER"
+  ADMIN = "ADMIN"
+  MEMBER = "MEMBER"
+}
+
+enum ProjectStatus {
+  @@type("pg/text@1")
+
+  ACTIVE = "ACTIVE"
+  ARCHIVED = "ARCHIVED"
+}
+
+enum SourceType {
+  @@type("pg/text@1")
+
+  WEBSITE = "WEBSITE"
+  WEB_APP = "WEB_APP"
+  GITHUB = "GITHUB"
+  GITLAB = "GITLAB"
+  LOCAL_PROJECT = "LOCAL_PROJECT"
+  ZIP = "ZIP"
+  DOCUMENT = "DOCUMENT"
+  PDF = "PDF"
+  IMAGE = "IMAGE"
+  VIDEO = "VIDEO"
+  AUDIO = "AUDIO"
+  FIGMA = "FIGMA"
+  TEXT = "TEXT"
+  OTHER = "OTHER"
+}
+
+enum AssetType {
+  @@type("pg/text@1")
+
+  IMAGE = "IMAGE"
+  VIDEO = "VIDEO"
+  AUDIO = "AUDIO"
+  DOCUMENT = "DOCUMENT"
+  LOGO = "LOGO"
+  SCREENSHOT = "SCREENSHOT"
+  UI_CAPTURE = "UI_CAPTURE"
+  OTHER = "OTHER"
+}
+
+model User {
+  id           String                     @id @default(cuid(2))
+  email        String                     @unique
+  passwordHash String
+  createdAt    TimestamptzString          @default(now())
+  updatedAt    temporal.updatedAtString()
+
+  sessions     Session[]
+  memberships  WorkspaceMember[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String            @id @default(cuid(2))
+  userId    String
+  tokenHash String            @unique
+  expiresAt TimestamptzString
+  createdAt TimestamptzString @default(now())
+
+  user      User              @relation(fields:[userId], references:[id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("session")
+}
+
+model Workspace {
+  id        String                     @id @default(cuid(2))
+  name      String
+  createdAt TimestamptzString          @default(now())
+  updatedAt temporal.updatedAtString()
+
+  members   WorkspaceMember[]
+  projects  Project[]
+
+  @@map("workspace")
+}
+
+model WorkspaceMember {
+  id          String            @id @default(cuid(2))
+  workspaceId String
+  userId      String
+  role        WorkspaceRole
+  createdAt   TimestamptzString @default(now())
+
+  workspace   Workspace         @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
+  user        User              @relation(fields:[userId], references:[id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@map("workspace_member")
+}
+
+model Project {
+  id          String                     @id @default(cuid(2))
+  workspaceId String
+  name        String
+  status      ProjectStatus              @default(ACTIVE)
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  workspace   Workspace                  @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
+  sources     Source[]
+  assets      Asset[]
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@map("project")
+}
+
+model Source {
+  id        String                     @id @default(cuid(2))
+  projectId String
+  type      SourceType
+  name      String
+  uri       String?
+  metadata  String?
+  createdAt TimestamptzString          @default(now())
+  updatedAt temporal.updatedAtString()
+
+  project   Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("source")
+}
+
+model Asset {
+  id        String                     @id @default(cuid(2))
+  projectId String
+  type      AssetType
+  name      String
+  uri       String
+  metadata  String?
+  createdAt TimestamptzString          @default(now())
+  updatedAt temporal.updatedAtString()
+
+  project   Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("asset")
+}

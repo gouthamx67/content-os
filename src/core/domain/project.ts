@@ -8,8 +8,10 @@ export type ProjectStatus =
 
 export type Project = {
   id: string;
+  workspaceId: string;
   name: string;
   status: ProjectStatus;
+  archived?: boolean;
   createdAt: string;
   updatedAt: string;
 
