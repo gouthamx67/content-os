@@ -4,10 +4,11 @@ import { ArrowLeft, FolderKanban } from "lucide-react";
 import { getCurrentUser } from "../../../infrastructure/auth/current-user";
 import {
   assetService,
+  inputService,
   projectService,
-  sourceService,
 } from "../../../infrastructure/services";
 import { HttpError } from "../../../lib/http";
+import { serializeInput } from "../../../lib/input-api";
 import { AppShell } from "../../../components/layout/AppShell";
 import {
   ProjectActions,
@@ -49,8 +50,8 @@ export default async function ProjectDetailPage({
     throw error;
   }
 
-  const [sources, assets] = await Promise.all([
-    sourceService.list(id, user.id),
+  const [inputBundle, assets] = await Promise.all([
+    inputService.getBundle(id, user.id),
     assetService.list(id, user.id),
   ]);
 
@@ -94,7 +95,8 @@ export default async function ProjectDetailPage({
         <div className="mt-8">
           <SourceAssetForms
             projectId={project.id}
-            sources={sources}
+            inputs={inputBundle.inputs.map(serializeInput)}
+            versions={inputBundle.versions}
             assets={assets}
           />
         </div>

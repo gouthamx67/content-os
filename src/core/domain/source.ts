@@ -14,6 +14,8 @@ export type SourceType =
   | "TEXT"
   | "OTHER";
 
+export type SourceStatus = "QUEUED" | "PROCESSING" | "READY" | "FAILED";
+
 export type Source = {
   id: string;
   projectId: string;
@@ -21,6 +23,13 @@ export type Source = {
   name: string;
   uri: string | null;
   metadata: string | null;
+  status: SourceStatus;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  contentHash: string | null;
+  storageKey: string | null;
+  errorCode: string | null;
+  errorMessage: string | null;
   createdAt: string;
   updatedAt: string;
 };

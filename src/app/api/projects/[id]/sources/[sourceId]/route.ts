@@ -1,6 +1,7 @@
-import { sourceService } from "../../../../../../infrastructure/services";
+import { inputService } from "../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../lib/require-auth";
-import { wrapHttpError } from "../../../../../../lib/http";
+import { HttpError, isSameOrigin } from "../../../../../../lib/http";
+import { wrapInputHttpError } from "../../../../../../lib/input-api";
 
 type SourceRouteContext = {
   params: Promise<{ id: string; sourceId: string }>;
@@ -11,14 +12,17 @@ export async function DELETE(
   context: SourceRouteContext,
 ) {
   try {
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin requests are not allowed");
+    }
     const { user } = await requireUser(request);
 
     const { id, sourceId } = await context.params;
 
-    await sourceService.remove(id, sourceId, user.id);
+    await inputService.deleteInput(id, user.id, sourceId);
 
     return Response.json({ ok: true });
   } catch (error) {
-    return wrapHttpError(error);
+    return wrapInputHttpError(error);
   }
 }

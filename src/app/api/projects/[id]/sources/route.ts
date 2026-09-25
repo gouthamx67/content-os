@@ -1,10 +1,12 @@
-import { sourceService } from "../../../../../infrastructure/services";
+import { projectService, sourceService } from "../../../../../infrastructure/services";
 import { requireUser } from "../../../../../lib/require-auth";
 import {
+  HttpError,
   parseJsonBody,
   wrapHttpError,
 } from "../../../../../lib/http";
 import { isSourceType } from "../../../../../lib/enums";
+import { serializeSource } from "../../../../../lib/input-api";
 import { normalizeMetadata } from "../../../../../lib/metadata";
 
 type SourcesRouteContext = {
@@ -22,7 +24,7 @@ export async function GET(
 
     const sources = await sourceService.list(id, user.id);
 
-    return Response.json({ sources });
+    return Response.json({ sources: sources.map(serializeSource) });
   } catch (error) {
     return wrapHttpError(error);
   }
@@ -36,11 +38,12 @@ export async function POST(
     const { user } = await requireUser(request);
 
     const { id } = await context.params;
+    await projectService.getAuthorized(id, user.id);
 
     const body = await parseJsonBody(request);
 
     if (!body) {
-      return wrapHttpError(new Error("Invalid request body"));
+      return wrapHttpError(new HttpError(400, "Invalid request body"));
     }
 
     const source = await sourceService.create(
@@ -48,13 +51,13 @@ export async function POST(
       {
         type: isSourceType(body.type) ? body.type : "OTHER",
         name: typeof body.name === "string" ? body.name : "",
-        uri: typeof body.uri === "string" ? body.uri : undefined,
-        metadata: normalizeMetadata(body.metadata),
+        uri: typeof body.uri === "string" ? body.uri : null,
+        metadata: normalizeMetadata(body.metadata) ?? null,
       },
       user.id,
     );
 
-    return Response.json({ source }, { status: 201 });
+    return Response.json({ source: serializeSource(source) }, { status: 201 });
   } catch (error) {
     return wrapHttpError(error);
   }

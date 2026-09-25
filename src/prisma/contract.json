@@ -87,6 +87,27 @@
               }
             ]
           },
+          "SourceStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "QUEUED",
+                "value": "QUEUED"
+              },
+              {
+                "name": "PROCESSING",
+                "value": "PROCESSING"
+              },
+              {
+                "name": "READY",
+                "value": "READY"
+              },
+              {
+                "name": "FAILED",
+                "value": "FAILED"
+              }
+            ]
+          },
           "SourceType": {
             "codecId": "pg/text@1",
             "members": [
@@ -485,10 +506,31 @@
           },
           "Source": {
             "fields": {
+              "contentHash": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "createdAt": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorCode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorMessage": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -506,6 +548,13 @@
                   "kind": "scalar"
                 }
               },
+              "mimeType": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "name": {
                 "nullable": false,
                 "type": {
@@ -515,6 +564,33 @@
               },
               "projectId": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sizeBytes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "SourceStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "storageKey": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -568,8 +644,17 @@
             },
             "storage": {
               "fields": {
+                "contentHash": {
+                  "column": "contentHash"
+                },
                 "createdAt": {
                   "column": "createdAt"
+                },
+                "errorCode": {
+                  "column": "errorCode"
+                },
+                "errorMessage": {
+                  "column": "errorMessage"
                 },
                 "id": {
                   "column": "id"
@@ -577,11 +662,23 @@
                 "metadata": {
                   "column": "metadata"
                 },
+                "mimeType": {
+                  "column": "mimeType"
+                },
                 "name": {
                   "column": "name"
                 },
                 "projectId": {
                   "column": "projectId"
+                },
+                "sizeBytes": {
+                  "column": "sizeBytes"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "storageKey": {
+                  "column": "storageKey"
                 },
                 "type": {
                   "column": "type"
@@ -1160,12 +1257,22 @@
             "source": {
               "checks": [
                 {
+                  "expression": "\"status\" IN ('QUEUED', 'PROCESSING', 'READY', 'FAILED')",
+                  "name": "source_status_check_a5b0d0d9",
+                  "prefix": "source_status_check"
+                },
+                {
                   "expression": "\"type\" IN ('WEBSITE', 'WEB_APP', 'GITHUB', 'GITLAB', 'LOCAL_PROJECT', 'ZIP', 'DOCUMENT', 'PDF', 'IMAGE', 'VIDEO', 'AUDIO', 'FIGMA', 'TEXT', 'OTHER')",
                   "name": "source_type_check_c748443f",
                   "prefix": "source_type_check"
                 }
               ],
               "columns": {
+                "contentHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "default": {
@@ -1175,12 +1282,27 @@
                   "nativeType": "timestamptz",
                   "nullable": false
                 },
+                "errorCode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "errorMessage": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "id": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
                 },
                 "metadata": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "mimeType": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
@@ -1194,6 +1316,31 @@
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "sizeBytes": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "READY"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "SourceStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "storageKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "type": {
                   "codecId": "pg/text@1",
@@ -1239,10 +1386,27 @@
               "indexes": [
                 {
                   "columns": [
+                    "projectId",
+                    "contentHash"
+                  ],
+                  "name": "source_projectId_contentHash_idx_1db464cf",
+                  "prefix": "source_projectId_contentHash_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
                     "projectId"
                   ],
                   "name": "source_projectId_idx_a96e4d92",
                   "prefix": "source_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "storageKey"
+                  ],
+                  "name": "source_storageKey_idx_8c086641",
+                  "prefix": "source_storageKey_idx",
                   "unique": false
                 }
               ],
@@ -1471,6 +1635,15 @@
                 "ARCHIVED"
               ]
             },
+            "SourceStatus": {
+              "kind": "valueSet",
+              "values": [
+                "QUEUED",
+                "PROCESSING",
+                "READY",
+                "FAILED"
+              ]
+            },
             "SourceType": {
               "kind": "valueSet",
               "values": [
@@ -1504,7 +1677,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "c452bc7af2468a3fa5120749196a76b07c4792fd47fd250c4e0666a94252cf76"
+    "storageHash": "2cf59c656c6a2b08c637713ebe50571570e1f6708857caf9e4058e25d88a6aba"
   },
   "execution": {
     "executionHash": "fec6691e4470d6f68db0260eb7e530ce47453398ea2fd889eb3824bd9320d56d",

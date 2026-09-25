@@ -65,5 +65,9 @@ export function readSessionToken(
     return undefined;
   }
 
-  return decodeURIComponent(cookie.slice(1).join("="));
+  try {
+    return decodeURIComponent(cookie.slice(1).join("="));
+  } catch {
+    return undefined;
+  }
 }

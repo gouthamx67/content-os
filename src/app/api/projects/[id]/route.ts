@@ -1,5 +1,6 @@
 import { assetService, projectService, sourceService } from "../../../../infrastructure/services";
 import { requireUser } from "../../../../lib/require-auth";
+import { serializeSource } from "../../../../lib/input-api";
 import {
   parseJsonBody,
   wrapHttpError,
@@ -31,7 +32,7 @@ export async function GET(
     ]);
 
     return Response.json({
-      project: { ...project, sources, assets },
+      project: { ...project, sources: sources.map(serializeSource), assets },
     });
   } catch (error) {
     return wrapHttpError(error);

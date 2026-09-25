@@ -4,13 +4,14 @@ import type {
   SourceRepository,
 } from "../ports";
 import { createId } from "../../lib/id";
-import { HttpError } from "../../lib/http";
+import type { InputService } from "./input-service";
 import type { ProjectService } from "./project-service";
 
 export class SourceService {
   constructor(
     private readonly sources: SourceRepository,
     private readonly projects: ProjectService,
+    private readonly inputs: Pick<InputService, "deleteInput">,
   ) {}
 
   async list(
@@ -24,7 +25,7 @@ export class SourceService {
 
   async create(
     projectId: string,
-    input: Omit<CreateSourceInput, "id" | "projectId">,
+    input: Pick<CreateSourceInput, "type" | "name" | "uri" | "metadata">,
     userId: string,
   ): Promise<Source> {
     await this.projects.getAuthorized(projectId, userId);
@@ -33,6 +34,13 @@ export class SourceService {
       ...input,
       id: createId("source"),
       projectId,
+      status: "READY",
+      mimeType: null,
+      sizeBytes: null,
+      contentHash: null,
+      storageKey: null,
+      errorCode: null,
+      errorMessage: null,
     });
   }
 
@@ -41,14 +49,6 @@ export class SourceService {
     sourceId: string,
     userId: string,
   ): Promise<void> {
-    await this.projects.getAuthorized(projectId, userId);
-
-    const source = await this.sources.getById(sourceId);
-
-    if (!source || source.projectId !== projectId) {
-      throw new HttpError(404, "Source not found");
-    }
-
-    await this.sources.deleteById(sourceId);
+    await this.inputs.deleteInput(projectId, userId, sourceId);
   }
 }

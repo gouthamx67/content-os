@@ -1,6 +1,7 @@
 import { assetService } from "../../../../../infrastructure/services";
 import { requireUser } from "../../../../../lib/require-auth";
 import {
+  HttpError,
   parseJsonBody,
   wrapHttpError,
 } from "../../../../../lib/http";
@@ -40,7 +41,7 @@ export async function POST(
     const body = await parseJsonBody(request);
 
     if (!body) {
-      return wrapHttpError(new Error("Invalid request body"));
+      return wrapHttpError(new HttpError(400, "Invalid request body"));
     }
 
     const asset = await assetService.create(

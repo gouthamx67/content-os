@@ -1,0 +1,416 @@
+[
+  {
+    "id": "column.public.source.contentHash",
+    "label": "Add column \"contentHash\" to \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "contentHash",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"contentHash\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "contentHash"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"contentHash\"",
+        "sql": "ALTER TABLE \"public\".\"source\" ADD COLUMN \"contentHash\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"contentHash\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "contentHash"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.source.errorCode",
+    "label": "Add column \"errorCode\" to \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "errorCode",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"errorCode\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "errorCode"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"errorCode\"",
+        "sql": "ALTER TABLE \"public\".\"source\" ADD COLUMN \"errorCode\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"errorCode\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "errorCode"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.source.errorMessage",
+    "label": "Add column \"errorMessage\" to \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "errorMessage",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"errorMessage\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "errorMessage"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"errorMessage\"",
+        "sql": "ALTER TABLE \"public\".\"source\" ADD COLUMN \"errorMessage\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"errorMessage\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "errorMessage"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.source.mimeType",
+    "label": "Add column \"mimeType\" to \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "mimeType",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"mimeType\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "mimeType"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"mimeType\"",
+        "sql": "ALTER TABLE \"public\".\"source\" ADD COLUMN \"mimeType\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"mimeType\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "mimeType"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.source.sizeBytes",
+    "label": "Add column \"sizeBytes\" to \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "sizeBytes",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"sizeBytes\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "sizeBytes"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"sizeBytes\"",
+        "sql": "ALTER TABLE \"public\".\"source\" ADD COLUMN \"sizeBytes\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"sizeBytes\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "sizeBytes"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.source.status",
+    "label": "Add column \"status\" to \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "status",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"status\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "status"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"status\"",
+        "sql": "ALTER TABLE \"public\".\"source\" ADD COLUMN \"status\" text DEFAULT 'READY' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"status\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "status"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.source.storageKey",
+    "label": "Add column \"storageKey\" to \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "storageKey",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"storageKey\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "storageKey"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"storageKey\"",
+        "sql": "ALTER TABLE \"public\".\"source\" ADD COLUMN \"storageKey\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"storageKey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "source",
+          "storageKey"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.source.source_status_check_a5b0d0d9",
+    "label": "Add check constraint \"source_status_check_a5b0d0d9\" on \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "source_status_check_a5b0d0d9",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"source_status_check_a5b0d0d9\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "source_status_check_a5b0d0d9",
+          "public",
+          "\"public\".\"source\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"source_status_check_a5b0d0d9\"",
+        "sql": "ALTER TABLE \"public\".\"source\" ADD CONSTRAINT \"source_status_check_a5b0d0d9\" CHECK (\"status\" IN ('QUEUED', 'PROCESSING', 'READY', 'FAILED'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"source_status_check_a5b0d0d9\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "source_status_check_a5b0d0d9",
+          "public",
+          "\"public\".\"source\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.source.source_projectId_contentHash_idx_1db464cf",
+    "label": "Create index \"source_projectId_contentHash_idx_1db464cf\" on \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "source_projectId_contentHash_idx_1db464cf",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"source_projectId_contentHash_idx_1db464cf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"source_projectId_contentHash_idx_1db464cf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"source_projectId_contentHash_idx_1db464cf\"",
+        "sql": "CREATE INDEX \"source_projectId_contentHash_idx_1db464cf\" ON \"public\".\"source\" (\"projectId\", \"contentHash\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"source_projectId_contentHash_idx_1db464cf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"source_projectId_contentHash_idx_1db464cf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.source.source_storageKey_idx_8c086641",
+    "label": "Create index \"source_storageKey_idx_8c086641\" on \"source\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "source_storageKey_idx_8c086641",
+        "table": "source"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"source_storageKey_idx_8c086641\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"source_storageKey_idx_8c086641\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"source_storageKey_idx_8c086641\"",
+        "sql": "CREATE INDEX \"source_storageKey_idx_8c086641\" ON \"public\".\"source\" (\"storageKey\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"source_storageKey_idx_8c086641\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"source_storageKey_idx_8c086641\""
+        ]
+      }
+    ]
+  }
+]

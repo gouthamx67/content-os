@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { db } from "../prisma/db";
 import { InMemoryJobRepository } from "./repositories/in-memory-job-repository";
 import { MockAIProvider } from "./ai/mock-ai-provider";
@@ -7,6 +8,7 @@ import { PostgresSessionRepository } from "./repositories/postgres-session-repos
 import { PostgresWorkspaceRepository } from "./repositories/postgres-workspace-repository";
 import { PostgresProjectRepository } from "./repositories/postgres-project-repository";
 import { PostgresSourceRepository } from "./repositories/postgres-source-repository";
+import { PostgresSourceStorageCoordinator } from "./repositories/postgres-source-storage-coordinator";
 import { PostgresAssetRepository } from "./repositories/postgres-asset-repository";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
@@ -15,6 +17,10 @@ import { ProjectService } from "../core/services/project-service";
 import { SourceService } from "../core/services/source-service";
 import { AssetService } from "../core/services/asset-service";
 import { GenerationService } from "../core/services/generation-service";
+import { InputService } from "../core/services/input-service";
+import { IngestionInputProvider } from "./ingestion/ingestion-provider";
+import { SafeHttpFetcher } from "./ingestion/safe-http";
+import { LocalStorageProvider } from "./storage/local-storage-provider";
 
 const orm = db.orm.public;
 
@@ -28,9 +34,19 @@ const repositories = {
   jobs: new InMemoryJobRepository(),
 };
 
+const sourceStorage = new PostgresSourceStorageCoordinator();
+
+const http = new SafeHttpFetcher();
+const storage = new LocalStorageProvider(
+  process.env["CONTENT_OS_STORAGE_PATH"] ?? join(process.cwd(), ".content-os", "storage"),
+);
+
 const providers = {
   ai: new MockAIProvider(),
   renderer: new MockRendererProvider(),
+  http,
+  storage,
+  inputs: new IngestionInputProvider(http),
 };
 
 const workspaceService = new WorkspaceService(
@@ -53,11 +69,6 @@ const authService = new AuthService(
   postgresDatabase,
 );
 
-const sourceService = new SourceService(
-  repositories.sources,
-  projectService,
-);
-
 const assetService = new AssetService(
   repositories.assets,
   projectService,
@@ -70,6 +81,20 @@ const generationService = new GenerationService(
   providers.renderer,
 );
 
+const inputService = new InputService({
+  projectService,
+  sourceRepository: repositories.sources,
+  storageCoordinator: sourceStorage,
+  storageProvider: providers.storage,
+  inputProvider: providers.inputs,
+});
+
+const sourceService = new SourceService(
+  repositories.sources,
+  projectService,
+  inputService,
+);
+
 export const container = {
   repositories,
   providers,
@@ -80,5 +105,6 @@ export const container = {
     sources: sourceService,
     assets: assetService,
     generation: generationService,
+    inputs: inputService,
   },
 };

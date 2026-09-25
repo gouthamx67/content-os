@@ -306,6 +306,7 @@ describe("projects integration (cross-workspace isolation)", () => {
         type: "WEBSITE",
         name: "Landing",
         uri: "https://example.com",
+        metadata: null,
       },
       owner.user.id,
     );
@@ -384,7 +385,215 @@ describe("projects integration (cross-workspace isolation)", () => {
   });
 });
 
+describe("universal inputs integration", () => {
+  it("persists lifecycle, hashes, deduplicates and deletes shared content", async () => {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Input lifecycle" },
+      owner.user.id,
+    );
+
+    const first = await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Brief", value: "The same brief" },
+      {
+        type: "upload",
+        file: {
+          name: "copy.txt",
+          mimeType: "text/plain",
+          bytes: new TextEncoder().encode("Uploaded copy"),
+        },
+      },
+    ]);
+
+    expect(first.inputs).toHaveLength(2);
+    expect(first.inputs.every((input) => input.status === "READY")).toBe(true);
+    expect(first.inputs.every((input) => input.contentHash?.match(/^[a-f0-9]{64}$/))).toBe(true);
+    expect(first.inputs.every((input) => input.storageKey !== null)).toBe(true);
+    const firstText = first.inputs.find((input) => input.type === "TEXT")!;
+
+    const duplicate = await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Same brief", value: "The same brief" },
+    ]);
+    const sharedVersion = duplicate.versions.find(
+      (version) => version.sourceIds.length === 2,
+    );
+    expect(sharedVersion).toBeDefined();
+    expect(duplicate.inputs[0]?.storageKey).toBe(firstText.storageKey);
+
+    const firstTextId = firstText.id;
+    const secondTextId = duplicate.inputs[0]!.id;
+    await services.inputService.deleteInput(project.id, owner.user.id, firstTextId);
+    await expect(
+      services.inputService.getInput(project.id, owner.user.id, secondTextId),
+    ).resolves.toMatchObject({ status: "READY" });
+    await services.inputService.deleteInput(project.id, owner.user.id, secondTextId);
+
+    const textRows = await orm.Source.where((source) =>
+      source.contentHash.eq(firstText.contentHash!),
+    ).all();
+    expect(textRows).toHaveLength(0);
+  });
+
+  it("serves authenticated input routes and keeps project scoping", async () => {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Input API" },
+      owner.user.id,
+    );
+    const { GET, POST } = await import(
+      "../../app/api/projects/[id]/inputs/route"
+    );
+    const { GET: GET_ITEM, DELETE } = await import(
+      "../../app/api/projects/[id]/inputs/[sourceId]/route"
+    );
+    const headers = { cookie: `content_os_session=${owner.token}` };
+    const createResponse = await POST(
+      new Request("http://localhost/api/projects/project/inputs", {
+        method: "POST",
+        headers: { ...headers, "content-type": "application/json" },
+        body: JSON.stringify({
+          inputs: [{ type: "text", name: "API brief", value: "API content" }],
+        }),
+      }),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    expect(createResponse.status).toBe(201);
+    const created = (await createResponse.json()) as {
+      inputs: Array<{ id: string; kind: string; status: string; storageKey?: string }>;
+    };
+    expect(created.inputs[0]).toMatchObject({ kind: "text", status: "ready" });
+    expect(created.inputs[0]?.storageKey).toBeUndefined();
+
+    const listResponse = await GET(
+      new Request("http://localhost/api", { headers }),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    expect(listResponse.status).toBe(200);
+    await expect(listResponse.json()).resolves.toMatchObject({
+      inputs: [{ id: created.inputs[0]!.id, kind: "text" }],
+    });
+
+    const foreignProject = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Wrong project" },
+      owner.user.id,
+    );
+    const foreignResponse = await GET_ITEM(
+      new Request("http://localhost/api", { headers }),
+      {
+        params: Promise.resolve({
+          id: foreignProject.id,
+          sourceId: created.inputs[0]!.id,
+        }),
+      },
+    );
+    expect(foreignResponse.status).toBe(404);
+
+    const deleteResponse = await DELETE(
+      new Request("http://localhost/api", { method: "DELETE", headers }),
+      {
+        params: Promise.resolve({
+          id: project.id,
+          sourceId: created.inputs[0]!.id,
+        }),
+      },
+    );
+    expect(deleteResponse.status).toBe(200);
+  });
+});
+
 describe("database integrity", () => {
+  it("serializes concurrent source storage locks in postgres", async () => {
+    const { PostgresSourceStorageCoordinator } = await import(
+      "../../infrastructure/repositories/postgres-source-storage-coordinator"
+    );
+    const coordinator = new PostgresSourceStorageCoordinator();
+    const events: string[] = [];
+
+    const first = coordinator.withSourceStorageLock("source_lock_probe", async () => {
+      events.push("first:enter");
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      events.push("first:exit");
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    const second = coordinator.withSourceStorageLock("source_lock_probe", async () => {
+      events.push("second:enter");
+    });
+
+    await Promise.all([first, second]);
+
+    expect(events).toEqual(["first:enter", "first:exit", "second:enter"]);
+  });
+
+  it("mutually excludes storage key locks across different source locks", async () => {
+    const { PostgresSourceStorageCoordinator } = await import(
+      "../../infrastructure/repositories/postgres-source-storage-coordinator"
+    );
+    const coordinator = new PostgresSourceStorageCoordinator();
+    let inside = 0;
+    let overlapped = false;
+
+    const contend = (label: string) =>
+      coordinator.withSourceStorageLock(`source_key_${label}`, (transaction) =>
+        transaction.withStorageKeyLock("projects/p/inputs/shared/original", async () => {
+          inside += 1;
+          if (inside > 1) {
+            overlapped = true;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 150));
+          inside -= 1;
+        }),
+      );
+
+    await Promise.all([contend("a"), contend("b")]);
+
+    expect(overlapped).toBe(false);
+    expect(inside).toBe(0);
+  });
+
+  it("rolls back repository writes when coordinated work throws", async () => {
+    const { PostgresSourceStorageCoordinator } = await import(
+      "../../infrastructure/repositories/postgres-source-storage-coordinator"
+    );
+    const coordinator = new PostgresSourceStorageCoordinator();
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Coordinated rollback" },
+      owner.user.id,
+    );
+
+    const failure = await coordinator
+      .withSourceStorageLock("source_rollback_probe", async (transaction) => {
+        await transaction.sources.create({
+          id: "source_rollback_probe",
+          projectId: project.id,
+          type: "TEXT",
+          name: "Rolled back",
+          uri: null,
+          metadata: null,
+          status: "QUEUED",
+          mimeType: null,
+          sizeBytes: null,
+          contentHash: null,
+          storageKey: null,
+          errorCode: null,
+          errorMessage: null,
+        });
+        throw new Error("force rollback");
+      })
+      .catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(Error);
+    await expect(
+      orm.Source.where((source) => source.name.eq("Rolled back")).all(),
+    ).resolves.toHaveLength(0);
+  });
+
   it("stores parseable timestamp columns", async () => {
     const result = await registerUser();
 

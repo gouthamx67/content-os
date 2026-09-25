@@ -25,7 +25,13 @@ export type {
 export type {
   SourceRepository,
   CreateSourceInput,
+  UpdateSourceInput,
 } from "./source-repository";
+
+export type {
+  SourceStorageCoordinator,
+  SourceStorageTransaction,
+} from "./source-storage-coordinator";
 
 export type {
   AssetRepository,
