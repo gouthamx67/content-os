@@ -12,6 +12,8 @@ export interface StorageProvider {
     mimeType?: string,
   ): Promise<StoredObject>;
 
+  get(key: string): Promise<Uint8Array>;
+
   delete(key: string): Promise<void>;
 
   getUrl(key: string): Promise<string>;

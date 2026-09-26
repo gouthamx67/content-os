@@ -29,6 +29,30 @@ export type {
 } from "./source-repository";
 
 export type {
+  SourceAnalysisContext,
+  SourceAnalysisResult,
+  SourceAnalyzer,
+} from "./source-analyzer";
+
+export { SourceAnalyzerRegistry } from "./source-analyzer";
+
+export type {
+  IntelligenceInterpretationProvider,
+  IntelligenceInterpretationRequest,
+  IntelligenceInterpretationResult,
+  IntelligenceInterpretationSource,
+} from "./intelligence-provider";
+
+export type {
+  IntelligenceRepository,
+  IntelligencePersistencePlan,
+  IntelligenceGraphTransactions,
+  EvidenceValues,
+  RelationshipValues,
+  Upsert,
+} from "./intelligence-repository";
+
+export type {
   SourceStorageCoordinator,
   SourceStorageTransaction,
 } from "./source-storage-coordinator";

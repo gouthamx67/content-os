@@ -13,3 +13,5 @@ export const sourceService = container.services.sources;
 export const assetService = container.services.assets;
 
 export const inputService = container.services.inputs;
+
+export const intelligenceService = container.services.intelligence;

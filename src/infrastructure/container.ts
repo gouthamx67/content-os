@@ -10,6 +10,7 @@ import { PostgresProjectRepository } from "./repositories/postgres-project-repos
 import { PostgresSourceRepository } from "./repositories/postgres-source-repository";
 import { PostgresSourceStorageCoordinator } from "./repositories/postgres-source-storage-coordinator";
 import { PostgresAssetRepository } from "./repositories/postgres-asset-repository";
+import { PostgresIntelligenceRepository } from "./repositories/postgres-intelligence-repository";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
 import { WorkspaceService } from "../core/services/workspace-service";
@@ -18,9 +19,17 @@ import { SourceService } from "../core/services/source-service";
 import { AssetService } from "../core/services/asset-service";
 import { GenerationService } from "../core/services/generation-service";
 import { InputService } from "../core/services/input-service";
+import { IntelligenceService } from "../core/services/intelligence-service";
+import { SourceAnalyzerRegistry } from "../core/ports/source-analyzer";
 import { IngestionInputProvider } from "./ingestion/ingestion-provider";
 import { SafeHttpFetcher } from "./ingestion/safe-http";
 import { LocalStorageProvider } from "./storage/local-storage-provider";
+import { WebsiteAnalyzer } from "./analysis/website-analyzer";
+import { RepositoryAnalyzer } from "./analysis/repository-analyzer";
+import { DocumentAnalyzer } from "./analysis/document-analyzer";
+import { MediaAnalyzer } from "./analysis/media-analyzer";
+import { ReferenceAnalyzer } from "./analysis/reference-analyzer";
+import { AiIntelligenceInterpretationProvider } from "./ai/intelligence-interpretation-provider";
 
 const orm = db.orm.public;
 
@@ -31,6 +40,7 @@ const repositories = {
   projects: new PostgresProjectRepository(orm),
   sources: new PostgresSourceRepository(orm),
   assets: new PostgresAssetRepository(orm),
+  intelligence: new PostgresIntelligenceRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -47,7 +57,24 @@ const providers = {
   http,
   storage,
   inputs: new IngestionInputProvider(http),
+  analyzers: new SourceAnalyzerRegistry([
+    new WebsiteAnalyzer(),
+    new RepositoryAnalyzer(),
+    new DocumentAnalyzer(),
+    new MediaAnalyzer(),
+    new ReferenceAnalyzer(),
+  ]),
 };
+
+/**
+ * The only AI provider wired today is a mock whose output can never satisfy
+ * intelligence validation, so interpretation stays off until a real provider is
+ * configured. Analysis still runs deterministically either way.
+ */
+const intelligenceInterpretation =
+  process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+    ? new AiIntelligenceInterpretationProvider(providers.ai)
+    : null;
 
 const workspaceService = new WorkspaceService(
   repositories.workspaces,
@@ -95,6 +122,15 @@ const sourceService = new SourceService(
   inputService,
 );
 
+const intelligenceService = new IntelligenceService({
+  projectService,
+  sourceRepository: repositories.sources,
+  storageProvider: providers.storage,
+  analyzers: providers.analyzers,
+  repository: repositories.intelligence,
+  interpretationProvider: intelligenceInterpretation,
+});
+
 export const container = {
   repositories,
   providers,
@@ -106,5 +142,6 @@ export const container = {
     assets: assetService,
     generation: generationService,
     inputs: inputService,
+    intelligence: intelligenceService,
   },
 };

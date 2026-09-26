@@ -1,0 +1,2981 @@
+[
+  {
+    "id": "table.intelligence_asset",
+    "label": "Create table \"intelligence_asset\"",
+    "summary": "Creates table \"intelligence_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_asset\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_asset\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_asset\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"canonicalKey\" text NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"durationMs\" int4,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"height\" int4,\n  \"id\" text NOT NULL,\n  \"mediaType\" text DEFAULT 'OTHER' NOT NULL,\n  \"mimeType\" text,\n  \"name\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"qualitySignals\" text,\n  \"relatedClaimIds\" text[] NOT NULL,\n  \"relatedFeatureIds\" text[] NOT NULL,\n  \"role\" text DEFAULT 'SUPPORTING' NOT NULL,\n  \"sourceId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"storageKey\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  \"width\" int4,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_asset_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_asset_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_asset_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_asset_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_asset_mediaType_check_48e31a04\" CHECK (\"mediaType\" IN ('SCREENSHOT', 'PRODUCT_UI', 'HERO_IMAGE', 'ICON', 'ILLUSTRATION', 'DIAGRAM', 'CHART', 'TESTIMONIAL', 'BEFORE_AFTER', 'EXISTING_AD', 'EXISTING_VIDEO', 'BRAND_ASSET', 'OTHER')),\n  CONSTRAINT \"intelligence_asset_relatedClaimIds_elem_not_null_6505efac\" CHECK (array_position(\"relatedClaimIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_asset_relatedFeatureIds_elem_not_null_e8d5025f\" CHECK (array_position(\"relatedFeatureIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_asset_role_check_e47a320b\" CHECK (\"role\" IN ('PRODUCT_UI', 'FEATURE_PROOF', 'HERO', 'SOCIAL_CREATIVE', 'BRAND_ASSET', 'SUPPORTING')),\n  CONSTRAINT \"intelligence_asset_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_asset\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_audience_signal",
+    "label": "Create table \"intelligence_audience_signal\"",
+    "summary": "Creates table \"intelligence_audience_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_audience_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_audience_signal\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_audience_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_audience_signal\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_audience_signal\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"canonicalKey\" text NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text DEFAULT 'CONTEXTUAL' NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"segment\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_audience_signal_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_audience_signal_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_audience_signal_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_audience_signal_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_audience_signal_kind_check_78d46c4f\" CHECK (\"kind\" IN ('EXPLICIT_SEGMENT', 'VOCABULARY', 'USE_CASE', 'CONTEXTUAL')),\n  CONSTRAINT \"intelligence_audience_signal_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_audience_signal\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_audience_signal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_benefit",
+    "label": "Create table \"intelligence_benefit\"",
+    "summary": "Creates table \"intelligence_benefit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_benefit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_benefit\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_benefit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_benefit\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_benefit\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"canonicalKey\" text NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"id\" text NOT NULL,\n  \"linkedFeatureIds\" text[] NOT NULL,\n  \"name\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_benefit_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_benefit_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_benefit_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_benefit_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_benefit_linkedFeatureIds_elem_not_null_d4cee99b\" CHECK (array_position(\"linkedFeatureIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_benefit_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_benefit\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_benefit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_brand_signal",
+    "label": "Create table \"intelligence_brand_signal\"",
+    "summary": "Creates table \"intelligence_brand_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_brand_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_brand_signal\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_brand_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_brand_signal\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_brand_signal\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"canonicalKey\" text NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text DEFAULT 'TERMINOLOGY' NOT NULL,\n  \"label\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  \"value\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_brand_signal_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_brand_signal_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_brand_signal_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_brand_signal_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_brand_signal_kind_check_cfa9a65a\" CHECK (\"kind\" IN ('BRAND_NAME', 'LOGO', 'COLOR', 'FONT', 'VISUAL_STYLE', 'TONE', 'TERMINOLOGY', 'TAGLINE', 'POSITIONING', 'DESIGN_PATTERN')),\n  CONSTRAINT \"intelligence_brand_signal_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_brand_signal\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_brand_signal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_claim",
+    "label": "Create table \"intelligence_claim\"",
+    "summary": "Creates table \"intelligence_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_claim\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_claim\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_claim\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_claim\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"canonicalKey\" text NOT NULL,\n  \"claimType\" text DEFAULT 'OTHER' NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"conflictsWithClaimId\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceId\" text,\n  \"sourceIds\" text[] NOT NULL,\n  \"text\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  \"verification\" text DEFAULT 'UNVERIFIED' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_claim_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_claim_claimType_check_0c8e528c\" CHECK (\"claimType\" IN ('CAPABILITY', 'INTEGRATION', 'FORMAT', 'LIMITATION', 'PRICING', 'PERFORMANCE', 'OTHER')),\n  CONSTRAINT \"intelligence_claim_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_claim_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_claim_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_claim_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_claim_verification_check_fef83f55\" CHECK (\"verification\" IN ('SUPPORTED', 'PARTIALLY_SUPPORTED', 'UNVERIFIED', 'CONFLICTING', 'CONTRADICTED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_claim\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_claim\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_evidence",
+    "label": "Create table \"intelligence_evidence\"",
+    "summary": "Creates table \"intelligence_evidence\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_evidence\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_evidence\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_evidence\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceKey\" text NOT NULL,\n  \"excerpt\" text,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"locator\" text NOT NULL,\n  \"metadata\" text,\n  \"projectId\" text NOT NULL,\n  \"sourceId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_evidence_kind_check_91a4a511\" CHECK (\"kind\" IN ('SOURCE_FRAGMENT', 'REPOSITORY_FILE', 'URL_SECTION', 'DOCUMENT_SECTION', 'IMAGE_REGION', 'VIDEO_TIMESTAMP', 'AUDIO_TIMESTAMP', 'EXTRACTED_METADATA'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_evidence\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_feature",
+    "label": "Create table \"intelligence_feature\"",
+    "summary": "Creates table \"intelligence_feature\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_feature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_feature\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_feature\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_feature\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_feature\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"canonicalKey\" text NOT NULL,\n  \"category\" text DEFAULT 'OTHER' NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"id\" text NOT NULL,\n  \"importance\" text DEFAULT 'SECONDARY' NOT NULL,\n  \"name\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_feature_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_feature_category_check_7d7a228e\" CHECK (\"category\" IN ('AI_GENERATION', 'DASHBOARD', 'AUTHENTICATION', 'INTEGRATION', 'AUTOMATION', 'ANALYTICS', 'COLLABORATION', 'CONTENT_MANAGEMENT', 'EXPORT', 'OTHER')),\n  CONSTRAINT \"intelligence_feature_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_feature_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_feature_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_feature_importance_check_85750412\" CHECK (\"importance\" IN ('PRIMARY', 'SECONDARY', 'TERTIARY')),\n  CONSTRAINT \"intelligence_feature_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_feature\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_feature\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_problem",
+    "label": "Create table \"intelligence_problem\"",
+    "summary": "Creates table \"intelligence_problem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_problem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_problem\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_problem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_problem\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_problem\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"canonicalKey\" text NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_problem_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_problem_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_problem_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_problem_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_problem_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_problem\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_problem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_product",
+    "label": "Create table \"intelligence_product\"",
+    "summary": "Creates table \"intelligence_product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_product\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_product\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_product\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_product\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"category\" text,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"id\" text NOT NULL,\n  \"longDescription\" text,\n  \"name\" text,\n  \"projectId\" text NOT NULL,\n  \"purpose\" text,\n  \"shortDescription\" text,\n  \"sourceIds\" text[] NOT NULL,\n  \"targetUserSummary\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  \"valueProposition\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_product_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_product_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_product_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_product_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_product_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_product\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_product\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_relationship",
+    "label": "Create table \"intelligence_relationship\"",
+    "summary": "Creates table \"intelligence_relationship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_relationship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_relationship\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_relationship\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_relationship\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_relationship\" (\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"fromId\" text NOT NULL,\n  \"fromType\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"toId\" text NOT NULL,\n  \"toType\" text NOT NULL,\n  \"type\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_relationship_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_relationship_fromType_check_6ecba03d\" CHECK (\"fromType\" IN ('PRODUCT', 'FEATURE', 'WORKFLOW', 'PROBLEM', 'BENEFIT', 'CLAIM', 'AUDIENCE_SIGNAL', 'BRAND_SIGNAL', 'ASSET', 'EVIDENCE')),\n  CONSTRAINT \"intelligence_relationship_toType_check_8c637b06\" CHECK (\"toType\" IN ('PRODUCT', 'FEATURE', 'WORKFLOW', 'PROBLEM', 'BENEFIT', 'CLAIM', 'AUDIENCE_SIGNAL', 'BRAND_SIGNAL', 'ASSET', 'EVIDENCE')),\n  CONSTRAINT \"intelligence_relationship_type_check_1ca4650c\" CHECK (\"type\" IN ('FEATURE_SOLVES_PROBLEM', 'FEATURE_PROVIDES_BENEFIT', 'WORKFLOW_USES_FEATURE', 'CLAIM_SUPPORTED_BY_EVIDENCE', 'FEATURE_SUPPORTED_BY_EVIDENCE', 'BENEFIT_SUPPORTED_BY_EVIDENCE', 'PRODUCT_SUPPORTED_BY_EVIDENCE', 'ASSET_REPRESENTS_FEATURE', 'ASSET_SUPPORTS_CLAIM', 'PROBLEM_SUPPORTED_BY_EVIDENCE', 'AUDIENCE_SUPPORTED_BY_EVIDENCE', 'BRAND_SUPPORTED_BY_EVIDENCE'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_relationship\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_relationship\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_run",
+    "label": "Create table \"intelligence_run\"",
+    "summary": "Creates table \"intelligence_run\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_run"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_run\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_run\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_run\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_run\" (\n  \"completedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"id\" text NOT NULL,\n  \"model\" text,\n  \"projectId\" text NOT NULL,\n  \"provider\" text,\n  \"sourceIds\" text[] NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'QUEUED' NOT NULL,\n  \"trigger\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_run_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_run_status_check_d15ecf83\" CHECK (\"status\" IN ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'PARTIAL'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_run\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_run\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_snapshot",
+    "label": "Create table \"intelligence_snapshot\"",
+    "summary": "Creates table \"intelligence_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_snapshot\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_snapshot\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_snapshot\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_snapshot\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"entityCounts\" text,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"runId\" text NOT NULL,\n  \"summary\" text,\n  \"version\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_snapshot\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_snapshot\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_workflow",
+    "label": "Create table \"intelligence_workflow\"",
+    "summary": "Creates table \"intelligence_workflow\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_workflow"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_workflow\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_workflow\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_workflow\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_workflow\" (\n  \"assertionKind\" text DEFAULT 'INFERENCE' NOT NULL,\n  \"canonicalKey\" text NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"evidenceIds\" text[] NOT NULL,\n  \"extractedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"extractionMethod\" text DEFAULT 'DETERMINISTIC' NOT NULL,\n  \"featureIds\" text[] NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userLocked\" bool DEFAULT false NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_workflow_assertionKind_check_e87eaa48\" CHECK (\"assertionKind\" IN ('FACT', 'INFERENCE', 'USER_PROVIDED', 'MARKETING_CLAIM')),\n  CONSTRAINT \"intelligence_workflow_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"intelligence_workflow_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_workflow_extractionMethod_check_cae1f4ef\" CHECK (\"extractionMethod\" IN ('DETERMINISTIC', 'AI_INTERPRETATION', 'USER_INPUT')),\n  CONSTRAINT \"intelligence_workflow_featureIds_elem_not_null_b2754430\" CHECK (array_position(\"featureIds\", NULL) IS NULL),\n  CONSTRAINT \"intelligence_workflow_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_workflow\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_workflow\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.intelligence_workflow_step",
+    "label": "Create table \"intelligence_workflow_step\"",
+    "summary": "Creates table \"intelligence_workflow_step\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "intelligence_workflow_step"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"intelligence_workflow_step\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_workflow_step\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"intelligence_workflow_step\"",
+        "sql": "CREATE TABLE \"public\".\"intelligence_workflow_step\" (\n  \"action\" text NOT NULL,\n  \"description\" text,\n  \"featureIds\" text[] NOT NULL,\n  \"id\" text NOT NULL,\n  \"order\" int4 NOT NULL,\n  \"workflowId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"intelligence_workflow_step_featureIds_elem_not_null_b2754430\" CHECK (array_position(\"featureIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"intelligence_workflow_step\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_workflow_step\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_asset.int_asset_canonical_key",
+    "label": "Add unique constraint on \"intelligence_asset\" (projectId, canonicalKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_asset_canonical_key",
+        "table": "intelligence_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_asset_canonical_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_asset_canonical_key",
+          "public",
+          "\"public\".\"intelligence_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_asset_canonical_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_asset\" ADD CONSTRAINT \"int_asset_canonical_key\" UNIQUE (\"projectId\", \"canonicalKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_asset_canonical_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_asset_canonical_key",
+          "public",
+          "\"public\".\"intelligence_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_audience_signal.int_audience_canonical_key",
+    "label": "Add unique constraint on \"intelligence_audience_signal\" (projectId, canonicalKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_audience_canonical_key",
+        "table": "intelligence_audience_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_audience_canonical_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_audience_canonical_key",
+          "public",
+          "\"public\".\"intelligence_audience_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_audience_canonical_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_audience_signal\" ADD CONSTRAINT \"int_audience_canonical_key\" UNIQUE (\"projectId\", \"canonicalKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_audience_canonical_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_audience_canonical_key",
+          "public",
+          "\"public\".\"intelligence_audience_signal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_benefit.int_benefit_canonical_key",
+    "label": "Add unique constraint on \"intelligence_benefit\" (projectId, canonicalKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_benefit_canonical_key",
+        "table": "intelligence_benefit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_benefit_canonical_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_benefit_canonical_key",
+          "public",
+          "\"public\".\"intelligence_benefit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_benefit_canonical_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_benefit\" ADD CONSTRAINT \"int_benefit_canonical_key\" UNIQUE (\"projectId\", \"canonicalKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_benefit_canonical_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_benefit_canonical_key",
+          "public",
+          "\"public\".\"intelligence_benefit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_brand_signal.int_brand_canonical_key",
+    "label": "Add unique constraint on \"intelligence_brand_signal\" (projectId, canonicalKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_brand_canonical_key",
+        "table": "intelligence_brand_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_brand_canonical_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_brand_canonical_key",
+          "public",
+          "\"public\".\"intelligence_brand_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_brand_canonical_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_brand_signal\" ADD CONSTRAINT \"int_brand_canonical_key\" UNIQUE (\"projectId\", \"canonicalKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_brand_canonical_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_brand_canonical_key",
+          "public",
+          "\"public\".\"intelligence_brand_signal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_claim.int_claim_canonical_key",
+    "label": "Add unique constraint on \"intelligence_claim\" (projectId, canonicalKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_claim_canonical_key",
+        "table": "intelligence_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_claim_canonical_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_claim_canonical_key",
+          "public",
+          "\"public\".\"intelligence_claim\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_claim_canonical_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_claim\" ADD CONSTRAINT \"int_claim_canonical_key\" UNIQUE (\"projectId\", \"canonicalKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_claim_canonical_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_claim_canonical_key",
+          "public",
+          "\"public\".\"intelligence_claim\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_evidence.int_evidence_key",
+    "label": "Add unique constraint on \"intelligence_evidence\" (projectId, evidenceKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_evidence_key",
+        "table": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_evidence_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_evidence_key",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_evidence_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_evidence\" ADD CONSTRAINT \"int_evidence_key\" UNIQUE (\"projectId\", \"evidenceKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_evidence_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_evidence_key",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_feature.int_feature_canonical_key",
+    "label": "Add unique constraint on \"intelligence_feature\" (projectId, canonicalKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_feature_canonical_key",
+        "table": "intelligence_feature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_feature_canonical_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_feature_canonical_key",
+          "public",
+          "\"public\".\"intelligence_feature\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_feature_canonical_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_feature\" ADD CONSTRAINT \"int_feature_canonical_key\" UNIQUE (\"projectId\", \"canonicalKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_feature_canonical_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_feature_canonical_key",
+          "public",
+          "\"public\".\"intelligence_feature\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_problem.int_problem_canonical_key",
+    "label": "Add unique constraint on \"intelligence_problem\" (projectId, canonicalKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_problem_canonical_key",
+        "table": "intelligence_problem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_problem_canonical_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_problem_canonical_key",
+          "public",
+          "\"public\".\"intelligence_problem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_problem_canonical_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_problem\" ADD CONSTRAINT \"int_problem_canonical_key\" UNIQUE (\"projectId\", \"canonicalKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_problem_canonical_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_problem_canonical_key",
+          "public",
+          "\"public\".\"intelligence_problem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_product.intelligence_product_projectId_key",
+    "label": "Add unique constraint on \"intelligence_product\" (projectId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "intelligence_product_projectId_key",
+        "table": "intelligence_product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"intelligence_product_projectId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_product_projectId_key",
+          "public",
+          "\"public\".\"intelligence_product\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"intelligence_product_projectId_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_product\" ADD CONSTRAINT \"intelligence_product_projectId_key\" UNIQUE (\"projectId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"intelligence_product_projectId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_product_projectId_key",
+          "public",
+          "\"public\".\"intelligence_product\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_relationship.int_rel_edge_key",
+    "label": "Add unique constraint on \"intelligence_relationship\" (projectId, type, fromId, toId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_rel_edge_key",
+        "table": "intelligence_relationship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_rel_edge_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_rel_edge_key",
+          "public",
+          "\"public\".\"intelligence_relationship\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_rel_edge_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_relationship\" ADD CONSTRAINT \"int_rel_edge_key\" UNIQUE (\"projectId\", \"type\", \"fromId\", \"toId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_rel_edge_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_rel_edge_key",
+          "public",
+          "\"public\".\"intelligence_relationship\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_snapshot.int_snapshot_version_key",
+    "label": "Add unique constraint on \"intelligence_snapshot\" (projectId, version)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_snapshot_version_key",
+        "table": "intelligence_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_snapshot_version_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_snapshot_version_key",
+          "public",
+          "\"public\".\"intelligence_snapshot\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_snapshot_version_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_snapshot\" ADD CONSTRAINT \"int_snapshot_version_key\" UNIQUE (\"projectId\", \"version\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_snapshot_version_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_snapshot_version_key",
+          "public",
+          "\"public\".\"intelligence_snapshot\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_workflow.int_workflow_canonical_key",
+    "label": "Add unique constraint on \"intelligence_workflow\" (projectId, canonicalKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_workflow_canonical_key",
+        "table": "intelligence_workflow"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_workflow_canonical_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_workflow_canonical_key",
+          "public",
+          "\"public\".\"intelligence_workflow\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_workflow_canonical_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_workflow\" ADD CONSTRAINT \"int_workflow_canonical_key\" UNIQUE (\"projectId\", \"canonicalKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_workflow_canonical_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_workflow_canonical_key",
+          "public",
+          "\"public\".\"intelligence_workflow\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.intelligence_workflow_step.int_step_workflow_order_key",
+    "label": "Add unique constraint on \"intelligence_workflow_step\" (workflowId, order)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "int_step_workflow_order_key",
+        "table": "intelligence_workflow_step"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"int_step_workflow_order_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_step_workflow_order_key",
+          "public",
+          "\"public\".\"intelligence_workflow_step\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"int_step_workflow_order_key\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_workflow_step\" ADD CONSTRAINT \"int_step_workflow_order_key\" UNIQUE (\"workflowId\", \"order\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"int_step_workflow_order_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "int_step_workflow_order_key",
+          "public",
+          "\"public\".\"intelligence_workflow_step\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_asset.int_asset_project_media_idx",
+    "label": "Create index \"int_asset_project_media_idx\" on \"intelligence_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_asset_project_media_idx",
+        "table": "intelligence_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_asset_project_media_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_asset_project_media_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_asset_project_media_idx\"",
+        "sql": "CREATE INDEX \"int_asset_project_media_idx\" ON \"public\".\"intelligence_asset\" (\"projectId\", \"mediaType\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_asset_project_media_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_asset_project_media_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_asset.int_asset_source_idx",
+    "label": "Create index \"int_asset_source_idx\" on \"intelligence_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_asset_source_idx",
+        "table": "intelligence_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_asset_source_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_asset_source_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_asset_source_idx\"",
+        "sql": "CREATE INDEX \"int_asset_source_idx\" ON \"public\".\"intelligence_asset\" (\"sourceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_asset_source_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_asset_source_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_asset.intelligence_asset_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_asset_projectId_idx_a96e4d92\" on \"intelligence_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_asset_projectId_idx_a96e4d92",
+        "table": "intelligence_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_asset_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_asset_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_asset_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_asset_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_asset\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_asset_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_asset_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_audience_signal.int_audience_project_kind_idx",
+    "label": "Create index \"int_audience_project_kind_idx\" on \"intelligence_audience_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_audience_project_kind_idx",
+        "table": "intelligence_audience_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_audience_project_kind_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_audience_project_kind_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_audience_project_kind_idx\"",
+        "sql": "CREATE INDEX \"int_audience_project_kind_idx\" ON \"public\".\"intelligence_audience_signal\" (\"projectId\", \"kind\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_audience_project_kind_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_audience_project_kind_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_audience_signal.intelligence_audience_signal_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_audience_signal_projectId_idx_a96e4d92\" on \"intelligence_audience_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_audience_signal_projectId_idx_a96e4d92",
+        "table": "intelligence_audience_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_audience_signal_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_audience_signal_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_audience_signal_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_audience_signal_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_audience_signal\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_audience_signal_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_audience_signal_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_benefit.intelligence_benefit_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_benefit_projectId_idx_a96e4d92\" on \"intelligence_benefit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_benefit_projectId_idx_a96e4d92",
+        "table": "intelligence_benefit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_benefit_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_benefit_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_benefit_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_benefit_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_benefit\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_benefit_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_benefit_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_brand_signal.int_brand_project_kind_idx",
+    "label": "Create index \"int_brand_project_kind_idx\" on \"intelligence_brand_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_brand_project_kind_idx",
+        "table": "intelligence_brand_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_brand_project_kind_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_brand_project_kind_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_brand_project_kind_idx\"",
+        "sql": "CREATE INDEX \"int_brand_project_kind_idx\" ON \"public\".\"intelligence_brand_signal\" (\"projectId\", \"kind\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_brand_project_kind_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_brand_project_kind_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_brand_signal.intelligence_brand_signal_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_brand_signal_projectId_idx_a96e4d92\" on \"intelligence_brand_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_brand_signal_projectId_idx_a96e4d92",
+        "table": "intelligence_brand_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_brand_signal_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_brand_signal_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_brand_signal_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_brand_signal_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_brand_signal\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_brand_signal_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_brand_signal_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_claim.int_claim_project_verification_idx",
+    "label": "Create index \"int_claim_project_verification_idx\" on \"intelligence_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_claim_project_verification_idx",
+        "table": "intelligence_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_claim_project_verification_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_claim_project_verification_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_claim_project_verification_idx\"",
+        "sql": "CREATE INDEX \"int_claim_project_verification_idx\" ON \"public\".\"intelligence_claim\" (\"projectId\", \"verification\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_claim_project_verification_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_claim_project_verification_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_claim.int_claim_source_idx",
+    "label": "Create index \"int_claim_source_idx\" on \"intelligence_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_claim_source_idx",
+        "table": "intelligence_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_claim_source_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_claim_source_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_claim_source_idx\"",
+        "sql": "CREATE INDEX \"int_claim_source_idx\" ON \"public\".\"intelligence_claim\" (\"sourceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_claim_source_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_claim_source_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_claim.intelligence_claim_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_claim_projectId_idx_a96e4d92\" on \"intelligence_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_claim_projectId_idx_a96e4d92",
+        "table": "intelligence_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_claim_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_claim_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_claim_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_claim_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_claim\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_claim_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_claim_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_evidence.int_evidence_project_kind_idx",
+    "label": "Create index \"int_evidence_project_kind_idx\" on \"intelligence_evidence\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_evidence_project_kind_idx",
+        "table": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_evidence_project_kind_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_evidence_project_kind_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_evidence_project_kind_idx\"",
+        "sql": "CREATE INDEX \"int_evidence_project_kind_idx\" ON \"public\".\"intelligence_evidence\" (\"projectId\", \"kind\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_evidence_project_kind_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_evidence_project_kind_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_evidence.int_evidence_source_idx",
+    "label": "Create index \"int_evidence_source_idx\" on \"intelligence_evidence\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_evidence_source_idx",
+        "table": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_evidence_source_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_evidence_source_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_evidence_source_idx\"",
+        "sql": "CREATE INDEX \"int_evidence_source_idx\" ON \"public\".\"intelligence_evidence\" (\"sourceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_evidence_source_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_evidence_source_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_evidence.intelligence_evidence_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_evidence_projectId_idx_a96e4d92\" on \"intelligence_evidence\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_evidence_projectId_idx_a96e4d92",
+        "table": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_evidence_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_evidence_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_evidence_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_evidence_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_evidence\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_evidence_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_evidence_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_feature.int_feature_project_category_idx",
+    "label": "Create index \"int_feature_project_category_idx\" on \"intelligence_feature\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_feature_project_category_idx",
+        "table": "intelligence_feature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_feature_project_category_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_feature_project_category_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_feature_project_category_idx\"",
+        "sql": "CREATE INDEX \"int_feature_project_category_idx\" ON \"public\".\"intelligence_feature\" (\"projectId\", \"category\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_feature_project_category_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_feature_project_category_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_feature.int_feature_project_importance_idx",
+    "label": "Create index \"int_feature_project_importance_idx\" on \"intelligence_feature\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_feature_project_importance_idx",
+        "table": "intelligence_feature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_feature_project_importance_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_feature_project_importance_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_feature_project_importance_idx\"",
+        "sql": "CREATE INDEX \"int_feature_project_importance_idx\" ON \"public\".\"intelligence_feature\" (\"projectId\", \"importance\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_feature_project_importance_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_feature_project_importance_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_feature.intelligence_feature_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_feature_projectId_idx_a96e4d92\" on \"intelligence_feature\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_feature_projectId_idx_a96e4d92",
+        "table": "intelligence_feature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_feature_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_feature_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_feature_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_feature_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_feature\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_feature_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_feature_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_problem.intelligence_problem_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_problem_projectId_idx_a96e4d92\" on \"intelligence_problem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_problem_projectId_idx_a96e4d92",
+        "table": "intelligence_problem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_problem_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_problem_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_problem_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_problem_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_problem\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_problem_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_problem_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_relationship.int_rel_from_idx",
+    "label": "Create index \"int_rel_from_idx\" on \"intelligence_relationship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_rel_from_idx",
+        "table": "intelligence_relationship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_rel_from_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_rel_from_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_rel_from_idx\"",
+        "sql": "CREATE INDEX \"int_rel_from_idx\" ON \"public\".\"intelligence_relationship\" (\"projectId\", \"fromType\", \"fromId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_rel_from_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_rel_from_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_relationship.int_rel_to_idx",
+    "label": "Create index \"int_rel_to_idx\" on \"intelligence_relationship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_rel_to_idx",
+        "table": "intelligence_relationship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_rel_to_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_rel_to_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_rel_to_idx\"",
+        "sql": "CREATE INDEX \"int_rel_to_idx\" ON \"public\".\"intelligence_relationship\" (\"projectId\", \"toType\", \"toId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_rel_to_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_rel_to_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_relationship.intelligence_relationship_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_relationship_projectId_idx_a96e4d92\" on \"intelligence_relationship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_relationship_projectId_idx_a96e4d92",
+        "table": "intelligence_relationship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_relationship_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_relationship_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_relationship_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_relationship_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_relationship\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_relationship_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_relationship_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_run.int_run_project_created_idx",
+    "label": "Create index \"int_run_project_created_idx\" on \"intelligence_run\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_run_project_created_idx",
+        "table": "intelligence_run"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_run_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_run_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_run_project_created_idx\"",
+        "sql": "CREATE INDEX \"int_run_project_created_idx\" ON \"public\".\"intelligence_run\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_run_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_run_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_run.int_run_project_status_idx",
+    "label": "Create index \"int_run_project_status_idx\" on \"intelligence_run\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_run_project_status_idx",
+        "table": "intelligence_run"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_run_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_run_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_run_project_status_idx\"",
+        "sql": "CREATE INDEX \"int_run_project_status_idx\" ON \"public\".\"intelligence_run\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_run_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_run_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_run.intelligence_run_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_run_projectId_idx_a96e4d92\" on \"intelligence_run\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_run_projectId_idx_a96e4d92",
+        "table": "intelligence_run"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_run_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_run_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_run_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_run_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_run\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_run_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_run_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_snapshot.int_snapshot_project_created_idx",
+    "label": "Create index \"int_snapshot_project_created_idx\" on \"intelligence_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "int_snapshot_project_created_idx",
+        "table": "intelligence_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"int_snapshot_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_snapshot_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"int_snapshot_project_created_idx\"",
+        "sql": "CREATE INDEX \"int_snapshot_project_created_idx\" ON \"public\".\"intelligence_snapshot\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"int_snapshot_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"int_snapshot_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_snapshot.intelligence_snapshot_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_snapshot_projectId_idx_a96e4d92\" on \"intelligence_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_snapshot_projectId_idx_a96e4d92",
+        "table": "intelligence_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_snapshot_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_snapshot_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_snapshot_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_snapshot_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_snapshot\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_snapshot_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_snapshot_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_snapshot.intelligence_snapshot_runId_idx_a6016437",
+    "label": "Create index \"intelligence_snapshot_runId_idx_a6016437\" on \"intelligence_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_snapshot_runId_idx_a6016437",
+        "table": "intelligence_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_snapshot_runId_idx_a6016437\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_snapshot_runId_idx_a6016437\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_snapshot_runId_idx_a6016437\"",
+        "sql": "CREATE INDEX \"intelligence_snapshot_runId_idx_a6016437\" ON \"public\".\"intelligence_snapshot\" (\"runId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_snapshot_runId_idx_a6016437\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_snapshot_runId_idx_a6016437\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_workflow.intelligence_workflow_projectId_idx_a96e4d92",
+    "label": "Create index \"intelligence_workflow_projectId_idx_a96e4d92\" on \"intelligence_workflow\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_workflow_projectId_idx_a96e4d92",
+        "table": "intelligence_workflow"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_workflow_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_workflow_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_workflow_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"intelligence_workflow_projectId_idx_a96e4d92\" ON \"public\".\"intelligence_workflow\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_workflow_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_workflow_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.intelligence_workflow_step.intelligence_workflow_step_workflowId_idx_09218652",
+    "label": "Create index \"intelligence_workflow_step_workflowId_idx_09218652\" on \"intelligence_workflow_step\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "intelligence_workflow_step_workflowId_idx_09218652",
+        "table": "intelligence_workflow_step"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"intelligence_workflow_step_workflowId_idx_09218652\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_workflow_step_workflowId_idx_09218652\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"intelligence_workflow_step_workflowId_idx_09218652\"",
+        "sql": "CREATE INDEX \"intelligence_workflow_step_workflowId_idx_09218652\" ON \"public\".\"intelligence_workflow_step\" (\"workflowId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"intelligence_workflow_step_workflowId_idx_09218652\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"intelligence_workflow_step_workflowId_idx_09218652\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_asset.intelligence_asset_projectId_fkey",
+    "label": "Add foreign key \"intelligence_asset_projectId_fkey\" on \"intelligence_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_asset_projectId_fkey",
+        "table": "intelligence_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_asset_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_asset_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_asset_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_asset\"\nADD CONSTRAINT \"intelligence_asset_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_asset_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_asset_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_asset.intelligence_asset_sourceId_fkey",
+    "label": "Add foreign key \"intelligence_asset_sourceId_fkey\" on \"intelligence_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_asset_sourceId_fkey",
+        "table": "intelligence_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_asset_sourceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_asset_sourceId_fkey",
+          "public",
+          "\"public\".\"intelligence_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_asset_sourceId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_asset\"\nADD CONSTRAINT \"intelligence_asset_sourceId_fkey\"\nFOREIGN KEY (\"sourceId\")\nREFERENCES \"public\".\"source\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_asset_sourceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_asset_sourceId_fkey",
+          "public",
+          "\"public\".\"intelligence_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_audience_signal.intelligence_audience_signal_projectId_fkey",
+    "label": "Add foreign key \"intelligence_audience_signal_projectId_fkey\" on \"intelligence_audience_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_audience_signal_projectId_fkey",
+        "table": "intelligence_audience_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_audience_signal_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_audience_signal_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_audience_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_audience_signal_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_audience_signal\"\nADD CONSTRAINT \"intelligence_audience_signal_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_audience_signal_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_audience_signal_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_audience_signal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_benefit.intelligence_benefit_projectId_fkey",
+    "label": "Add foreign key \"intelligence_benefit_projectId_fkey\" on \"intelligence_benefit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_benefit_projectId_fkey",
+        "table": "intelligence_benefit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_benefit_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_benefit_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_benefit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_benefit_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_benefit\"\nADD CONSTRAINT \"intelligence_benefit_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_benefit_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_benefit_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_benefit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_brand_signal.intelligence_brand_signal_projectId_fkey",
+    "label": "Add foreign key \"intelligence_brand_signal_projectId_fkey\" on \"intelligence_brand_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_brand_signal_projectId_fkey",
+        "table": "intelligence_brand_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_brand_signal_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_brand_signal_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_brand_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_brand_signal_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_brand_signal\"\nADD CONSTRAINT \"intelligence_brand_signal_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_brand_signal_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_brand_signal_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_brand_signal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_claim.intelligence_claim_projectId_fkey",
+    "label": "Add foreign key \"intelligence_claim_projectId_fkey\" on \"intelligence_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_claim_projectId_fkey",
+        "table": "intelligence_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_claim_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_claim_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_claim\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_claim_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_claim\"\nADD CONSTRAINT \"intelligence_claim_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_claim_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_claim_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_claim\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_claim.intelligence_claim_sourceId_fkey",
+    "label": "Add foreign key \"intelligence_claim_sourceId_fkey\" on \"intelligence_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_claim_sourceId_fkey",
+        "table": "intelligence_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_claim_sourceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_claim_sourceId_fkey",
+          "public",
+          "\"public\".\"intelligence_claim\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_claim_sourceId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_claim\"\nADD CONSTRAINT \"intelligence_claim_sourceId_fkey\"\nFOREIGN KEY (\"sourceId\")\nREFERENCES \"public\".\"source\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_claim_sourceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_claim_sourceId_fkey",
+          "public",
+          "\"public\".\"intelligence_claim\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_evidence.intelligence_evidence_projectId_fkey",
+    "label": "Add foreign key \"intelligence_evidence_projectId_fkey\" on \"intelligence_evidence\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_evidence_projectId_fkey",
+        "table": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_evidence_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_evidence_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_evidence_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_evidence\"\nADD CONSTRAINT \"intelligence_evidence_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_evidence_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_evidence_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_evidence.intelligence_evidence_sourceId_fkey",
+    "label": "Add foreign key \"intelligence_evidence_sourceId_fkey\" on \"intelligence_evidence\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_evidence_sourceId_fkey",
+        "table": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_evidence_sourceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_evidence_sourceId_fkey",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_evidence_sourceId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_evidence\"\nADD CONSTRAINT \"intelligence_evidence_sourceId_fkey\"\nFOREIGN KEY (\"sourceId\")\nREFERENCES \"public\".\"source\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_evidence_sourceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_evidence_sourceId_fkey",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_feature.intelligence_feature_projectId_fkey",
+    "label": "Add foreign key \"intelligence_feature_projectId_fkey\" on \"intelligence_feature\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_feature_projectId_fkey",
+        "table": "intelligence_feature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_feature_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_feature_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_feature\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_feature_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_feature\"\nADD CONSTRAINT \"intelligence_feature_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_feature_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_feature_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_feature\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_problem.intelligence_problem_projectId_fkey",
+    "label": "Add foreign key \"intelligence_problem_projectId_fkey\" on \"intelligence_problem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_problem_projectId_fkey",
+        "table": "intelligence_problem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_problem_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_problem_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_problem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_problem_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_problem\"\nADD CONSTRAINT \"intelligence_problem_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_problem_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_problem_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_problem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_product.intelligence_product_projectId_fkey",
+    "label": "Add foreign key \"intelligence_product_projectId_fkey\" on \"intelligence_product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_product_projectId_fkey",
+        "table": "intelligence_product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_product_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_product_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_product\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_product_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_product\"\nADD CONSTRAINT \"intelligence_product_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_product_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_product_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_product\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_relationship.intelligence_relationship_projectId_fkey",
+    "label": "Add foreign key \"intelligence_relationship_projectId_fkey\" on \"intelligence_relationship\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_relationship_projectId_fkey",
+        "table": "intelligence_relationship"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_relationship_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_relationship_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_relationship\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_relationship_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_relationship\"\nADD CONSTRAINT \"intelligence_relationship_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_relationship_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_relationship_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_relationship\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_run.intelligence_run_projectId_fkey",
+    "label": "Add foreign key \"intelligence_run_projectId_fkey\" on \"intelligence_run\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_run_projectId_fkey",
+        "table": "intelligence_run"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_run_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_run_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_run\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_run_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_run\"\nADD CONSTRAINT \"intelligence_run_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_run_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_run_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_run\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_snapshot.intelligence_snapshot_projectId_fkey",
+    "label": "Add foreign key \"intelligence_snapshot_projectId_fkey\" on \"intelligence_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_snapshot_projectId_fkey",
+        "table": "intelligence_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_snapshot_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_snapshot_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_snapshot\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_snapshot_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_snapshot\"\nADD CONSTRAINT \"intelligence_snapshot_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_snapshot_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_snapshot_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_snapshot\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_snapshot.intelligence_snapshot_runId_fkey",
+    "label": "Add foreign key \"intelligence_snapshot_runId_fkey\" on \"intelligence_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_snapshot_runId_fkey",
+        "table": "intelligence_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_snapshot_runId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_snapshot_runId_fkey",
+          "public",
+          "\"public\".\"intelligence_snapshot\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_snapshot_runId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_snapshot\"\nADD CONSTRAINT \"intelligence_snapshot_runId_fkey\"\nFOREIGN KEY (\"runId\")\nREFERENCES \"public\".\"intelligence_run\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_snapshot_runId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_snapshot_runId_fkey",
+          "public",
+          "\"public\".\"intelligence_snapshot\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_workflow.intelligence_workflow_projectId_fkey",
+    "label": "Add foreign key \"intelligence_workflow_projectId_fkey\" on \"intelligence_workflow\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_workflow_projectId_fkey",
+        "table": "intelligence_workflow"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_workflow_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_workflow_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_workflow\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_workflow_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_workflow\"\nADD CONSTRAINT \"intelligence_workflow_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_workflow_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_workflow_projectId_fkey",
+          "public",
+          "\"public\".\"intelligence_workflow\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.intelligence_workflow_step.intelligence_workflow_step_workflowId_fkey",
+    "label": "Add foreign key \"intelligence_workflow_step_workflowId_fkey\" on \"intelligence_workflow_step\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "intelligence_workflow_step_workflowId_fkey",
+        "table": "intelligence_workflow_step"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"intelligence_workflow_step_workflowId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_workflow_step_workflowId_fkey",
+          "public",
+          "\"public\".\"intelligence_workflow_step\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"intelligence_workflow_step_workflowId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_workflow_step\"\nADD CONSTRAINT \"intelligence_workflow_step_workflowId_fkey\"\nFOREIGN KEY (\"workflowId\")\nREFERENCES \"public\".\"intelligence_workflow\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"intelligence_workflow_step_workflowId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_workflow_step_workflowId_fkey",
+          "public",
+          "\"public\".\"intelligence_workflow_step\""
+        ]
+      }
+    ]
+  }
+]

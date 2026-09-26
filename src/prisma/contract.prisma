@@ -110,16 +110,30 @@ model WorkspaceMember {
 }
 
 model Project {
-  id          String                     @id @default(cuid(2))
-  workspaceId String
-  name        String
-  status      ProjectStatus              @default(ACTIVE)
-  createdAt   TimestamptzString          @default(now())
-  updatedAt   temporal.updatedAtString()
+  id                          String                       @id @default(cuid(2))
+  workspaceId                 String
+  name                        String
+  status                      ProjectStatus                @default(ACTIVE)
+  createdAt                   TimestamptzString            @default(now())
+  updatedAt                   temporal.updatedAtString()
 
-  workspace   Workspace                  @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
-  sources     Source[]
-  assets      Asset[]
+  workspace                   Workspace                    @relation(fields:[workspaceId], references:[id], onDelete: Cascade)
+  sources                     Source[]
+  assets                      Asset[]
+
+  intelligenceProduct         IntelligenceProduct?
+  intelligenceEvidence        IntelligenceEvidence[]
+  intelligenceFeatures        IntelligenceFeature[]
+  intelligenceProblems        IntelligenceProblem[]
+  intelligenceBenefits        IntelligenceBenefit[]
+  intelligenceClaims          IntelligenceClaim[]
+  intelligenceWorkflows       IntelligenceWorkflow[]
+  intelligenceAudienceSignals IntelligenceAudienceSignal[]
+  intelligenceBrandSignals    IntelligenceBrandSignal[]
+  intelligenceAssets          IntelligenceAsset[]
+  intelligenceRelationships   IntelligenceRelationship[]
+  intelligenceRuns            IntelligenceRun[]
+  intelligenceSnapshots       IntelligenceSnapshot[]
 
   @@index([workspaceId])
   @@index([workspaceId, status])
@@ -127,23 +141,27 @@ model Project {
 }
 
 model Source {
-  id           String                     @id @default(cuid(2))
-  projectId    String
-  type         SourceType
-  name         String
-  uri          String?
-  metadata     String?
-  status       SourceStatus               @default(READY)
-  mimeType     String?
-  sizeBytes    Int?
-  contentHash  String?
-  storageKey   String?
-  errorCode    String?
-  errorMessage String?
-  createdAt    TimestamptzString          @default(now())
-  updatedAt    temporal.updatedAtString()
+  id                   String                     @id @default(cuid(2))
+  projectId            String
+  type                 SourceType
+  name                 String
+  uri                  String?
+  metadata             String?
+  status               SourceStatus               @default(READY)
+  mimeType             String?
+  sizeBytes            Int?
+  contentHash          String?
+  storageKey           String?
+  errorCode            String?
+  errorMessage         String?
+  createdAt            TimestamptzString          @default(now())
+  updatedAt            temporal.updatedAtString()
 
-  project      Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  project              Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  intelligenceEvidence IntelligenceEvidence[]
+  intelligenceClaims   IntelligenceClaim[]
+  intelligenceAssets   IntelligenceAsset[]
 
   @@index([projectId])
   @@index([projectId, contentHash])
@@ -165,4 +183,506 @@ model Asset {
 
   @@index([projectId])
   @@map("asset")
+}
+
+enum IntelligenceConfidence {
+  @@type("pg/text@1")
+
+  HIGH = "HIGH"
+  MEDIUM = "MEDIUM"
+  LOW = "LOW"
+}
+
+enum AssertionKind {
+  @@type("pg/text@1")
+
+  FACT = "FACT"
+  INFERENCE = "INFERENCE"
+  USER_PROVIDED = "USER_PROVIDED"
+  MARKETING_CLAIM = "MARKETING_CLAIM"
+}
+
+enum ClaimVerification {
+  @@type("pg/text@1")
+
+  SUPPORTED = "SUPPORTED"
+  PARTIALLY_SUPPORTED = "PARTIALLY_SUPPORTED"
+  UNVERIFIED = "UNVERIFIED"
+  CONFLICTING = "CONFLICTING"
+  CONTRADICTED = "CONTRADICTED"
+}
+
+enum ClaimType {
+  @@type("pg/text@1")
+
+  CAPABILITY = "CAPABILITY"
+  INTEGRATION = "INTEGRATION"
+  FORMAT = "FORMAT"
+  LIMITATION = "LIMITATION"
+  PRICING = "PRICING"
+  PERFORMANCE = "PERFORMANCE"
+  OTHER = "OTHER"
+}
+
+enum IntelligenceEvidenceKind {
+  @@type("pg/text@1")
+
+  SOURCE_FRAGMENT = "SOURCE_FRAGMENT"
+  REPOSITORY_FILE = "REPOSITORY_FILE"
+  URL_SECTION = "URL_SECTION"
+  DOCUMENT_SECTION = "DOCUMENT_SECTION"
+  IMAGE_REGION = "IMAGE_REGION"
+  VIDEO_TIMESTAMP = "VIDEO_TIMESTAMP"
+  AUDIO_TIMESTAMP = "AUDIO_TIMESTAMP"
+  EXTRACTED_METADATA = "EXTRACTED_METADATA"
+}
+
+enum ExtractionMethod {
+  @@type("pg/text@1")
+
+  DETERMINISTIC = "DETERMINISTIC"
+  AI_INTERPRETATION = "AI_INTERPRETATION"
+  USER_INPUT = "USER_INPUT"
+}
+
+enum FeatureCategory {
+  @@type("pg/text@1")
+
+  AI_GENERATION = "AI_GENERATION"
+  DASHBOARD = "DASHBOARD"
+  AUTHENTICATION = "AUTHENTICATION"
+  INTEGRATION = "INTEGRATION"
+  AUTOMATION = "AUTOMATION"
+  ANALYTICS = "ANALYTICS"
+  COLLABORATION = "COLLABORATION"
+  CONTENT_MANAGEMENT = "CONTENT_MANAGEMENT"
+  EXPORT = "EXPORT"
+  OTHER = "OTHER"
+}
+
+enum Importance {
+  @@type("pg/text@1")
+
+  PRIMARY = "PRIMARY"
+  SECONDARY = "SECONDARY"
+  TERTIARY = "TERTIARY"
+}
+
+enum AudienceSignalKind {
+  @@type("pg/text@1")
+
+  EXPLICIT_SEGMENT = "EXPLICIT_SEGMENT"
+  VOCABULARY = "VOCABULARY"
+  USE_CASE = "USE_CASE"
+  CONTEXTUAL = "CONTEXTUAL"
+}
+
+enum BrandSignalKind {
+  @@type("pg/text@1")
+
+  BRAND_NAME = "BRAND_NAME"
+  LOGO = "LOGO"
+  COLOR = "COLOR"
+  FONT = "FONT"
+  VISUAL_STYLE = "VISUAL_STYLE"
+  TONE = "TONE"
+  TERMINOLOGY = "TERMINOLOGY"
+  TAGLINE = "TAGLINE"
+  POSITIONING = "POSITIONING"
+  DESIGN_PATTERN = "DESIGN_PATTERN"
+}
+
+enum IntelligenceAssetMediaType {
+  @@type("pg/text@1")
+
+  SCREENSHOT = "SCREENSHOT"
+  PRODUCT_UI = "PRODUCT_UI"
+  HERO_IMAGE = "HERO_IMAGE"
+  ICON = "ICON"
+  ILLUSTRATION = "ILLUSTRATION"
+  DIAGRAM = "DIAGRAM"
+  CHART = "CHART"
+  TESTIMONIAL = "TESTIMONIAL"
+  BEFORE_AFTER = "BEFORE_AFTER"
+  EXISTING_AD = "EXISTING_AD"
+  EXISTING_VIDEO = "EXISTING_VIDEO"
+  BRAND_ASSET = "BRAND_ASSET"
+  OTHER = "OTHER"
+}
+
+enum IntelligenceAssetRole {
+  @@type("pg/text@1")
+
+  PRODUCT_UI = "PRODUCT_UI"
+  FEATURE_PROOF = "FEATURE_PROOF"
+  HERO = "HERO"
+  SOCIAL_CREATIVE = "SOCIAL_CREATIVE"
+  BRAND_ASSET = "BRAND_ASSET"
+  SUPPORTING = "SUPPORTING"
+}
+
+enum IntelligenceEntityType {
+  @@type("pg/text@1")
+
+  PRODUCT = "PRODUCT"
+  FEATURE = "FEATURE"
+  WORKFLOW = "WORKFLOW"
+  PROBLEM = "PROBLEM"
+  BENEFIT = "BENEFIT"
+  CLAIM = "CLAIM"
+  AUDIENCE_SIGNAL = "AUDIENCE_SIGNAL"
+  BRAND_SIGNAL = "BRAND_SIGNAL"
+  ASSET = "ASSET"
+  EVIDENCE = "EVIDENCE"
+}
+
+enum IntelligenceRelationshipType {
+  @@type("pg/text@1")
+
+  FEATURE_SOLVES_PROBLEM = "FEATURE_SOLVES_PROBLEM"
+  FEATURE_PROVIDES_BENEFIT = "FEATURE_PROVIDES_BENEFIT"
+  WORKFLOW_USES_FEATURE = "WORKFLOW_USES_FEATURE"
+  CLAIM_SUPPORTED_BY_EVIDENCE = "CLAIM_SUPPORTED_BY_EVIDENCE"
+  FEATURE_SUPPORTED_BY_EVIDENCE = "FEATURE_SUPPORTED_BY_EVIDENCE"
+  BENEFIT_SUPPORTED_BY_EVIDENCE = "BENEFIT_SUPPORTED_BY_EVIDENCE"
+  PRODUCT_SUPPORTED_BY_EVIDENCE = "PRODUCT_SUPPORTED_BY_EVIDENCE"
+  ASSET_REPRESENTS_FEATURE = "ASSET_REPRESENTS_FEATURE"
+  ASSET_SUPPORTS_CLAIM = "ASSET_SUPPORTS_CLAIM"
+  PROBLEM_SUPPORTED_BY_EVIDENCE = "PROBLEM_SUPPORTED_BY_EVIDENCE"
+  AUDIENCE_SUPPORTED_BY_EVIDENCE = "AUDIENCE_SUPPORTED_BY_EVIDENCE"
+  BRAND_SUPPORTED_BY_EVIDENCE = "BRAND_SUPPORTED_BY_EVIDENCE"
+}
+
+enum IntelligenceRunStatus {
+  @@type("pg/text@1")
+
+  QUEUED = "QUEUED"
+  RUNNING = "RUNNING"
+  COMPLETED = "COMPLETED"
+  FAILED = "FAILED"
+  PARTIAL = "PARTIAL"
+}
+
+model IntelligenceProduct {
+  id                String                     @id @default(cuid(2))
+  projectId         String                     @unique
+  name              String?
+  shortDescription  String?
+  longDescription   String?
+  category          String?
+  purpose           String?
+  valueProposition  String?
+  targetUserSummary String?
+  confidence        IntelligenceConfidence     @default(MEDIUM)
+  assertionKind     AssertionKind              @default(INFERENCE)
+  userLocked        Boolean                    @default(false)
+  sourceIds         String[]
+  evidenceIds       String[]
+  extractionMethod  ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt       TimestamptzString          @default(now())
+  createdAt         TimestamptzString          @default(now())
+  updatedAt         temporal.updatedAtString()
+
+  project           Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@map("intelligence_product")
+}
+
+model IntelligenceEvidence {
+  id          String                   @id @default(cuid(2))
+  projectId   String
+  sourceId    String
+  kind        IntelligenceEvidenceKind
+  locator     String
+  excerpt     String?
+  metadata    String?
+  evidenceKey String
+  createdAt   TimestamptzString        @default(now())
+
+  project     Project                  @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  source      Source                   @relation(fields:[sourceId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, evidenceKey], map: "int_evidence_key")
+  @@index([projectId, kind], map: "int_evidence_project_kind_idx")
+  @@index([sourceId], map: "int_evidence_source_idx")
+  @@map("intelligence_evidence")
+}
+
+model IntelligenceFeature {
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  name             String
+  description      String?
+  category         FeatureCategory            @default(OTHER)
+  importance       Importance                 @default(SECONDARY)
+  confidence       IntelligenceConfidence     @default(MEDIUM)
+  assertionKind    AssertionKind              @default(INFERENCE)
+  userLocked       Boolean                    @default(false)
+  canonicalKey     String
+  sourceIds        String[]
+  evidenceIds      String[]
+  extractionMethod ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt      TimestamptzString          @default(now())
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, canonicalKey], map: "int_feature_canonical_key")
+  @@index([projectId, category], map: "int_feature_project_category_idx")
+  @@index([projectId, importance], map: "int_feature_project_importance_idx")
+  @@map("intelligence_feature")
+}
+
+model IntelligenceProblem {
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  name             String
+  description      String?
+  confidence       IntelligenceConfidence     @default(MEDIUM)
+  assertionKind    AssertionKind              @default(INFERENCE)
+  userLocked       Boolean                    @default(false)
+  canonicalKey     String
+  sourceIds        String[]
+  evidenceIds      String[]
+  extractionMethod ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt      TimestamptzString          @default(now())
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, canonicalKey], map: "int_problem_canonical_key")
+  @@map("intelligence_problem")
+}
+
+model IntelligenceBenefit {
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  name             String
+  description      String?
+  linkedFeatureIds String[]
+  confidence       IntelligenceConfidence     @default(MEDIUM)
+  assertionKind    AssertionKind              @default(INFERENCE)
+  userLocked       Boolean                    @default(false)
+  canonicalKey     String
+  sourceIds        String[]
+  evidenceIds      String[]
+  extractionMethod ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt      TimestamptzString          @default(now())
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, canonicalKey], map: "int_benefit_canonical_key")
+  @@map("intelligence_benefit")
+}
+
+model IntelligenceClaim {
+  id                   String                     @id @default(cuid(2))
+  projectId            String
+  text                 String
+  claimType            ClaimType                  @default(OTHER)
+  sourceId             String?
+  verification         ClaimVerification          @default(UNVERIFIED)
+  conflictsWithClaimId String?
+  confidence           IntelligenceConfidence     @default(MEDIUM)
+  assertionKind        AssertionKind              @default(INFERENCE)
+  userLocked           Boolean                    @default(false)
+  canonicalKey         String
+  sourceIds            String[]
+  evidenceIds          String[]
+  extractionMethod     ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt          TimestamptzString          @default(now())
+  createdAt            TimestamptzString          @default(now())
+  updatedAt            temporal.updatedAtString()
+
+  project              Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  source               Source?                    @relation(fields:[sourceId], references:[id], onDelete: SetNull)
+
+  @@unique([projectId, canonicalKey], map: "int_claim_canonical_key")
+  @@index([projectId, verification], map: "int_claim_project_verification_idx")
+  @@index([sourceId], map: "int_claim_source_idx")
+  @@map("intelligence_claim")
+}
+
+model IntelligenceWorkflow {
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  name             String
+  description      String?
+  featureIds       String[]
+  confidence       IntelligenceConfidence     @default(MEDIUM)
+  assertionKind    AssertionKind              @default(INFERENCE)
+  userLocked       Boolean                    @default(false)
+  canonicalKey     String
+  sourceIds        String[]
+  evidenceIds      String[]
+  extractionMethod ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt      TimestamptzString          @default(now())
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  steps            IntelligenceWorkflowStep[]
+
+  @@unique([projectId, canonicalKey], map: "int_workflow_canonical_key")
+  @@map("intelligence_workflow")
+}
+
+model IntelligenceWorkflowStep {
+  id          String               @id @default(cuid(2))
+  workflowId  String
+  order       Int
+  action      String
+  description String?
+  featureIds  String[]
+
+  workflow    IntelligenceWorkflow @relation(fields:[workflowId], references:[id], onDelete: Cascade)
+
+  @@unique([workflowId, order], map: "int_step_workflow_order_key")
+  @@map("intelligence_workflow_step")
+}
+
+model IntelligenceAudienceSignal {
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  segment          String
+  description      String?
+  kind             AudienceSignalKind         @default(CONTEXTUAL)
+  confidence       IntelligenceConfidence     @default(MEDIUM)
+  assertionKind    AssertionKind              @default(INFERENCE)
+  userLocked       Boolean                    @default(false)
+  canonicalKey     String
+  sourceIds        String[]
+  evidenceIds      String[]
+  extractionMethod ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt      TimestamptzString          @default(now())
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, canonicalKey], map: "int_audience_canonical_key")
+  @@index([projectId, kind], map: "int_audience_project_kind_idx")
+  @@map("intelligence_audience_signal")
+}
+
+model IntelligenceBrandSignal {
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  kind             BrandSignalKind            @default(TERMINOLOGY)
+  label            String
+  value            String
+  confidence       IntelligenceConfidence     @default(MEDIUM)
+  assertionKind    AssertionKind              @default(INFERENCE)
+  userLocked       Boolean                    @default(false)
+  canonicalKey     String
+  sourceIds        String[]
+  evidenceIds      String[]
+  extractionMethod ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt      TimestamptzString          @default(now())
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, canonicalKey], map: "int_brand_canonical_key")
+  @@index([projectId, kind], map: "int_brand_project_kind_idx")
+  @@map("intelligence_brand_signal")
+}
+
+model IntelligenceAsset {
+  id                String                     @id @default(cuid(2))
+  projectId         String
+  sourceId          String
+  name              String
+  mediaType         IntelligenceAssetMediaType @default(OTHER)
+  role              IntelligenceAssetRole      @default(SUPPORTING)
+  storageKey        String?
+  mimeType          String?
+  width             Int?
+  height            Int?
+  durationMs        Int?
+  qualitySignals    String?
+  relatedFeatureIds String[]
+  relatedClaimIds   String[]
+  confidence        IntelligenceConfidence     @default(MEDIUM)
+  assertionKind     AssertionKind              @default(INFERENCE)
+  userLocked        Boolean                    @default(false)
+  canonicalKey      String
+  sourceIds         String[]
+  evidenceIds       String[]
+  extractionMethod  ExtractionMethod           @default(DETERMINISTIC)
+  extractedAt       TimestamptzString          @default(now())
+  createdAt         TimestamptzString          @default(now())
+  updatedAt         temporal.updatedAtString()
+
+  project           Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  source            Source                     @relation(fields:[sourceId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, canonicalKey], map: "int_asset_canonical_key")
+  @@index([projectId, mediaType], map: "int_asset_project_media_idx")
+  @@index([sourceId], map: "int_asset_source_idx")
+  @@map("intelligence_asset")
+}
+
+model IntelligenceRelationship {
+  id         String                       @id @default(cuid(2))
+  projectId  String
+  type       IntelligenceRelationshipType
+  fromType   IntelligenceEntityType
+  fromId     String
+  toType     IntelligenceEntityType
+  toId       String
+  confidence IntelligenceConfidence       @default(MEDIUM)
+  createdAt  TimestamptzString            @default(now())
+
+  project    Project                      @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, type, fromId, toId], map: "int_rel_edge_key")
+  @@index([projectId, fromType, fromId], map: "int_rel_from_idx")
+  @@index([projectId, toType, toId], map: "int_rel_to_idx")
+  @@map("intelligence_relationship")
+}
+
+model IntelligenceRun {
+  id           String                     @id @default(cuid(2))
+  projectId    String
+  status       IntelligenceRunStatus      @default(QUEUED)
+  sourceIds    String[]
+  provider     String?
+  model        String?
+  trigger      String
+  errorCode    String?
+  errorMessage String?
+  startedAt    TimestamptzString?
+  completedAt  TimestamptzString?
+  createdAt    TimestamptzString          @default(now())
+  updatedAt    temporal.updatedAtString()
+
+  project      Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  snapshots    IntelligenceSnapshot[]
+
+  @@index([projectId, status], map: "int_run_project_status_idx")
+  @@index([projectId, createdAt], map: "int_run_project_created_idx")
+  @@map("intelligence_run")
+}
+
+model IntelligenceSnapshot {
+  id           String            @id @default(cuid(2))
+  projectId    String
+  version      Int
+  runId        String
+  summary      String?
+  entityCounts String?
+  createdAt    TimestamptzString @default(now())
+
+  project      Project           @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  run          IntelligenceRun   @relation(fields:[runId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, version], map: "int_snapshot_version_key")
+  @@index([projectId, createdAt], map: "int_snapshot_project_created_idx")
+  @@map("intelligence_snapshot")
 }

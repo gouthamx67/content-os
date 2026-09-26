@@ -5,11 +5,14 @@ import { getCurrentUser } from "../../../infrastructure/auth/current-user";
 import {
   assetService,
   inputService,
+  intelligenceService,
   projectService,
 } from "../../../infrastructure/services";
 import { HttpError } from "../../../lib/http";
 import { serializeInput } from "../../../lib/input-api";
+import { serializeGraph } from "../../../lib/intelligence-api";
 import { AppShell } from "../../../components/layout/AppShell";
+import { IntelligencePanel } from "../../../components/intelligence/IntelligencePanel";
 import {
   ProjectActions,
 } from "../../../components/projects/ProjectActions";
@@ -50,9 +53,13 @@ export default async function ProjectDetailPage({
     throw error;
   }
 
-  const [inputBundle, assets] = await Promise.all([
+  const [inputBundle, assets, summary, graph, runs, snapshots] = await Promise.all([
     inputService.getBundle(id, user.id),
     assetService.list(id, user.id),
+    intelligenceService.getSummary(id, user.id),
+    intelligenceService.getGraph(id, user.id),
+    intelligenceService.listRuns(id, user.id, 10),
+    intelligenceService.listSnapshots(id, user.id, 10),
   ]);
 
   return (
@@ -98,6 +105,16 @@ export default async function ProjectDetailPage({
             inputs={inputBundle.inputs.map(serializeInput)}
             versions={inputBundle.versions}
             assets={assets}
+          />
+        </div>
+
+        <div className="mt-8">
+          <IntelligencePanel
+            projectId={project.id}
+            summary={summary}
+            graph={serializeGraph(graph)}
+            runs={runs}
+            snapshots={snapshots}
           />
         </div>
       </div>

@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { lstat, mkdir, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { basename, isAbsolute, join, resolve, sep } from "node:path";
 import { InputError } from "../../core/domain/input";
 import type { StorageProvider, StoredObject } from "../../core/ports/storage-provider";
+
+const MAX_READ_BYTES = 32 * 1024 * 1024;
 
 function storageError(message: string): InputError {
   return new InputError("STORAGE_FAILED", message);
@@ -71,6 +73,25 @@ export class LocalStorageProvider implements StorageProvider {
       if (error instanceof InputError) throw error;
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
       throw storageError("Stored input could not be deleted");
+    }
+  }
+
+  async get(key: string): Promise<Uint8Array> {
+    const segments = validateKey(key);
+    const root = await this.ensureRoot();
+    const target = await this.resolveTarget(root, segments, false);
+    if (!target) throw storageError("Stored object is unavailable");
+    try {
+      const stats = await lstat(target.file);
+      if (!stats.isFile() || stats.isSymbolicLink()) throw storageError("Stored object is invalid");
+      if (stats.size > MAX_READ_BYTES) throw storageError("Stored object is too large to analyze");
+      return await readFile(target.file);
+    } catch (error) {
+      if (error instanceof InputError) throw error;
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        throw storageError("Stored object is unavailable");
+      }
+      throw storageError("Stored object could not be read");
     }
   }
 

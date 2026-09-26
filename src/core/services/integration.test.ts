@@ -659,3 +659,992 @@ describe("database integrity", () => {
     expect(rows).toHaveLength(1);
   });
 });
+const INTELLIGENCE_BRIEF = [
+  "# Northwind Analytics",
+  "",
+  "Northwind Analytics turns raw product data into live dashboards in minutes.",
+  "",
+  "## Real-time dashboards",
+  "",
+  "Every metric refreshes continuously, with no scheduled rebuild.",
+  "",
+  "## Slack integration",
+  "",
+  "Alerts and digests post straight into Slack channels.",
+  "",
+  "## CSV export",
+  "",
+  "Export any dashboard to CSV for offline analysis.",
+].join("\n");
+
+/**
+ * A brief that states a pain, an outcome and an ordered flow in plain language,
+ * so the narrative families are derived from the source rather than seeded into
+ * a draft by the test.
+ */
+const NARRATIVE_BRIEF = [
+  "# Launchboard",
+  "",
+  "Launchboard is a content operations platform for marketing teams.",
+  "",
+  "## Platform-specific drafts",
+  "",
+  "Marketing teams currently spend hours manually rewriting the same launch announcement for every channel.",
+  "",
+  "## Campaign workspace",
+  "",
+  "To publish, create a campaign, generate platform-specific drafts, review the drafts, then publish the final versions.",
+  "",
+  "## One brief per channel",
+  "",
+  "Launchboard adapts one campaign for every platform, so you can publish everywhere from a single brief.",
+  "",
+  "It cuts the manual work per launch and keeps every channel consistent.",
+].join("\n");
+
+describe("product intelligence integration", () => {
+  const BRIEF = INTELLIGENCE_BRIEF;
+
+  const ROADMAP = [
+    "# Northwind roadmap",
+    "",
+    "## Guided onboarding",
+    "",
+    "A checklist walks new teams through their first dashboard.",
+  ].join("\n");
+
+  async function projectWithBrief(name: string) {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name },
+      owner.user.id,
+    );
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Product brief", value: BRIEF },
+    ]);
+    return { owner, project };
+  }
+
+  /** A project whose only source states a pain, an outcome and a flow. */
+  async function projectWithNarrativeBrief(name: string) {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name },
+      owner.user.id,
+    );
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Launch brief", value: NARRATIVE_BRIEF },
+    ]);
+    return { owner, project };
+  }
+
+  async function addTextSource(
+    project: { id: string },
+    userId: string,
+    name: string,
+    value: string,
+  ): Promise<string> {
+    const bundle = await services.inputService.createBatch(project.id, userId, [
+      { type: "text", name, value },
+    ]);
+    return bundle.inputs[0]!.id;
+  }
+
+  const addRoadmap = (project: { id: string }, userId: string) =>
+    addTextSource(project, userId, "Roadmap", ROADMAP);
+
+  it("persists an evidence-backed graph, run and snapshot", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence graph");
+
+    const report = await services.intelligenceService.analyze(
+      project.id,
+      owner.user.id,
+    );
+
+    expect(report.run.status).toBe("COMPLETED");
+    expect(report.aiApplied).toBe(false);
+    expect(report.snapshot?.version).toBe(1);
+    expect(report.snapshot?.entityCounts).toBeTruthy();
+
+    const features = await services.intelligenceService.listFeatures(
+      project.id,
+      owner.user.id,
+    );
+    expect(features.length).toBeGreaterThan(0);
+    expect(features.every((feature) => feature.projectId === project.id)).toBe(true);
+    expect(features.every((feature) => feature.canonicalKey.length > 0)).toBe(true);
+
+    const evidence = await services.intelligenceService.listEvidence(
+      project.id,
+      owner.user.id,
+    );
+    expect(evidence.length).toBeGreaterThan(0);
+    expect(evidence.every((item) => item.projectId === project.id)).toBe(true);
+
+    const summary = await services.intelligenceService.getSummary(
+      project.id,
+      owner.user.id,
+    );
+    expect(summary.counts.features).toBe(features.length);
+    expect(summary.lastRun?.id).toBe(report.run.id);
+    expect(summary.lastSnapshot?.version).toBe(1);
+
+    const stored = await orm.IntelligenceProduct.first({ projectId: project.id });
+    expect(stored?.projectId).toBe(project.id);
+  });
+
+  it("skips a refresh when no source changed", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence no-op");
+
+    const first = await services.intelligenceService.analyze(project.id, owner.user.id);
+    const refreshed = await services.intelligenceService.refresh(project.id, owner.user.id);
+
+    expect(refreshed.notes).toContain("No new or changed sources since the last analysis");
+    expect(refreshed.run.id).toBe(first.run.id);
+    expect(refreshed.snapshot?.version).toBe(1);
+    expect(await services.intelligenceService.listRuns(project.id, owner.user.id)).toHaveLength(
+      1,
+    );
+  });
+
+  it("analyzes a new source without duplicating earlier entities", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence idempotency");
+
+    const first = await services.intelligenceService.analyze(project.id, owner.user.id);
+    const sourceId = await addRoadmap(project, owner.user.id);
+
+    const refreshed = await services.intelligenceService.refresh(project.id, owner.user.id);
+
+    expect(refreshed.run.trigger).toBe("REFRESH");
+    expect(refreshed.run.sourceIds).toEqual([sourceId]);
+    expect(refreshed.snapshot?.version).toBe(2);
+
+    const features = await services.intelligenceService.listFeatures(
+      project.id,
+      owner.user.id,
+    );
+    const keys = features.map((feature) => feature.canonicalKey);
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toEqual(
+      expect.arrayContaining(first.graph.features.map((feature) => feature.canonicalKey)),
+    );
+    expect(features.some((feature) => feature.name === "Guided onboarding")).toBe(true);
+
+    const evidence = await services.intelligenceService.listEvidence(
+      project.id,
+      owner.user.id,
+    );
+    expect(evidence.length).toBeGreaterThan(first.graph.evidence.length);
+    expect(
+      evidence.every((item) => item.projectId === project.id && item.sourceId !== null),
+    ).toBe(true);
+
+    const runs = await services.intelligenceService.listRuns(project.id, owner.user.id);
+    expect(runs.length).toBe(2);
+    expect(runs.every((run) => run.status === "COMPLETED")).toBe(true);
+  });
+
+  it("keeps a user correction through a later re-analysis", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence corrections");
+
+    await services.intelligenceService.analyze(project.id, owner.user.id);
+
+    const corrected = await services.intelligenceService.correctProduct(
+      project.id,
+      owner.user.id,
+      { name: "Northwind BI (corrected)", assertionKind: "USER_PROVIDED" },
+    );
+
+    expect(corrected?.name).toBe("Northwind BI (corrected)");
+    expect(corrected?.userLocked).toBe(true);
+
+    await addRoadmap(project, owner.user.id);
+    const refreshed = await services.intelligenceService.refresh(project.id, owner.user.id);
+    expect(refreshed.run.trigger).toBe("REFRESH");
+
+    const after = await services.intelligenceService.getProduct(project.id, owner.user.id);
+    expect(after?.name).toBe("Northwind BI (corrected)");
+    expect(after?.userLocked).toBe(true);
+
+    const features = await services.intelligenceService.listFeatures(
+      project.id,
+      owner.user.id,
+    );
+    expect(features.some((feature) => feature.name === "Guided onboarding")).toBe(true);
+
+    const rows = await orm.IntelligenceProduct.where((row) =>
+      row.projectId.eq(project.id),
+    ).all();
+    expect(rows).toHaveLength(1);
+  });
+
+  it("reconciles relationship rows to exactly the derived graph", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence edges");
+
+    const first = await services.intelligenceService.analyze(project.id, owner.user.id);
+    expect(first.graph.relationships.length).toBeGreaterThan(0);
+
+    const dropped = first.graph.relationships[0]!;
+    await orm.IntelligenceRelationship.where({ id: dropped.id }).delete();
+    expect(
+      (await orm.IntelligenceRelationship.where({ projectId: project.id }).all()).length,
+    ).toBe(first.graph.relationships.length - 1);
+
+    await addRoadmap(project, owner.user.id);
+    const second = await services.intelligenceService.refresh(project.id, owner.user.id);
+    expect(second.run.trigger).toBe("REFRESH");
+    const rows = await orm.IntelligenceRelationship.where({ projectId: project.id }).all();
+
+    expect(new Set(rows.map((row) => row.id))).toEqual(
+      new Set(second.graph.relationships.map((edge) => edge.id)),
+    );
+
+    const entityIds = new Set([
+      ...(second.graph.product ? [second.graph.product.id] : []),
+      ...second.graph.features.map((item) => item.id),
+      ...second.graph.problems.map((item) => item.id),
+      ...second.graph.benefits.map((item) => item.id),
+      ...second.graph.claims.map((item) => item.id),
+      ...second.graph.evidence.map((item) => item.id),
+      ...second.graph.audienceSignals.map((item) => item.id),
+      ...second.graph.brandSignals.map((item) => item.id),
+      ...second.graph.assets.map((item) => item.id),
+      ...second.graph.workflows.map((item) => item.id),
+    ]);
+
+    expect(
+      rows.every((row) => entityIds.has(row.fromId) && entityIds.has(row.toId)),
+    ).toBe(true);
+
+    await addTextSource(
+      project,
+      owner.user.id,
+      "Changelog",
+      ["# Changelog", "", "## Audit log", "", "Every dashboard change is recorded."].join("\n"),
+    );
+    const replay = await services.intelligenceService.refresh(project.id, owner.user.id);
+    expect(replay.run.trigger).toBe("REFRESH");
+    expect(
+      (await orm.IntelligenceRelationship.where({ projectId: project.id }).all()).length,
+    ).toBe(replay.graph.relationships.length);
+  });
+
+  it("persists corrections for every entity type and keeps them locked", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence entity corrections");
+
+    const report = await services.intelligenceService.analyze(project.id, owner.user.id);
+    const userId = owner.user.id;
+
+    const feature = await services.intelligenceService.correctFeature(
+      project.id,
+      userId,
+      report.graph.features[0]!.canonicalKey,
+      { name: "Real-time dashboards (verified)", importance: "PRIMARY" },
+    );
+    expect(feature?.name).toBe("Real-time dashboards (verified)");
+    expect(feature?.importance).toBe("PRIMARY");
+    expect(feature?.userLocked).toBe(true);
+
+    const claim = await services.intelligenceService.correctClaim(
+      project.id,
+      userId,
+      report.graph.claims[0]!.canonicalKey,
+      { text: "Exports any dashboard to CSV", assertionKind: "USER_PROVIDED" },
+    );
+    expect(claim?.text).toBe("Exports any dashboard to CSV");
+    expect(claim?.userLocked).toBe(true);
+
+    // Re-uploading the brief re-derives the same canonical keys, so only the
+    // lock can preserve the corrected wording.
+    await addTextSource(project, userId, "Product brief v2", BRIEF);
+    const refreshed = await services.intelligenceService.refresh(project.id, userId);
+    expect(refreshed.run.trigger).toBe("REFRESH");
+
+    const features = await services.intelligenceService.listFeatures(project.id, userId);
+    const kept = features.find((item) => item.id === feature!.id);
+    expect(kept?.name).toBe("Real-time dashboards (verified)");
+    expect(kept?.importance).toBe("PRIMARY");
+    expect(kept?.userLocked).toBe(true);
+
+    const claims = await services.intelligenceService.listClaims(project.id, userId);
+    expect(claims.find((item) => item.id === claim!.id)?.text).toBe(
+      "Exports any dashboard to CSV",
+    );
+
+    const rows = await orm.IntelligenceFeature.where((row) =>
+      row.projectId.eq(project.id),
+    ).all();
+    expect(rows.filter((row) => row.userLocked)).toHaveLength(1);
+  });
+
+  it("rejects an entity correction across workspaces", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence correction scope");
+    const report = await services.intelligenceService.analyze(project.id, owner.user.id);
+    const stranger = await registerUser();
+
+    const denied = await services.intelligenceService
+      .correctFeature(project.id, stranger.user.id, report.graph.features[0]!.canonicalKey, {
+        name: "Hijacked",
+      })
+      .catch((error: unknown) => error);
+
+    expect(errorStatus(denied)).toBe(403);
+    expect(
+      (await services.intelligenceService.listFeatures(project.id, owner.user.id))[0]?.name,
+    ).not.toBe("Hijacked");
+  });
+
+  it("removes intelligence rows when the project row is deleted", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence cascade");
+
+    await services.intelligenceService.analyze(project.id, owner.user.id);
+
+    expect(
+      (await orm.IntelligenceFeature.where((row) => row.projectId.eq(project.id)).all())
+        .length,
+    ).toBeGreaterThan(0);
+
+    await orm.Project.where({ id: project.id }).delete();
+
+    expect(await orm.IntelligenceFeature.where((row) => row.projectId.eq(project.id)).all())
+      .toHaveLength(0);
+    expect(await orm.IntelligenceRun.where((row) => row.projectId.eq(project.id)).all())
+      .toHaveLength(0);
+    expect(await orm.IntelligenceSnapshot.where((row) => row.projectId.eq(project.id)).all())
+      .toHaveLength(0);
+  });
+
+  it("rejects analysis and reads across workspaces", async () => {
+    const { owner, project } = await projectWithBrief("Intelligence isolation");
+    const stranger = await registerUser();
+
+    await services.intelligenceService.analyze(project.id, owner.user.id);
+
+    const deniedSummary = await services.intelligenceService
+      .getSummary(project.id, stranger.user.id)
+      .catch((error: unknown) => error);
+
+    expect(errorStatus(deniedSummary)).toBe(403);
+
+    const deniedFeatures = await services.intelligenceService
+      .listFeatures(project.id, stranger.user.id)
+      .catch((error: unknown) => error);
+
+    expect(errorStatus(deniedFeatures)).toBe(403);
+
+    const deniedAnalyze = await services.intelligenceService
+      .analyze(project.id, stranger.user.id)
+      .catch((error: unknown) => error);
+
+    expect(errorStatus(deniedAnalyze)).toBe(403);
+
+    const deniedRuns = await services.intelligenceService
+      .listRuns(project.id, stranger.user.id)
+      .catch((error: unknown) => error);
+
+    expect(errorStatus(deniedRuns)).toBe(403);
+  });
+
+  it("persists extracted problems, benefits and workflows with their relationships", async () => {
+    const { owner, project } = await projectWithNarrativeBrief("Intelligence narrative");
+    const userId = owner.user.id;
+
+    const report = await services.intelligenceService.analyze(project.id, userId);
+
+    const problems = await services.intelligenceService.listProblems(project.id, userId);
+    const benefits = await services.intelligenceService.listBenefits(project.id, userId);
+    const workflows = await services.intelligenceService.listWorkflows(project.id, userId);
+    expect(problems.length).toBeGreaterThan(0);
+    expect(benefits.length).toBeGreaterThan(0);
+    expect(workflows.length).toBeGreaterThan(0);
+
+    for (const problem of problems) {
+      expect(problem.projectId).toBe(project.id);
+      expect(problem.canonicalKey).toMatch(/^problem:/);
+      expect(problem.name.length).toBeGreaterThan(3);
+      expect(problem.provenance?.sourceIds ?? []).toEqual([expect.any(String)]);
+      expect(problem.provenance?.evidenceIds?.length ?? 0).toBeGreaterThan(0);
+      expect(problem.provenance?.method).toBe("DETERMINISTIC");
+    }
+    for (const benefit of benefits) {
+      expect(benefit.projectId).toBe(project.id);
+      expect(benefit.canonicalKey).toMatch(/^benefit:/);
+      expect(benefit.provenance?.evidenceIds?.length ?? 0).toBeGreaterThan(0);
+    }
+    for (const workflow of workflows) {
+      expect(workflow.projectId).toBe(project.id);
+      expect(workflow.canonicalKey).toMatch(/^workflow:/);
+      expect(workflow.steps.length).toBeGreaterThanOrEqual(3);
+      expect(workflow.steps.map((step) => step.order)).toEqual([1, 2, 3, 4]);
+      expect(workflow.provenance?.evidenceIds?.length ?? 0).toBeGreaterThan(0);
+    }
+
+    const problemKeys = new Set(problems.map((problem) => problem.canonicalKey));
+    const benefitKeys = new Set(benefits.map((benefit) => benefit.canonicalKey));
+    const workflowKeys = new Set(workflows.map((workflow) => workflow.canonicalKey));
+
+    const featureIds = new Set(report.graph.features.map((feature) => feature.id));
+    const problemIds = new Set(problems.map((problem) => problem.id));
+    const benefitIds = new Set(benefits.map((benefit) => benefit.id));
+    const workflowIds = new Set(workflows.map((workflow) => workflow.id));
+    expect(problemKeys.size).toBe(problemIds.size);
+    expect(benefitKeys.size).toBe(benefitIds.size);
+    expect(workflowKeys.size).toBe(workflowIds.size);
+
+    const solves = report.graph.relationships.filter(
+      (edge) => edge.type === "FEATURE_SOLVES_PROBLEM",
+    );
+    const provides = report.graph.relationships.filter(
+      (edge) => edge.type === "FEATURE_PROVIDES_BENEFIT",
+    );
+    const uses = report.graph.relationships.filter(
+      (edge) => edge.type === "WORKFLOW_USES_FEATURE",
+    );
+    expect(solves.length).toBeGreaterThan(0);
+    expect(provides.length).toBeGreaterThan(0);
+    expect(uses.length).toBeGreaterThan(0);
+    for (const edge of solves) {
+      expect(edge.fromType).toBe("FEATURE");
+      expect(featureIds.has(edge.fromId)).toBe(true);
+      expect(problemIds.has(edge.toId)).toBe(true);
+    }
+    for (const edge of provides) {
+      expect(featureIds.has(edge.fromId)).toBe(true);
+      expect(benefitIds.has(edge.toId)).toBe(true);
+    }
+    for (const edge of uses) {
+      expect(workflowIds.has(edge.fromId)).toBe(true);
+      expect(featureIds.has(edge.toId)).toBe(true);
+    }
+
+    const storedProblems = await orm.IntelligenceProblem.where((row) =>
+      row.projectId.eq(project.id),
+    ).all();
+    const storedBenefits = await orm.IntelligenceBenefit.where((row) =>
+      row.projectId.eq(project.id),
+    ).all();
+    const storedWorkflows = await orm.IntelligenceWorkflow.where((row) =>
+      row.projectId.eq(project.id),
+    ).all();
+    expect(storedProblems).toHaveLength(problems.length);
+    expect(storedBenefits).toHaveLength(benefits.length);
+    expect(storedWorkflows).toHaveLength(workflows.length);
+
+    const steps = await orm.IntelligenceWorkflowStep.where((row) =>
+      row.workflowId.eq(storedWorkflows[0]!.id),
+    ).all();
+    expect(steps).toHaveLength(workflows[0]!.steps.length);
+    expect(steps.map((step) => step.order)).toEqual([1, 2, 3, 4]);
+    expect(steps.some((step) => step.featureIds.length > 0)).toBe(true);
+
+    const summary = await services.intelligenceService.getSummary(project.id, userId);
+    expect(summary.counts.problems).toBe(problems.length);
+    expect(summary.counts.benefits).toBe(benefits.length);
+    expect(summary.counts.workflows).toBe(workflows.length);
+  });
+
+  it("does not duplicate a narrative entity named by a second source", async () => {
+    const { owner, project } = await projectWithNarrativeBrief("Intelligence narrative dedup");
+    const userId = owner.user.id;
+
+    const first = await services.intelligenceService.analyze(project.id, userId);
+    const beforeProblems = await services.intelligenceService.listProblems(project.id, userId);
+    const beforeBenefits = await services.intelligenceService.listBenefits(project.id, userId);
+    const beforeWorkflows = await services.intelligenceService.listWorkflows(project.id, userId);
+
+    await addTextSource(project, userId, "Repeated brief", NARRATIVE_BRIEF);
+    const second = await services.intelligenceService.refresh(project.id, userId);
+    expect(second.run.trigger).toBe("REFRESH");
+
+    const afterProblems = await services.intelligenceService.listProblems(project.id, userId);
+    const afterBenefits = await services.intelligenceService.listBenefits(project.id, userId);
+    const afterWorkflows = await services.intelligenceService.listWorkflows(project.id, userId);
+
+    expect(afterProblems).toHaveLength(beforeProblems.length);
+    expect(afterBenefits).toHaveLength(beforeBenefits.length);
+    expect(afterWorkflows).toHaveLength(beforeWorkflows.length);
+    expect(new Set(afterProblems.map((item) => item.canonicalKey)).size).toBe(
+      afterProblems.length,
+    );
+    expect(new Set(afterBenefits.map((item) => item.canonicalKey)).size).toBe(
+      afterBenefits.length,
+    );
+    expect(new Set(afterWorkflows.map((item) => item.canonicalKey)).size).toBe(
+      afterWorkflows.length,
+    );
+
+    // The repeat is a second piece of evidence for the same entities, so the
+    // ids stay put and the provenance unions.
+    const merged = afterProblems.find((item) => item.id === beforeProblems[0]!.id);
+    expect(merged).toBeTruthy();
+    expect(
+      (merged!.provenance?.sourceIds?.length ?? 0) >=
+        (beforeProblems[0]!.provenance?.sourceIds?.length ?? 0),
+    ).toBe(true);
+    expect(first.graph.problems.length).toBe(beforeProblems.length);
+  });
+
+  it("adds narrative entities incrementally when a new source states them", async () => {
+    const { owner, project } = await projectWithNarrativeBrief("Intelligence narrative refresh");
+    const userId = owner.user.id;
+
+    const first = await services.intelligenceService.analyze(project.id, userId);
+    const beforeProblems = first.graph.problems.length;
+    const beforeBenefits = first.graph.benefits.length;
+    const beforeWorkflows = first.graph.workflows.length;
+
+    await addTextSource(
+      project,
+      userId,
+      "Support notes",
+      [
+        "# Support notes",
+        "",
+        "## Escalations",
+        "",
+        "Support agents lose track of which launch a customer is blocked on.",
+      ].join("\n"),
+    );
+    const second = await services.intelligenceService.refresh(project.id, userId);
+    expect(second.run.trigger).toBe("REFRESH");
+    expect(second.snapshot?.version).toBe(2);
+
+    const afterProblems = await services.intelligenceService.listProblems(project.id, userId);
+    const afterBenefits = await services.intelligenceService.listBenefits(project.id, userId);
+    const afterWorkflows = await services.intelligenceService.listWorkflows(project.id, userId);
+    expect(afterProblems.length).toBeGreaterThanOrEqual(beforeProblems);
+    expect(afterBenefits.length).toBeGreaterThanOrEqual(beforeBenefits);
+    expect(afterWorkflows.length).toBeGreaterThanOrEqual(beforeWorkflows);
+    expect(
+      afterProblems.some((problem) => /track|launch|customer|blocked/i.test(problem.name)),
+    ).toBe(true);
+    expect(second.graph.problems.length).toBe(afterProblems.length);
+  });
+
+  it("keeps a corrected problem, benefit and workflow through a refresh", async () => {
+    const { owner, project } = await projectWithNarrativeBrief("Intelligence narrative corrections");
+    const userId = owner.user.id;
+
+    const report = await services.intelligenceService.analyze(project.id, userId);
+
+    const problem = await services.intelligenceService.correctProblem(
+      project.id,
+      userId,
+      report.graph.problems[0]!.canonicalKey,
+      { name: "Rewriting every channel by hand (verified)" },
+    );
+    expect(problem?.name).toBe("Rewriting every channel by hand (verified)");
+    expect(problem?.userLocked).toBe(true);
+
+    const benefit = await services.intelligenceService.correctBenefit(
+      project.id,
+      userId,
+      report.graph.benefits[0]!.canonicalKey,
+      { name: "One brief for every channel (verified)" },
+    );
+    expect(benefit?.name).toBe("One brief for every channel (verified)");
+    expect(benefit?.userLocked).toBe(true);
+
+    const workflow = await services.intelligenceService.correctWorkflow(
+      project.id,
+      userId,
+      report.graph.workflows[0]!.canonicalKey,
+      { name: "Launch publishing flow (verified)" },
+    );
+    expect(workflow?.name).toBe("Launch publishing flow (verified)");
+    expect(workflow?.userLocked).toBe(true);
+
+    await addTextSource(project, userId, "Launch brief v2", NARRATIVE_BRIEF);
+    const refreshed = await services.intelligenceService.refresh(project.id, userId);
+    expect(refreshed.run.trigger).toBe("REFRESH");
+
+    const problems = await services.intelligenceService.listProblems(project.id, userId);
+    const benefits = await services.intelligenceService.listBenefits(project.id, userId);
+    const workflows = await services.intelligenceService.listWorkflows(project.id, userId);
+    expect(problems.find((item) => item.id === problem!.id)?.name).toBe(
+      "Rewriting every channel by hand (verified)",
+    );
+    expect(benefits.find((item) => item.id === benefit!.id)?.name).toBe(
+      "One brief for every channel (verified)",
+    );
+    expect(workflows.find((item) => item.id === workflow!.id)?.name).toBe(
+      "Launch publishing flow (verified)",
+    );
+    expect(
+      workflows.find((item) => item.id === workflow!.id)?.steps.length ?? 0,
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  it("rejects narrative reads and corrections across workspaces", async () => {
+    const { owner, project } = await projectWithNarrativeBrief("Intelligence narrative isolation");
+    const report = await services.intelligenceService.analyze(project.id, owner.user.id);
+    const stranger = await registerUser();
+
+    // Awaited one at a time so each rejection is handled before the next call,
+    // rather than leaving a floating rejected promise behind.
+    const deniedReads = await services.intelligenceService
+      .listProblems(project.id, stranger.user.id)
+      .catch((error: unknown) => error);
+    expect(errorStatus(deniedReads)).toBe(403);
+
+    const deniedBenefits = await services.intelligenceService
+      .listBenefits(project.id, stranger.user.id)
+      .catch((error: unknown) => error);
+    expect(errorStatus(deniedBenefits)).toBe(403);
+
+    const deniedWorkflows = await services.intelligenceService
+      .listWorkflows(project.id, stranger.user.id)
+      .catch((error: unknown) => error);
+    expect(errorStatus(deniedWorkflows)).toBe(403);
+
+    const deniedCorrection = await services.intelligenceService
+      .correctProblem(
+        project.id,
+        stranger.user.id,
+        report.graph.problems[0]!.canonicalKey,
+        { name: "Hijacked" },
+      )
+      .catch((error: unknown) => error);
+    expect(errorStatus(deniedCorrection)).toBe(403);
+
+    const problems = await services.intelligenceService.listProblems(
+      project.id,
+      owner.user.id,
+    );
+    expect(problems.some((item) => item.name === "Hijacked")).toBe(false);
+  });
+
+  it("fails the run when a project has no readable sources", async () => {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Intelligence empty" },
+      owner.user.id,
+    );
+
+    const failure = await services.intelligenceService
+      .analyze(project.id, owner.user.id)
+      .catch((error: unknown) => error);
+
+    expect((failure as { code?: string }).code).toBe("INTELLIGENCE_INVALID_INPUT");
+    expect(await orm.IntelligenceRun.where((run) => run.projectId.eq(project.id)).all())
+      .toHaveLength(0);
+  });
+});
+
+describe("intelligence API integration", () => {
+  async function analyzedProject() {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Intelligence API" },
+      owner.user.id,
+    );
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "API brief", value: INTELLIGENCE_BRIEF },
+    ]);
+    await services.intelligenceService.analyze(project.id, owner.user.id);
+    return { owner, project };
+  }
+
+  it("analyzes, reads and corrects over HTTP", async () => {
+    const { owner, project } = await analyzedProject();
+    const { GET: GET_INTELLIGENCE } = await import(
+      "../../app/api/projects/[id]/intelligence/route"
+    );
+    const { POST: POST_CORRECTIONS } = await import(
+      "../../app/api/projects/[id]/intelligence/corrections/route"
+    );
+    const { POST: POST_ANALYZE } = await import(
+      "../../app/api/projects/[id]/intelligence/analyze/route"
+    );
+    const { POST: POST_REFRESH } = await import(
+      "../../app/api/projects/[id]/intelligence/refresh/route"
+    );
+    const headers = { cookie: `content_os_session=${owner.token}` };
+    const json = { ...headers, "content-type": "application/json" };
+    const context = { params: Promise.resolve({ id: project.id }) };
+
+    const readResponse = await GET_INTELLIGENCE(
+      new Request("http://localhost/api/projects/p/intelligence", { headers }),
+      context,
+    );
+    expect(readResponse.status).toBe(200);
+    const payload = (await readResponse.json()) as {
+      summary: { counts: { features: number } };
+      graph: { features: Array<{ canonicalKey: string; name: string }> };
+      runs: Array<{ status: string }>;
+      snapshots: Array<{ version: number }>;
+    };
+    expect(payload.summary.counts.features).toBeGreaterThan(0);
+    expect(payload.graph.features.length).toBeGreaterThan(0);
+    expect(payload.runs[0]?.status).toBe("COMPLETED");
+    expect(payload.snapshots[0]?.version).toBe(1);
+
+    const noChange = await POST_REFRESH(
+      new Request("http://localhost/api/projects/p/intelligence/refresh", {
+        method: "POST",
+        headers,
+      }),
+      context,
+    );
+    expect(noChange.status).toBe(200);
+    expect((await noChange.json()).notes).toContain(
+      "No new or changed sources since the last analysis",
+    );
+
+    const analyzeResponse = await POST_ANALYZE(
+      new Request("http://localhost/api/projects/p/intelligence/analyze", {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({}),
+      }),
+      context,
+    );
+    expect(analyzeResponse.status).toBe(200);
+    const analyzed = (await analyzeResponse.json()) as { run: { trigger: string } };
+    expect(analyzed.run.trigger).toBe("MANUAL");
+
+    const target = payload.graph.features[0]!;
+    const correctResponse = await POST_CORRECTIONS(
+      new Request("http://localhost/api/projects/p/intelligence/corrections", {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({
+          scope: "FEATURE",
+          canonicalKey: target.canonicalKey,
+          name: "Corrected over HTTP",
+          importance: "PRIMARY",
+        }),
+      }),
+      context,
+    );
+    expect(correctResponse.status).toBe(200);
+    const corrected = (await correctResponse.json()) as {
+      entity: { name: string; importance: string; userLocked: boolean };
+    };
+    expect(corrected.entity).toMatchObject({
+      name: "Corrected over HTTP",
+      importance: "PRIMARY",
+      userLocked: true,
+    });
+
+    const productResponse = await POST_CORRECTIONS(
+      new Request("http://localhost/api/projects/p/intelligence/corrections", {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({ scope: "product", name: "Northwind API" }),
+      }),
+      context,
+    );
+    expect(productResponse.status).toBe(200);
+
+    const after = await GET_INTELLIGENCE(
+      new Request("http://localhost/api/projects/p/intelligence", { headers }),
+      context,
+    );
+    const afterPayload = (await after.json()) as {
+      summary: { product: { name: string } };
+      graph: { features: Array<{ name: string }> };
+    };
+    expect(afterPayload.summary.product.name).toBe("Northwind API");
+    expect(afterPayload.graph.features.map((item) => item.name)).toContain(
+      "Corrected over HTTP",
+    );
+  });
+
+  it("returns extracted narrative entities over HTTP and corrects them", async () => {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Intelligence API narrative" },
+      owner.user.id,
+    );
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Launch brief", value: NARRATIVE_BRIEF },
+    ]);
+
+    const { POST: POST_ANALYZE } = await import(
+      "../../app/api/projects/[id]/intelligence/analyze/route"
+    );
+    const { GET: GET_INTELLIGENCE } = await import(
+      "../../app/api/projects/[id]/intelligence/route"
+    );
+    const { POST: POST_CORRECTIONS } = await import(
+      "../../app/api/projects/[id]/intelligence/corrections/route"
+    );
+    const headers = { cookie: `content_os_session=${owner.token}` };
+    const json = { ...headers, "content-type": "application/json" };
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const url = "http://localhost/api/projects/p/intelligence";
+
+    const analyzed = await POST_ANALYZE(
+      new Request(`${url}/analyze`, { method: "POST", headers: json, body: "{}" }),
+      context,
+    );
+    expect(analyzed.status).toBe(200);
+
+    const read = await GET_INTELLIGENCE(new Request(url, { headers }), context);
+    expect(read.status).toBe(200);
+    const payload = (await read.json()) as {
+      summary: { counts: { problems: number; benefits: number; workflows: number } };
+      graph: {
+        problems: Array<{ id: string; canonicalKey: string; name: string; provenance: { evidenceIds: string[] } | null }>;
+        benefits: Array<{ id: string; canonicalKey: string; name: string }>;
+        workflows: Array<{
+          id: string;
+          canonicalKey: string;
+          name: string;
+          steps: Array<{ order: number; action: string }>;
+        }>;
+        relationships: Array<{ type: string; fromId: string; toId: string }>;
+      };
+    };
+
+    expect(payload.summary.counts.problems).toBeGreaterThan(0);
+    expect(payload.summary.counts.benefits).toBeGreaterThan(0);
+    expect(payload.summary.counts.workflows).toBeGreaterThan(0);
+    expect(payload.graph.problems.length).toBeGreaterThan(0);
+    expect(payload.graph.benefits.length).toBeGreaterThan(0);
+    expect(payload.graph.workflows.length).toBeGreaterThan(0);
+    expect(payload.graph.problems[0]?.provenance?.evidenceIds.length ?? 0).toBeGreaterThan(0);
+    expect(payload.graph.workflows[0]?.steps.length ?? 0).toBeGreaterThanOrEqual(3);
+
+    const problemIds = new Set(payload.graph.problems.map((problem) => problem.id));
+    const benefitIds = new Set(payload.graph.benefits.map((benefit) => benefit.id));
+    const workflowIds = new Set(payload.graph.workflows.map((workflow) => workflow.id));
+    const featureIds = new Set(
+      payload.graph.relationships
+        .filter((edge) => edge.type === "FEATURE_SOLVES_PROBLEM")
+        .map((edge) => edge.fromId),
+    );
+    for (const edge of payload.graph.relationships.filter(
+      (item) => item.type === "FEATURE_SOLVES_PROBLEM",
+    )) {
+      expect(featureIds.has(edge.fromId)).toBe(true);
+      expect(problemIds.has(edge.toId)).toBe(true);
+    }
+    expect(
+      payload.graph.relationships.filter((edge) => edge.type === "FEATURE_PROVIDES_BENEFIT").every(
+        (edge) => benefitIds.has(edge.toId),
+      ),
+    ).toBe(true);
+    expect(
+      payload.graph.relationships.filter((edge) => edge.type === "WORKFLOW_USES_FEATURE").every(
+        (edge) => workflowIds.has(edge.fromId),
+      ),
+    ).toBe(true);
+
+    const problemResponse = await POST_CORRECTIONS(
+      new Request(url, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({
+          scope: "PROBLEM",
+          canonicalKey: payload.graph.problems[0]!.canonicalKey,
+          name: "Manual per-channel rewriting (verified over HTTP)",
+        }),
+      }),
+      context,
+    );
+    expect(problemResponse.status).toBe(200);
+    expect(
+      ((await problemResponse.json()) as { entity: { name: string; userLocked: boolean } })
+        .entity,
+    ).toMatchObject({ name: "Manual per-channel rewriting (verified over HTTP)", userLocked: true });
+
+    const workflowResponse = await POST_CORRECTIONS(
+      new Request(url, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({
+          scope: "WORKFLOW",
+          canonicalKey: payload.graph.workflows[0]!.canonicalKey,
+          name: "Launch publishing flow (verified over HTTP)",
+        }),
+      }),
+      context,
+    );
+    expect(workflowResponse.status).toBe(200);
+
+    const afterRead = await GET_INTELLIGENCE(new Request(url, { headers }), context);
+    const afterPayload = (await afterRead.json()) as {
+      graph: {
+        problems: Array<{ name: string }>;
+        workflows: Array<{ name: string; steps: Array<{ order: number }> }>;
+      };
+    };
+    expect(afterPayload.graph.problems.map((item) => item.name)).toContain(
+      "Manual per-channel rewriting (verified over HTTP)",
+    );
+    expect(afterPayload.graph.workflows.map((item) => item.name)).toContain(
+      "Launch publishing flow (verified over HTTP)",
+    );
+    expect(afterPayload.graph.workflows[0]?.steps.length ?? 0).toBeGreaterThanOrEqual(3);
+  });
+
+  it("rejects unauthenticated, cross-origin and invalid requests", async () => {
+    const { owner, project } = await analyzedProject();
+    const { GET: GET_INTELLIGENCE } = await import(
+      "../../app/api/projects/[id]/intelligence/route"
+    );
+    const { POST: POST_CORRECTIONS } = await import(
+      "../../app/api/projects/[id]/intelligence/corrections/route"
+    );
+    const { POST: POST_ANALYZE } = await import(
+      "../../app/api/projects/[id]/intelligence/analyze/route"
+    );
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const url = "http://localhost/api/projects/p/intelligence";
+
+    const anonymous = await GET_INTELLIGENCE(new Request(url), context);
+    expect(anonymous.status).toBe(401);
+
+    const stranger = await registerUser();
+    const strangerHeaders = { cookie: `content_os_session=${stranger.token}` };
+    const denied = await GET_INTELLIGENCE(new Request(url, { headers: strangerHeaders }), context);
+    expect(denied.status).toBe(403);
+
+    const crossOrigin = await POST_ANALYZE(
+      new Request(url, {
+        method: "POST",
+        headers: { ...strangerHeaders, origin: "https://evil.test" },
+      }),
+      context,
+    );
+    expect(crossOrigin.status).toBe(403);
+
+    const ownerHeaders = { cookie: `content_os_session=${owner.token}` };
+    const invalidScope = await POST_CORRECTIONS(
+      new Request(url, {
+        method: "POST",
+        headers: { ...ownerHeaders, "content-type": "application/json" },
+        body: JSON.stringify({ scope: "EVIDENCE" }),
+      }),
+      context,
+    );
+    expect(invalidScope.status).toBe(400);
+
+    const missingKey = await POST_CORRECTIONS(
+      new Request(url, {
+        method: "POST",
+        headers: { ...ownerHeaders, "content-type": "application/json" },
+        body: JSON.stringify({ scope: "FEATURE", name: "Nope" }),
+      }),
+      context,
+    );
+    expect(missingKey.status).toBe(400);
+
+    const unknownEntity = await POST_CORRECTIONS(
+      new Request(url, {
+        method: "POST",
+        headers: { ...ownerHeaders, "content-type": "application/json" },
+        body: JSON.stringify({ scope: "FEATURE", canonicalKey: "feature:missing", name: "Nope" }),
+      }),
+      context,
+    );
+    expect(unknownEntity.status).toBe(404);
+  });
+});
