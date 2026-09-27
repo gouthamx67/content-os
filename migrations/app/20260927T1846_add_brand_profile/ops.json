@@ -1,0 +1,1715 @@
+[
+  {
+    "id": "table.brand_asset",
+    "label": "Create table \"brand_asset\"",
+    "summary": "Creates table \"brand_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_asset\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_asset\"",
+        "sql": "CREATE TABLE \"public\".\"brand_asset\" (\n  \"assetId\" text NOT NULL,\n  \"basis\" text DEFAULT 'RECOGNIZED_ASSET' NOT NULL,\n  \"confidence\" text DEFAULT 'LOW' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"id\" text NOT NULL,\n  \"label\" text NOT NULL,\n  \"notes\" text,\n  \"origin\" text DEFAULT 'EXTRACTED' NOT NULL,\n  \"profileId\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"role\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"brand_asset_basis_check_0cb76274\" CHECK (\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')),\n  CONSTRAINT \"brand_asset_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"brand_asset_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"brand_asset_origin_check_4f78d06c\" CHECK (\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')),\n  CONSTRAINT \"brand_asset_role_check_c9adb556\" CHECK (\"role\" IN ('LOGO', 'PRIMARY_LOGO', 'MARK', 'WORDMARK', 'ICON', 'FAVICON', 'PATTERN', 'TEXTURE', 'ILLUSTRATION', 'PHOTOGRAPHY_STYLE')),\n  CONSTRAINT \"brand_asset_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_asset\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.brand_color",
+    "label": "Create table \"brand_color\"",
+    "summary": "Creates table \"brand_color\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_color"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_color\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_color\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_color\"",
+        "sql": "CREATE TABLE \"public\".\"brand_color\" (\n  \"basis\" text DEFAULT 'GENERAL_EXTRACTION' NOT NULL,\n  \"confidence\" text DEFAULT 'LOW' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"hex\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"notes\" text,\n  \"origin\" text DEFAULT 'EXTRACTED' NOT NULL,\n  \"profileId\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"role\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"brand_color_basis_check_0cb76274\" CHECK (\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')),\n  CONSTRAINT \"brand_color_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"brand_color_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"brand_color_origin_check_4f78d06c\" CHECK (\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')),\n  CONSTRAINT \"brand_color_role_check_5c11cb2c\" CHECK (\"role\" IN ('PRIMARY', 'SECONDARY', 'ACCENT', 'BACKGROUND', 'SURFACE', 'TEXT', 'MUTED', 'BORDER', 'SUCCESS', 'WARNING', 'DANGER', 'NEUTRAL')),\n  CONSTRAINT \"brand_color_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_color\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_color\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.brand_conflict",
+    "label": "Create table \"brand_conflict\"",
+    "summary": "Creates table \"brand_conflict\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_conflict"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_conflict\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_conflict\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_conflict\"",
+        "sql": "CREATE TABLE \"public\".\"brand_conflict\" (\n  \"competing\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"field\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"profileId\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"resolvedBy\" text NOT NULL,\n  \"retained\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"brand_conflict_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"brand_conflict_resolvedBy_check_b61f5589\" CHECK (\"resolvedBy\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')),\n  CONSTRAINT \"brand_conflict_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_conflict\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_conflict\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.brand_font",
+    "label": "Create table \"brand_font\"",
+    "summary": "Creates table \"brand_font\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_font"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_font\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_font\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_font\"",
+        "sql": "CREATE TABLE \"public\".\"brand_font\" (\n  \"basis\" text DEFAULT 'GENERAL_EXTRACTION' NOT NULL,\n  \"confidence\" text DEFAULT 'LOW' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"family\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"notes\" text,\n  \"origin\" text DEFAULT 'EXTRACTED' NOT NULL,\n  \"profileId\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"role\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"sourceUrl\" text,\n  \"style\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"weight\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"brand_font_basis_check_0cb76274\" CHECK (\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')),\n  CONSTRAINT \"brand_font_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"brand_font_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"brand_font_origin_check_4f78d06c\" CHECK (\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')),\n  CONSTRAINT \"brand_font_role_check_cfaea187\" CHECK (\"role\" IN ('HEADING', 'BODY', 'DISPLAY', 'MONOSPACE', 'UI', 'CAPTION')),\n  CONSTRAINT \"brand_font_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_font\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_font\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.brand_guideline",
+    "label": "Create table \"brand_guideline\"",
+    "summary": "Creates table \"brand_guideline\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_guideline"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_guideline\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_guideline\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_guideline\"",
+        "sql": "CREATE TABLE \"public\".\"brand_guideline\" (\n  \"basis\" text DEFAULT 'EXPLICIT_GUIDELINE' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"detail\" text NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"id\" text NOT NULL,\n  \"origin\" text DEFAULT 'EXTRACTED' NOT NULL,\n  \"profileId\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"title\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"brand_guideline_basis_check_0cb76274\" CHECK (\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')),\n  CONSTRAINT \"brand_guideline_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"brand_guideline_origin_check_4f78d06c\" CHECK (\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')),\n  CONSTRAINT \"brand_guideline_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_guideline\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_guideline\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.brand_profile",
+    "label": "Create table \"brand_profile\"",
+    "summary": "Creates table \"brand_profile\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_profile"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_profile\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_profile\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_profile\"",
+        "sql": "CREATE TABLE \"public\".\"brand_profile\" (\n  \"confidence\" text DEFAULT 'LOW' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"locked\" bool DEFAULT false NOT NULL,\n  \"name\" text,\n  \"positioning\" text,\n  \"projectId\" text NOT NULL,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"tagline\" text,\n  \"textOrigins\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"valueProposition\" text,\n  \"version\" int4 DEFAULT 1 NOT NULL,\n  \"visualStyle\" text,\n  \"voiceSummary\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"brand_profile_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"brand_profile_status_check_09a729f8\" CHECK (\"status\" IN ('DRAFT', 'READY', 'STALE')),\n  CONSTRAINT \"brand_profile_textOrigins_elem_not_null_70e5d210\" CHECK (array_position(\"textOrigins\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_profile\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_profile\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.brand_source_state",
+    "label": "Create table \"brand_source_state\"",
+    "summary": "Creates table \"brand_source_state\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_source_state"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_source_state\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_source_state\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_source_state\"",
+        "sql": "CREATE TABLE \"public\".\"brand_source_state\" (\n  \"analyzedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"analyzerId\" text NOT NULL,\n  \"brandVersion\" int4 NOT NULL,\n  \"contentHash\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceId\" text NOT NULL,\n  \"sourceUpdatedAt\" timestamptz NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_source_state\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_source_state\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.brand_term",
+    "label": "Create table \"brand_term\"",
+    "summary": "Creates table \"brand_term\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_term"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_term\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_term\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_term\"",
+        "sql": "CREATE TABLE \"public\".\"brand_term\" (\n  \"basis\" text DEFAULT 'GENERAL_EXTRACTION' NOT NULL,\n  \"category\" text DEFAULT 'INDUSTRY_TERM' NOT NULL,\n  \"confidence\" text DEFAULT 'LOW' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"id\" text NOT NULL,\n  \"notes\" text,\n  \"origin\" text DEFAULT 'EXTRACTED' NOT NULL,\n  \"preference\" text DEFAULT 'NEUTRAL' NOT NULL,\n  \"profileId\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"term\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"brand_term_basis_check_0cb76274\" CHECK (\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')),\n  CONSTRAINT \"brand_term_category_check_18ff91ea\" CHECK (\"category\" IN ('FEATURE', 'PROBLEM', 'VALUE_PROP', 'CALL_TO_ACTION', 'AUDIENCE', 'COMPETITOR', 'INDUSTRY_TERM')),\n  CONSTRAINT \"brand_term_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"brand_term_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"brand_term_origin_check_4f78d06c\" CHECK (\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')),\n  CONSTRAINT \"brand_term_preference_check_d1c098fe\" CHECK (\"preference\" IN ('PREFERRED', 'AVOID', 'NEUTRAL')),\n  CONSTRAINT \"brand_term_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_term\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_term\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.brand_voice_signal",
+    "label": "Create table \"brand_voice_signal\"",
+    "summary": "Creates table \"brand_voice_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "brand_voice_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"brand_voice_signal\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_voice_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"brand_voice_signal\"",
+        "sql": "CREATE TABLE \"public\".\"brand_voice_signal\" (\n  \"basis\" text DEFAULT 'RECOGNIZED_ASSET' NOT NULL,\n  \"confidence\" text DEFAULT 'LOW' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"origin\" text DEFAULT 'EXTRACTED' NOT NULL,\n  \"profileId\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"value\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"brand_voice_signal_basis_check_0cb76274\" CHECK (\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')),\n  CONSTRAINT \"brand_voice_signal_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"brand_voice_signal_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"brand_voice_signal_origin_check_4f78d06c\" CHECK (\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')),\n  CONSTRAINT \"brand_voice_signal_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"brand_voice_signal\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_voice_signal\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.brand_profile.brand_profile_project_key",
+    "label": "Add unique constraint on \"brand_profile\" (projectId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "brand_profile_project_key",
+        "table": "brand_profile"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"brand_profile_project_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_profile_project_key",
+          "public",
+          "\"public\".\"brand_profile\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"brand_profile_project_key\"",
+        "sql": "ALTER TABLE \"public\".\"brand_profile\" ADD CONSTRAINT \"brand_profile_project_key\" UNIQUE (\"projectId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"brand_profile_project_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_profile_project_key",
+          "public",
+          "\"public\".\"brand_profile\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.brand_source_state.brand_source_state_source_key",
+    "label": "Add unique constraint on \"brand_source_state\" (projectId, sourceId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "brand_source_state_source_key",
+        "table": "brand_source_state"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"brand_source_state_source_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_source_state_source_key",
+          "public",
+          "\"public\".\"brand_source_state\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"brand_source_state_source_key\"",
+        "sql": "ALTER TABLE \"public\".\"brand_source_state\" ADD CONSTRAINT \"brand_source_state_source_key\" UNIQUE (\"projectId\", \"sourceId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"brand_source_state_source_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_source_state_source_key",
+          "public",
+          "\"public\".\"brand_source_state\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_asset.brand_asset_profile_idx",
+    "label": "Create index \"brand_asset_profile_idx\" on \"brand_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_asset_profile_idx",
+        "table": "brand_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_asset_profile_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset_profile_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_asset_profile_idx\"",
+        "sql": "CREATE INDEX \"brand_asset_profile_idx\" ON \"public\".\"brand_asset\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_asset_profile_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset_profile_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_asset.brand_asset_projectId_idx_a96e4d92",
+    "label": "Create index \"brand_asset_projectId_idx_a96e4d92\" on \"brand_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_asset_projectId_idx_a96e4d92",
+        "table": "brand_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_asset_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_asset_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"brand_asset_projectId_idx_a96e4d92\" ON \"public\".\"brand_asset\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_asset_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_asset.brand_asset_project_role_idx",
+    "label": "Create index \"brand_asset_project_role_idx\" on \"brand_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_asset_project_role_idx",
+        "table": "brand_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_asset_project_role_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset_project_role_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_asset_project_role_idx\"",
+        "sql": "CREATE INDEX \"brand_asset_project_role_idx\" ON \"public\".\"brand_asset\" (\"projectId\", \"role\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_asset_project_role_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset_project_role_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_color.brand_color_profile_idx",
+    "label": "Create index \"brand_color_profile_idx\" on \"brand_color\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_color_profile_idx",
+        "table": "brand_color"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_color_profile_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_color_profile_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_color_profile_idx\"",
+        "sql": "CREATE INDEX \"brand_color_profile_idx\" ON \"public\".\"brand_color\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_color_profile_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_color_profile_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_color.brand_color_projectId_idx_a96e4d92",
+    "label": "Create index \"brand_color_projectId_idx_a96e4d92\" on \"brand_color\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_color_projectId_idx_a96e4d92",
+        "table": "brand_color"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_color_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_color_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_color_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"brand_color_projectId_idx_a96e4d92\" ON \"public\".\"brand_color\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_color_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_color_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_color.brand_color_project_role_idx",
+    "label": "Create index \"brand_color_project_role_idx\" on \"brand_color\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_color_project_role_idx",
+        "table": "brand_color"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_color_project_role_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_color_project_role_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_color_project_role_idx\"",
+        "sql": "CREATE INDEX \"brand_color_project_role_idx\" ON \"public\".\"brand_color\" (\"projectId\", \"role\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_color_project_role_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_color_project_role_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_conflict.brand_conflict_profile_idx",
+    "label": "Create index \"brand_conflict_profile_idx\" on \"brand_conflict\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_conflict_profile_idx",
+        "table": "brand_conflict"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_conflict_profile_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_conflict_profile_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_conflict_profile_idx\"",
+        "sql": "CREATE INDEX \"brand_conflict_profile_idx\" ON \"public\".\"brand_conflict\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_conflict_profile_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_conflict_profile_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_conflict.brand_conflict_projectId_idx_a96e4d92",
+    "label": "Create index \"brand_conflict_projectId_idx_a96e4d92\" on \"brand_conflict\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_conflict_projectId_idx_a96e4d92",
+        "table": "brand_conflict"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_conflict_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_conflict_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_conflict_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"brand_conflict_projectId_idx_a96e4d92\" ON \"public\".\"brand_conflict\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_conflict_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_conflict_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_conflict.brand_conflict_project_field_idx",
+    "label": "Create index \"brand_conflict_project_field_idx\" on \"brand_conflict\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_conflict_project_field_idx",
+        "table": "brand_conflict"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_conflict_project_field_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_conflict_project_field_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_conflict_project_field_idx\"",
+        "sql": "CREATE INDEX \"brand_conflict_project_field_idx\" ON \"public\".\"brand_conflict\" (\"projectId\", \"field\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_conflict_project_field_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_conflict_project_field_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_font.brand_font_profile_idx",
+    "label": "Create index \"brand_font_profile_idx\" on \"brand_font\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_font_profile_idx",
+        "table": "brand_font"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_font_profile_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_font_profile_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_font_profile_idx\"",
+        "sql": "CREATE INDEX \"brand_font_profile_idx\" ON \"public\".\"brand_font\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_font_profile_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_font_profile_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_font.brand_font_projectId_idx_a96e4d92",
+    "label": "Create index \"brand_font_projectId_idx_a96e4d92\" on \"brand_font\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_font_projectId_idx_a96e4d92",
+        "table": "brand_font"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_font_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_font_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_font_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"brand_font_projectId_idx_a96e4d92\" ON \"public\".\"brand_font\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_font_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_font_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_font.brand_font_project_role_idx",
+    "label": "Create index \"brand_font_project_role_idx\" on \"brand_font\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_font_project_role_idx",
+        "table": "brand_font"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_font_project_role_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_font_project_role_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_font_project_role_idx\"",
+        "sql": "CREATE INDEX \"brand_font_project_role_idx\" ON \"public\".\"brand_font\" (\"projectId\", \"role\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_font_project_role_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_font_project_role_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_guideline.brand_guideline_profile_idx",
+    "label": "Create index \"brand_guideline_profile_idx\" on \"brand_guideline\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_guideline_profile_idx",
+        "table": "brand_guideline"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_guideline_profile_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_guideline_profile_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_guideline_profile_idx\"",
+        "sql": "CREATE INDEX \"brand_guideline_profile_idx\" ON \"public\".\"brand_guideline\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_guideline_profile_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_guideline_profile_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_guideline.brand_guideline_project_idx",
+    "label": "Create index \"brand_guideline_project_idx\" on \"brand_guideline\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_guideline_project_idx",
+        "table": "brand_guideline"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_guideline_project_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_guideline_project_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_guideline_project_idx\"",
+        "sql": "CREATE INDEX \"brand_guideline_project_idx\" ON \"public\".\"brand_guideline\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_guideline_project_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_guideline_project_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_source_state.brand_source_state_projectId_idx_a96e4d92",
+    "label": "Create index \"brand_source_state_projectId_idx_a96e4d92\" on \"brand_source_state\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_source_state_projectId_idx_a96e4d92",
+        "table": "brand_source_state"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_source_state_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_source_state_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_source_state_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"brand_source_state_projectId_idx_a96e4d92\" ON \"public\".\"brand_source_state\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_source_state_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_source_state_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_source_state.brand_source_state_source_idx",
+    "label": "Create index \"brand_source_state_source_idx\" on \"brand_source_state\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_source_state_source_idx",
+        "table": "brand_source_state"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_source_state_source_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_source_state_source_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_source_state_source_idx\"",
+        "sql": "CREATE INDEX \"brand_source_state_source_idx\" ON \"public\".\"brand_source_state\" (\"sourceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_source_state_source_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_source_state_source_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_term.brand_term_profile_idx",
+    "label": "Create index \"brand_term_profile_idx\" on \"brand_term\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_term_profile_idx",
+        "table": "brand_term"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_term_profile_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_term_profile_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_term_profile_idx\"",
+        "sql": "CREATE INDEX \"brand_term_profile_idx\" ON \"public\".\"brand_term\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_term_profile_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_term_profile_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_term.brand_term_projectId_idx_a96e4d92",
+    "label": "Create index \"brand_term_projectId_idx_a96e4d92\" on \"brand_term\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_term_projectId_idx_a96e4d92",
+        "table": "brand_term"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_term_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_term_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_term_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"brand_term_projectId_idx_a96e4d92\" ON \"public\".\"brand_term\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_term_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_term_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_term.brand_term_project_preference_idx",
+    "label": "Create index \"brand_term_project_preference_idx\" on \"brand_term\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_term_project_preference_idx",
+        "table": "brand_term"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_term_project_preference_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_term_project_preference_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_term_project_preference_idx\"",
+        "sql": "CREATE INDEX \"brand_term_project_preference_idx\" ON \"public\".\"brand_term\" (\"projectId\", \"preference\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_term_project_preference_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_term_project_preference_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_voice_signal.brand_voice_profile_idx",
+    "label": "Create index \"brand_voice_profile_idx\" on \"brand_voice_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_voice_profile_idx",
+        "table": "brand_voice_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_voice_profile_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_voice_profile_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_voice_profile_idx\"",
+        "sql": "CREATE INDEX \"brand_voice_profile_idx\" ON \"public\".\"brand_voice_signal\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_voice_profile_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_voice_profile_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_voice_signal.brand_voice_project_kind_idx",
+    "label": "Create index \"brand_voice_project_kind_idx\" on \"brand_voice_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_voice_project_kind_idx",
+        "table": "brand_voice_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_voice_project_kind_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_voice_project_kind_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_voice_project_kind_idx\"",
+        "sql": "CREATE INDEX \"brand_voice_project_kind_idx\" ON \"public\".\"brand_voice_signal\" (\"projectId\", \"kind\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_voice_project_kind_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_voice_project_kind_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.brand_voice_signal.brand_voice_signal_projectId_idx_a96e4d92",
+    "label": "Create index \"brand_voice_signal_projectId_idx_a96e4d92\" on \"brand_voice_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_voice_signal_projectId_idx_a96e4d92",
+        "table": "brand_voice_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_voice_signal_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_voice_signal_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_voice_signal_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"brand_voice_signal_projectId_idx_a96e4d92\" ON \"public\".\"brand_voice_signal\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_voice_signal_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_voice_signal_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_asset.brand_asset_projectId_fkey",
+    "label": "Add foreign key \"brand_asset_projectId_fkey\" on \"brand_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_asset_projectId_fkey",
+        "table": "brand_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_asset_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_asset_projectId_fkey",
+          "public",
+          "\"public\".\"brand_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_asset_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_asset\"\nADD CONSTRAINT \"brand_asset_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_asset_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_asset_projectId_fkey",
+          "public",
+          "\"public\".\"brand_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_color.brand_color_projectId_fkey",
+    "label": "Add foreign key \"brand_color_projectId_fkey\" on \"brand_color\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_color_projectId_fkey",
+        "table": "brand_color"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_color_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_color_projectId_fkey",
+          "public",
+          "\"public\".\"brand_color\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_color_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_color\"\nADD CONSTRAINT \"brand_color_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_color_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_color_projectId_fkey",
+          "public",
+          "\"public\".\"brand_color\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_conflict.brand_conflict_projectId_fkey",
+    "label": "Add foreign key \"brand_conflict_projectId_fkey\" on \"brand_conflict\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_conflict_projectId_fkey",
+        "table": "brand_conflict"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_conflict_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_conflict_projectId_fkey",
+          "public",
+          "\"public\".\"brand_conflict\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_conflict_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_conflict\"\nADD CONSTRAINT \"brand_conflict_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_conflict_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_conflict_projectId_fkey",
+          "public",
+          "\"public\".\"brand_conflict\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_font.brand_font_projectId_fkey",
+    "label": "Add foreign key \"brand_font_projectId_fkey\" on \"brand_font\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_font_projectId_fkey",
+        "table": "brand_font"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_font_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_font_projectId_fkey",
+          "public",
+          "\"public\".\"brand_font\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_font_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_font\"\nADD CONSTRAINT \"brand_font_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_font_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_font_projectId_fkey",
+          "public",
+          "\"public\".\"brand_font\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_guideline.brand_guideline_projectId_fkey",
+    "label": "Add foreign key \"brand_guideline_projectId_fkey\" on \"brand_guideline\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_guideline_projectId_fkey",
+        "table": "brand_guideline"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_guideline_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_guideline_projectId_fkey",
+          "public",
+          "\"public\".\"brand_guideline\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_guideline_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_guideline\"\nADD CONSTRAINT \"brand_guideline_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_guideline_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_guideline_projectId_fkey",
+          "public",
+          "\"public\".\"brand_guideline\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_profile.brand_profile_projectId_fkey",
+    "label": "Add foreign key \"brand_profile_projectId_fkey\" on \"brand_profile\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_profile_projectId_fkey",
+        "table": "brand_profile"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_profile_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_profile_projectId_fkey",
+          "public",
+          "\"public\".\"brand_profile\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_profile_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_profile\"\nADD CONSTRAINT \"brand_profile_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_profile_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_profile_projectId_fkey",
+          "public",
+          "\"public\".\"brand_profile\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_source_state.brand_source_state_projectId_fkey",
+    "label": "Add foreign key \"brand_source_state_projectId_fkey\" on \"brand_source_state\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_source_state_projectId_fkey",
+        "table": "brand_source_state"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_source_state_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_source_state_projectId_fkey",
+          "public",
+          "\"public\".\"brand_source_state\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_source_state_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_source_state\"\nADD CONSTRAINT \"brand_source_state_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_source_state_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_source_state_projectId_fkey",
+          "public",
+          "\"public\".\"brand_source_state\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_source_state.brand_source_state_sourceId_fkey",
+    "label": "Add foreign key \"brand_source_state_sourceId_fkey\" on \"brand_source_state\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_source_state_sourceId_fkey",
+        "table": "brand_source_state"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_source_state_sourceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_source_state_sourceId_fkey",
+          "public",
+          "\"public\".\"brand_source_state\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_source_state_sourceId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_source_state\"\nADD CONSTRAINT \"brand_source_state_sourceId_fkey\"\nFOREIGN KEY (\"sourceId\")\nREFERENCES \"public\".\"source\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_source_state_sourceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_source_state_sourceId_fkey",
+          "public",
+          "\"public\".\"brand_source_state\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_term.brand_term_projectId_fkey",
+    "label": "Add foreign key \"brand_term_projectId_fkey\" on \"brand_term\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_term_projectId_fkey",
+        "table": "brand_term"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_term_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_term_projectId_fkey",
+          "public",
+          "\"public\".\"brand_term\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_term_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_term\"\nADD CONSTRAINT \"brand_term_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_term_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_term_projectId_fkey",
+          "public",
+          "\"public\".\"brand_term\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_voice_signal.brand_voice_signal_projectId_fkey",
+    "label": "Add foreign key \"brand_voice_signal_projectId_fkey\" on \"brand_voice_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_voice_signal_projectId_fkey",
+        "table": "brand_voice_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_voice_signal_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_voice_signal_projectId_fkey",
+          "public",
+          "\"public\".\"brand_voice_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_voice_signal_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_voice_signal\"\nADD CONSTRAINT \"brand_voice_signal_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_voice_signal_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_voice_signal_projectId_fkey",
+          "public",
+          "\"public\".\"brand_voice_signal\""
+        ]
+      }
+    ]
+  }
+]

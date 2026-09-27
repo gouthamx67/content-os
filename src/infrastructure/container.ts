@@ -12,6 +12,7 @@ import { PostgresSourceStorageCoordinator } from "./repositories/postgres-source
 import { PostgresAssetRepository } from "./repositories/postgres-asset-repository";
 import { PostgresIntelligenceRepository } from "./repositories/postgres-intelligence-repository";
 import { PostgresBrowserSessionRepository } from "./repositories/postgres-browser-session-repository";
+import { PostgresBrandRepository } from "./repositories/postgres-brand-repository";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
 import { WorkspaceService } from "../core/services/workspace-service";
@@ -41,6 +42,13 @@ import {
 } from "./browser/navigation-policy";
 import { BrowserService } from "../core/services/browser-service";
 import { DeterministicBrowserPlanner } from "../core/services/browser-planner";
+import { BrandIntelligenceService } from "../core/services/brand-intelligence-service";
+import { BrandAnalyzerRegistry } from "../core/ports/brand-analyzer";
+import { WebsiteBrandAnalyzer } from "./brand/website-brand-analyzer";
+import { TextBrandAnalyzer } from "./brand/text-brand-analyzer";
+import { RepositoryBrandAnalyzer } from "./brand/repository-brand-analyzer";
+import { CreativeBrandAnalyzer } from "./brand/creative-brand-analyzer";
+import { AiBrandInterpretationProvider } from "./ai/brand-interpretation-provider";
 
 const orm = db.orm.public;
 
@@ -53,6 +61,7 @@ const repositories = {
   assets: new PostgresAssetRepository(orm),
   intelligence: new PostgresIntelligenceRepository(orm),
   browserSessions: new PostgresBrowserSessionRepository(orm),
+  brand: new PostgresBrandRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -214,6 +223,35 @@ const browserService = new BrowserService({
   },
 });
 
+/**
+ * Brand analysis runs fully deterministically. The AI interpreter is optional and
+ * shares the same gate as intelligence interpretation: a mock provider cannot
+ * produce evidence-cited output, so leaving it off keeps every stored value
+ * traceable to a source instead of to a guess.
+ */
+const brandAnalyzers = new BrandAnalyzerRegistry([
+  new WebsiteBrandAnalyzer(),
+  new TextBrandAnalyzer(),
+  new RepositoryBrandAnalyzer(),
+  new CreativeBrandAnalyzer(),
+]);
+
+const brandInterpretation =
+  process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+    ? new AiBrandInterpretationProvider(providers.ai)
+    : null;
+
+const brandService = new BrandIntelligenceService({
+  projectService,
+  sourceRepository: repositories.sources,
+  assetRepository: repositories.assets,
+  storageProvider: providers.storage,
+  analyzers: brandAnalyzers,
+  repository: repositories.brand,
+  intelligence: repositories.intelligence,
+  interpretationProvider: brandInterpretation,
+});
+
 export const container = {
   repositories,
   providers,
@@ -226,6 +264,7 @@ export const container = {
     generation: generationService,
     inputs: inputService,
     intelligence: intelligenceService,
+    brand: brandService,
     browser: browserService,
   },
 };

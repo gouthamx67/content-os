@@ -136,6 +136,16 @@ model Project {
   intelligenceSnapshots       IntelligenceSnapshot[]
   browserSessions             BrowserSession[]
 
+  brandProfile                BrandProfile?
+  brandColors                 BrandColor[]
+  brandFonts                  BrandFont[]
+  brandAssets                 BrandAsset[]
+  brandTerms                  BrandTerm[]
+  brandVoiceSignals           BrandVoiceSignal[]
+  brandGuidelines             BrandGuideline[]
+  brandConflicts              BrandConflict[]
+  brandSourceStates           BrandSourceState[]
+
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@map("project")
@@ -164,6 +174,7 @@ model Source {
   intelligenceClaims   IntelligenceClaim[]
   intelligenceAssets   IntelligenceAsset[]
   browserSessions      BrowserSession[]
+  brandSourceStates    BrandSourceState[]
 
   @@index([projectId])
   @@index([projectId, contentHash])
@@ -172,16 +183,17 @@ model Source {
 }
 
 model Asset {
-  id        String                     @id @default(cuid(2))
-  projectId String
-  type      AssetType
-  name      String
-  uri       String
-  metadata  String?
-  createdAt TimestamptzString          @default(now())
-  updatedAt temporal.updatedAtString()
+  id          String                     @id @default(cuid(2))
+  projectId   String
+  type        AssetType
+  name        String
+  uri         String
+  metadata    String?
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
 
-  project   Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  project     Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  brandAssets BrandAsset[]
 
   @@index([projectId])
   @@map("asset")
@@ -790,4 +802,323 @@ model IntelligenceSnapshot {
   @@unique([projectId, version], map: "int_snapshot_version_key")
   @@index([projectId, createdAt], map: "int_snapshot_project_created_idx")
   @@map("intelligence_snapshot")
+}
+
+enum BrandOrigin {
+  @@type("pg/text@1")
+
+  EXTRACTED = "EXTRACTED"
+  INFERRED = "INFERRED"
+  USER = "USER"
+}
+
+enum BrandPrecedence {
+  @@type("pg/text@1")
+
+  INFERENCE = "INFERENCE"
+  GENERAL_EXTRACTION = "GENERAL_EXTRACTION"
+  RECOGNIZED_ASSET = "RECOGNIZED_ASSET"
+  DESIGN_TOKEN = "DESIGN_TOKEN"
+  EXPLICIT_GUIDELINE = "EXPLICIT_GUIDELINE"
+  USER = "USER"
+}
+
+enum BrandConfidence {
+  @@type("pg/text@1")
+
+  HIGH = "HIGH"
+  MEDIUM = "MEDIUM"
+  LOW = "LOW"
+}
+
+enum BrandStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  READY = "READY"
+  STALE = "STALE"
+}
+
+enum BrandColorRole {
+  @@type("pg/text@1")
+
+  PRIMARY = "PRIMARY"
+  SECONDARY = "SECONDARY"
+  ACCENT = "ACCENT"
+  BACKGROUND = "BACKGROUND"
+  SURFACE = "SURFACE"
+  TEXT = "TEXT"
+  MUTED = "MUTED"
+  BORDER = "BORDER"
+  SUCCESS = "SUCCESS"
+  WARNING = "WARNING"
+  DANGER = "DANGER"
+  NEUTRAL = "NEUTRAL"
+}
+
+enum BrandFontRole {
+  @@type("pg/text@1")
+
+  HEADING = "HEADING"
+  BODY = "BODY"
+  DISPLAY = "DISPLAY"
+  MONOSPACE = "MONOSPACE"
+  UI = "UI"
+  CAPTION = "CAPTION"
+}
+
+enum BrandAssetRole {
+  @@type("pg/text@1")
+
+  LOGO = "LOGO"
+  PRIMARY_LOGO = "PRIMARY_LOGO"
+  MARK = "MARK"
+  WORDMARK = "WORDMARK"
+  ICON = "ICON"
+  FAVICON = "FAVICON"
+  PATTERN = "PATTERN"
+  TEXTURE = "TEXTURE"
+  ILLUSTRATION = "ILLUSTRATION"
+  PHOTOGRAPHY_STYLE = "PHOTOGRAPHY_STYLE"
+}
+
+enum BrandTermCategory {
+  @@type("pg/text@1")
+
+  FEATURE = "FEATURE"
+  PROBLEM = "PROBLEM"
+  VALUE_PROP = "VALUE_PROP"
+  CALL_TO_ACTION = "CALL_TO_ACTION"
+  AUDIENCE = "AUDIENCE"
+  COMPETITOR = "COMPETITOR"
+  INDUSTRY_TERM = "INDUSTRY_TERM"
+}
+
+enum BrandTermPreference {
+  @@type("pg/text@1")
+
+  PREFERRED = "PREFERRED"
+  AVOID = "AVOID"
+  NEUTRAL = "NEUTRAL"
+}
+
+/// The canonical brand for one project: the single layer later generators read.
+/// Every material value keeps the basis and the provenance that produced it, so
+/// a weaker extraction can never overwrite a stronger one and a disagreement
+/// stays visible instead of being silently resolved.
+model BrandProfile {
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  name             String?
+  positioning      String?
+  tagline          String?
+  valueProposition String?
+  voiceSummary     String?
+  visualStyle      String?
+  textOrigins      String[]
+  status           BrandStatus                @default(DRAFT)
+  confidence       BrandConfidence            @default(LOW)
+  version          Int                        @default(1)
+  locked           Boolean                    @default(false)
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  colors           BrandColor[]
+  fonts            BrandFont[]
+  assets           BrandAsset[]
+  terms            BrandTerm[]
+  voiceSignals     BrandVoiceSignal[]
+  guidelines       BrandGuideline[]
+  conflicts        BrandConflict[]
+
+  @@unique([projectId], map: "brand_profile_project_key")
+  @@map("brand_profile")
+}
+
+model BrandColor {
+  id          String                     @id @default(cuid(2))
+  projectId   String
+  profileId   String
+  name        String
+  hex         String
+  role        BrandColorRole
+  confidence  BrandConfidence            @default(LOW)
+  origin      BrandOrigin                @default(EXTRACTED)
+  basis       BrandPrecedence            @default(GENERAL_EXTRACTION)
+  sourceIds   String[]
+  evidenceIds String[]
+  notes       String?
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project     Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  profile     BrandProfile               @relation(fields:[profileId], references:[id], onDelete: Cascade)
+
+  @@index([projectId, role], map: "brand_color_project_role_idx")
+  @@index([profileId], map: "brand_color_profile_idx")
+  @@map("brand_color")
+}
+
+model BrandFont {
+  id          String                     @id @default(cuid(2))
+  projectId   String
+  profileId   String
+  family      String
+  role        BrandFontRole
+  weight      String?
+  style       String?
+  sourceUrl   String?
+  confidence  BrandConfidence            @default(LOW)
+  origin      BrandOrigin                @default(EXTRACTED)
+  basis       BrandPrecedence            @default(GENERAL_EXTRACTION)
+  sourceIds   String[]
+  evidenceIds String[]
+  notes       String?
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project     Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  profile     BrandProfile               @relation(fields:[profileId], references:[id], onDelete: Cascade)
+
+  @@index([projectId, role], map: "brand_font_project_role_idx")
+  @@index([profileId], map: "brand_font_profile_idx")
+  @@map("brand_font")
+}
+
+model BrandAsset {
+  id          String                     @id @default(cuid(2))
+  projectId   String
+  profileId   String
+  assetId     String
+  role        BrandAssetRole
+  label       String
+  confidence  BrandConfidence            @default(LOW)
+  origin      BrandOrigin                @default(EXTRACTED)
+  basis       BrandPrecedence            @default(RECOGNIZED_ASSET)
+  sourceIds   String[]
+  evidenceIds String[]
+  notes       String?
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project     Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  profile     BrandProfile               @relation(fields:[profileId], references:[id], onDelete: Cascade)
+  asset       Asset                      @relation(fields:[assetId], references:[id], onDelete: Cascade)
+
+  @@index([projectId, role], map: "brand_asset_project_role_idx")
+  @@index([profileId], map: "brand_asset_profile_idx")
+  @@map("brand_asset")
+}
+
+model BrandTerm {
+  id          String                     @id @default(cuid(2))
+  projectId   String
+  profileId   String
+  term        String
+  category    BrandTermCategory          @default(INDUSTRY_TERM)
+  preference  BrandTermPreference        @default(NEUTRAL)
+  confidence  BrandConfidence            @default(LOW)
+  origin      BrandOrigin                @default(EXTRACTED)
+  basis       BrandPrecedence            @default(GENERAL_EXTRACTION)
+  sourceIds   String[]
+  evidenceIds String[]
+  notes       String?
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project     Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  profile     BrandProfile               @relation(fields:[profileId], references:[id], onDelete: Cascade)
+
+  @@index([projectId, preference], map: "brand_term_project_preference_idx")
+  @@index([profileId], map: "brand_term_profile_idx")
+  @@map("brand_term")
+}
+
+model BrandVoiceSignal {
+  id          String                     @id @default(cuid(2))
+  projectId   String
+  profileId   String
+  kind        String
+  value       String
+  confidence  BrandConfidence            @default(LOW)
+  origin      BrandOrigin                @default(EXTRACTED)
+  basis       BrandPrecedence            @default(RECOGNIZED_ASSET)
+  sourceIds   String[]
+  evidenceIds String[]
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project     Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  profile     BrandProfile               @relation(fields:[profileId], references:[id], onDelete: Cascade)
+
+  @@index([projectId, kind], map: "brand_voice_project_kind_idx")
+  @@index([profileId], map: "brand_voice_profile_idx")
+  @@map("brand_voice_signal")
+}
+
+model BrandGuideline {
+  id          String                     @id @default(cuid(2))
+  projectId   String
+  profileId   String
+  title       String
+  detail      String
+  origin      BrandOrigin                @default(EXTRACTED)
+  basis       BrandPrecedence            @default(EXPLICIT_GUIDELINE)
+  sourceIds   String[]
+  evidenceIds String[]
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project     Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  profile     BrandProfile               @relation(fields:[profileId], references:[id], onDelete: Cascade)
+
+  @@index([projectId], map: "brand_guideline_project_idx")
+  @@index([profileId], map: "brand_guideline_profile_idx")
+  @@map("brand_guideline")
+}
+
+/// A disagreement the brand did not resolve silently. Both the retained and the
+/// competing assertion stay readable so a reviewer can see what was overruled.
+model BrandConflict {
+  id          String                     @id @default(cuid(2))
+  projectId   String
+  profileId   String
+  field       String
+  retained    String
+  competing   String
+  resolvedBy  BrandPrecedence
+  sourceIds   String[]
+  evidenceIds String[]
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project     Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  profile     BrandProfile               @relation(fields:[profileId], references:[id], onDelete: Cascade)
+
+  @@index([projectId, field], map: "brand_conflict_project_field_idx")
+  @@index([profileId], map: "brand_conflict_profile_idx")
+  @@map("brand_conflict")
+}
+
+/// What the analyzers last read from one source. An unchanged hash means the
+/// source is already represented in the profile, so an incremental run skips it.
+model BrandSourceState {
+  id              String                     @id @default(cuid(2))
+  projectId       String
+  sourceId        String
+  contentHash     String?
+  sourceUpdatedAt TimestamptzString
+  analyzerId      String
+  brandVersion    Int
+  analyzedAt      TimestamptzString          @default(now())
+  createdAt       TimestamptzString          @default(now())
+  updatedAt       temporal.updatedAtString()
+
+  project         Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  source          Source                     @relation(fields:[sourceId], references:[id], onDelete: Cascade)
+
+  @@unique([projectId, sourceId], map: "brand_source_state_source_key")
+  @@index([sourceId], map: "brand_source_state_source_idx")
+  @@map("brand_source_state")
 }

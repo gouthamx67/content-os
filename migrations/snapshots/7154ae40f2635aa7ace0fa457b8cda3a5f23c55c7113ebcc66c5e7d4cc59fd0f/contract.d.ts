@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'6c77f72461b984d10b46a28826a0a4978533bced104aea4ed33bc993ee05e0fd'>;
+  StorageHashBase<'7154ae40f2635aa7ace0fa457b8cda3a5f23c55c7113ebcc66c5e7d4cc59fd0f'>;
 export type ExecutionHash =
   ExecutionHashBase<'b4e9213d1d8165ec37af2762ca6b408c78ef3547f2e77bf317f4f3bd04b96e77'>;
 export type ProfileHash =
@@ -2954,9 +2954,8 @@ export namespace Models {
     metadata: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    brandAssets: public_BrandAsset[];
     project: public_Project;
-    readonly [RelationKeys]?: 'brandAssets' | 'project';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_IntelligenceProduct = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3364,23 +3363,8 @@ export namespace Models {
     locked: CodecTypes['pg/bool@1']['output'];
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    assets: public_BrandAsset[];
-    colors: public_BrandColor[];
-    conflicts: public_BrandConflict[];
-    fonts: public_BrandFont[];
-    guidelines: public_BrandGuideline[];
     project: public_Project;
-    terms: public_BrandTerm[];
-    voiceSignals: public_BrandVoiceSignal[];
-    readonly [RelationKeys]?:
-      | 'assets'
-      | 'colors'
-      | 'conflicts'
-      | 'fonts'
-      | 'guidelines'
-      | 'project'
-      | 'terms'
-      | 'voiceSignals';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_BrandColor = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3415,9 +3399,8 @@ export namespace Models {
     notes: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    profile: public_BrandProfile;
     project: public_Project;
-    readonly [RelationKeys]?: 'profile' | 'project';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_BrandFont = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3442,9 +3425,8 @@ export namespace Models {
     notes: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    profile: public_BrandProfile;
     project: public_Project;
-    readonly [RelationKeys]?: 'profile' | 'project';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_BrandAsset = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3477,10 +3459,8 @@ export namespace Models {
     notes: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    asset: public_Asset;
-    profile: public_BrandProfile;
     project: public_Project;
-    readonly [RelationKeys]?: 'asset' | 'profile' | 'project';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_BrandTerm = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3510,9 +3490,8 @@ export namespace Models {
     notes: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    profile: public_BrandProfile;
     project: public_Project;
-    readonly [RelationKeys]?: 'profile' | 'project';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_BrandVoiceSignal = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3533,9 +3512,8 @@ export namespace Models {
     evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    profile: public_BrandProfile;
     project: public_Project;
-    readonly [RelationKeys]?: 'profile' | 'project';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_BrandGuideline = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3555,9 +3533,8 @@ export namespace Models {
     evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    profile: public_BrandProfile;
     project: public_Project;
-    readonly [RelationKeys]?: 'profile' | 'project';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_BrandConflict = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3577,9 +3554,8 @@ export namespace Models {
     evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    profile: public_BrandProfile;
     project: public_Project;
-    readonly [RelationKeys]?: 'profile' | 'project';
+    readonly [RelationKeys]?: 'project';
   };
   export type public_BrandSourceState = {
     id: CodecTypes['pg/text@1']['output'];
@@ -3828,12 +3804,6 @@ type ContractBase = Omit<
                   readonly columns: readonly ['projectId'];
                   readonly unique: false;
                 },
-                {
-                  readonly name: 'brand_asset_assetId_idx_4ebe630a';
-                  readonly prefix: 'brand_asset_assetId_idx';
-                  readonly columns: readonly ['assetId'];
-                  readonly unique: false;
-                },
               ];
               foreignKeys: readonly [
                 {
@@ -3845,30 +3815,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'project';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_asset';
-                    readonly columns: readonly ['profileId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_profile';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_asset';
-                    readonly columns: readonly ['assetId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'asset';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -3993,18 +3939,6 @@ type ContractBase = Omit<
                     readonly columns: readonly ['id'];
                   };
                 },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_color';
-                    readonly columns: readonly ['profileId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_profile';
-                    readonly columns: readonly ['id'];
-                  };
-                },
               ];
             };
             readonly brand_conflict: {
@@ -4096,18 +4030,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'project';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_conflict';
-                    readonly columns: readonly ['profileId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_profile';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -4242,18 +4164,6 @@ type ContractBase = Omit<
                     readonly columns: readonly ['id'];
                   };
                 },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_font';
-                    readonly columns: readonly ['profileId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_profile';
-                    readonly columns: readonly ['id'];
-                  };
-                },
               ];
             };
             readonly brand_guideline: {
@@ -4347,18 +4257,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'project';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_guideline';
-                    readonly columns: readonly ['profileId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_profile';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -4711,18 +4609,6 @@ type ContractBase = Omit<
                     readonly columns: readonly ['id'];
                   };
                 },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_term';
-                    readonly columns: readonly ['profileId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_profile';
-                    readonly columns: readonly ['id'];
-                  };
-                },
               ];
             };
             readonly brand_voice_signal: {
@@ -4831,18 +4717,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'project';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_voice_signal';
-                    readonly columns: readonly ['profileId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'brand_profile';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -7800,17 +7674,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly brandAssets: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandAsset';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['assetId'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -7907,30 +7770,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly asset: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Asset';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['assetId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly profile: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandProfile';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['profileId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -8033,18 +7872,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly profile: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandProfile';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['profileId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -8135,18 +7962,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly profile: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandProfile';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['profileId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -8254,18 +8069,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly profile: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandProfile';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['profileId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -8358,18 +8161,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly profile: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandProfile';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['profileId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -8472,61 +8263,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly assets: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandAsset';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['profileId'];
-                };
-              };
-              readonly colors: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandColor';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['profileId'];
-                };
-              };
-              readonly conflicts: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandConflict';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['profileId'];
-                };
-              };
-              readonly fonts: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandFont';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['profileId'];
-                };
-              };
-              readonly guidelines: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandGuideline';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['profileId'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -8537,28 +8273,6 @@ type ContractBase = Omit<
                 readonly on: {
                   readonly localFields: readonly ['projectId'];
                   readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly terms: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandTerm';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['profileId'];
-                };
-              };
-              readonly voiceSignals: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandVoiceSignal';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['profileId'];
                 };
               };
             };
@@ -8750,18 +8464,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly profile: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandProfile';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['profileId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -8856,18 +8558,6 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
-              readonly profile: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'BrandProfile';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['profileId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
               readonly project: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;

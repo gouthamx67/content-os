@@ -16,4 +16,6 @@ export const inputService = container.services.inputs;
 
 export const intelligenceService = container.services.intelligence;
 
+export const brandService = container.services.brand;
+
 export const browserService = container.services.browser;

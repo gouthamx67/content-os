@@ -2077,3 +2077,431 @@ describe("browser agent API integration", () => {
     expect(cancelMissing.status).toBe(404);
   });
 });
+
+const BRAND_BRIEF = [
+  "# Northwind Analytics",
+  "",
+  "Northwind Analytics is the content operating system for regulated teams.",
+  "",
+  "## Voice",
+  "",
+  "Write in plain, direct sentences. Never say revolutionary. Use single source of truth instead.",
+  "",
+  "## Visual system",
+  "",
+  "Primary color: #1D4ED8",
+  "Heading font: Sora",
+  "Body font: Inter",
+  "",
+  "## Terminology",
+  "",
+  "Call to action: Start free trial",
+  "Preferred term: single source of truth",
+  "Avoid term: revolutionary",
+  "",
+  "Guidelines: Keep every claim traceable to a source document.",
+  "Guidelines: Prefer short sentences over long ones.",
+].join("\n");
+
+describe("brand integration (real postgres)", () => {
+  async function brandProject() {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Brand project" },
+      owner.user.id,
+    );
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Brand brief", value: BRAND_BRIEF },
+    ]);
+    return { owner, project };
+  }
+
+  it("persists the composed brand with its basis, provenance and conflicts", async () => {
+    const { owner, project } = await brandProject();
+    const report = await services.brandService.analyze(project.id, owner.user.id);
+
+    const profile = report.profile;
+    expect(profile.projectId).toBe(project.id);
+    expect(profile.name).toBe("Northwind Analytics");
+    expect(profile.version).toBe(1);
+    expect(profile.colors.length).toBeGreaterThan(0);
+    expect(profile.terms.length).toBeGreaterThan(0);
+
+    // The row is what the service returned, not a reconstruction of it.
+    const stored = await services.brandService.getProfile(project.id, owner.user.id);
+    expect(stored.profile?.name).toBe(profile.name);
+    expect(stored.profile?.version).toBe(1);
+    expect(stored.profile?.colors).toEqual(profile.colors);
+    expect(stored.profile?.terms).toEqual(profile.terms);
+    expect(stored.profile?.textOrigins).toEqual(profile.textOrigins);
+
+    const profileRow = await orm.BrandProfile.first({ projectId: project.id });
+    expect(profileRow?.version).toBe(1);
+    expect(profileRow?.textOrigins.length).toBeGreaterThan(0);
+
+    // Basis survives the round trip, so a refresh cannot demote a design token.
+    const colorRows = await orm.BrandColor.where((row) => row.projectId.eq(project.id)).all();
+    expect(colorRows.length).toBe(profile.colors.length);
+    expect(colorRows.every((row) => row.basis.length > 0)).toBe(true);
+    expect(colorRows.some((row) => row.evidenceIds.length > 0)).toBe(true);
+  });
+
+  it("records one source state per analyzed source and skips an unchanged refresh", async () => {
+    const { owner, project } = await brandProject();
+    const first = await services.brandService.analyze(project.id, owner.user.id);
+
+    const states = await services.brandService.getProfile(project.id, owner.user.id);
+    expect(states.sourceStates).toHaveLength(1);
+    expect(states.sourceStates[0].analyzerId).toBe("brand-text");
+    expect(states.sourceStates[0].brandVersion).toBe(first.profile.version);
+    expect(states.sourceStates[0].contentHash).toBeTruthy();
+
+    const refresh = await services.brandService.refresh(project.id, owner.user.id);
+    expect(refresh.skipped).toBe("UP_TO_DATE");
+    expect(refresh.profile.version).toBe(1);
+
+    const stateRows = await orm.BrandSourceState.where((row) => row.projectId.eq(project.id)).all();
+    expect(stateRows).toHaveLength(1);
+  });
+
+  it("replaces sent collections, preserves omitted ones, and keeps user text through refresh", async () => {
+    const { owner, project } = await brandProject();
+    const before = await services.brandService.analyze(project.id, owner.user.id);
+    expect(before.profile.terms.length).toBeGreaterThan(0);
+
+    const updated = await services.brandService.update(project.id, owner.user.id, {
+      name: "Northwind OS",
+      // Sent collection replaces the detected one.
+      terms: [{ term: "content operations", category: "FEATURE", preference: "PREFERRED" }],
+      // Omitted fonts and colors are left alone.
+    });
+
+    expect(updated.name).toBe("Northwind OS");
+    expect(updated.textOrigins.name).toBe("USER");
+    expect(updated.terms).toHaveLength(1);
+    expect(updated.terms[0].term).toBe("content operations");
+    expect(updated.terms[0].origin).toBe("USER");
+    expect(updated.terms[0].basis).toBe("USER");
+    expect(updated.fonts).toEqual(before.profile.fonts);
+    expect(updated.colors).toEqual(before.profile.colors);
+    // A correction is not a re-analysis, so the version does not move.
+    expect(updated.version).toBe(1);
+
+    // The stored row agrees, and the user origin is recoverable, not inferred.
+    const stored = await services.brandService.getProfile(project.id, owner.user.id);
+    expect(stored.profile?.name).toBe("Northwind OS");
+    expect(stored.profile?.textOrigins.name).toBe("USER");
+    const nameOrigin = await orm.BrandProfile.first({ projectId: project.id });
+    expect(nameOrigin?.textOrigins).toContain("name=USER");
+
+    const afterRefresh = await services.brandService.refresh(project.id, owner.user.id);
+    expect(afterRefresh.skipped).toBe("UP_TO_DATE");
+    expect(afterRefresh.profile.name).toBe("Northwind OS");
+    expect(afterRefresh.profile.terms.map((term) => term.term)).toContain("content operations");
+    expect(afterRefresh.profile.terms.some((term) => term.origin === "USER")).toBe(true);
+  });
+
+  it("takes the profile's child rows with it when the profile is deleted", async () => {
+    const { owner, project } = await brandProject();
+    await services.brandService.analyze(project.id, owner.user.id);
+
+    const before = await orm.BrandColor.where((row) => row.projectId.eq(project.id)).all();
+    expect(before.length).toBeGreaterThan(0);
+
+    const { container } = await import("../../infrastructure/container");
+    await container.repositories.brand.deleteByProjectId(project.id);
+
+    // A brand value may not outlive the profile that asserted it, or the next
+    // analysis would read rows belonging to a brand that no longer exists.
+    const projectId = project.id;
+    expect(await orm.BrandProfile.where({ projectId }).all()).toHaveLength(0);
+    expect(await orm.BrandColor.where({ projectId }).all()).toHaveLength(0);
+    expect(await orm.BrandFont.where({ projectId }).all()).toHaveLength(0);
+    expect(await orm.BrandTerm.where({ projectId }).all()).toHaveLength(0);
+    expect(await orm.BrandVoiceSignal.where({ projectId }).all()).toHaveLength(0);
+    expect(await orm.BrandGuideline.where({ projectId }).all()).toHaveLength(0);
+    expect(await orm.BrandSourceState.where({ projectId }).all()).toHaveLength(0);
+  });
+
+  it("keeps detected evidence visible as a conflict when a user overrides it", async () => {
+    const { owner, project } = await brandProject();
+    await services.brandService.analyze(project.id, owner.user.id);
+
+    const updated = await services.brandService.update(project.id, owner.user.id, {
+      colors: [{ name: "Ink", hex: "#111111", role: "PRIMARY" }],
+    });
+
+    expect(updated.colors).toHaveLength(1);
+    expect(updated.colors[0].hex).toBe("#111111");
+    expect(updated.colors[0].basis).toBe("USER");
+    // A slot can only hold one primary, so the displaced value is retained as a
+    // conflict instead of being dropped without a trace.
+    const primaryConflict = updated.conflicts.find((conflict) => conflict.field.startsWith("color"));
+    expect(primaryConflict?.retained).toContain("#111111");
+    expect(primaryConflict?.competing).toBeTruthy();
+    expect(primaryConflict?.resolvedBy).toBe("USER");
+
+    const conflicts = await orm.BrandConflict.where((row) => row.projectId.eq(project.id)).all();
+    expect(conflicts.length).toBe(updated.conflicts.length);
+  });
+
+  it("records evidence for a locked profile without changing canonical values", async () => {
+    const { owner, project } = await brandProject();
+    const before = await services.brandService.analyze(project.id, owner.user.id);
+    const locked = await services.brandService.setLock(project.id, owner.user.id, true);
+    expect(locked.locked).toBe(true);
+
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Second brief", value: `${BRAND_BRIEF}\n\nPrimary color: #0F172A` },
+    ]);
+    const after = await services.brandService.analyze(project.id, owner.user.id, { force: true });
+
+    expect(after.skipped).toBe("LOCKED");
+    expect(after.profile.colors).toEqual(before.profile.colors);
+    expect(after.profile.version).toBe(before.profile.version);
+    expect(after.notes.join(" ")).toContain("locked");
+
+    // The new source is still accounted for, so unlocking and refreshing resumes.
+    const states = await services.brandService.getProfile(project.id, owner.user.id);
+    expect(states.sourceStates).toHaveLength(2);
+    const profileRow = await orm.BrandProfile.first({ projectId: project.id });
+    expect(profileRow?.locked).toBe(true);
+  });
+
+  it("rejects a correction for a project that has no brand yet", async () => {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "No brand" },
+      owner.user.id,
+    );
+
+    const failure = await services.brandService
+      .update(project.id, owner.user.id, { name: "Nope" })
+      .catch((error: unknown) => error);
+
+    expect((failure as { code?: string }).code).toBe("BRAND_NOT_FOUND");
+  });
+
+  it("fails with BRAND_NO_SOURCES when the project has no readable source", async () => {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Brand without sources" },
+      owner.user.id,
+    );
+
+    const failure = await services.brandService
+      .analyze(project.id, owner.user.id)
+      .catch((error: unknown) => error);
+
+    expect((failure as { code?: string }).code).toBe("BRAND_NO_SOURCES");
+    expect(await orm.BrandProfile.where((row) => row.projectId.eq(project.id)).all()).toHaveLength(0);
+  });
+});
+
+describe("brand API integration", () => {
+  async function analyzedBrand() {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Brand API" },
+      owner.user.id,
+    );
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Brand brief", value: BRAND_BRIEF },
+    ]);
+    return { owner, project };
+  }
+
+  it("analyzes, reads, corrects, locks and unlocks over HTTP", async () => {
+    const { owner, project } = await analyzedBrand();
+    const { GET, PATCH } = await import("../../app/api/projects/[id]/brand/route");
+    const { POST: POST_ANALYZE } = await import(
+      "../../app/api/projects/[id]/brand/analyze/route"
+    );
+    const { POST: POST_REFRESH } = await import(
+      "../../app/api/projects/[id]/brand/refresh/route"
+    );
+    const { POST: POST_LOCK } = await import("../../app/api/projects/[id]/brand/lock/route");
+    const { POST: POST_UNLOCK } = await import(
+      "../../app/api/projects/[id]/brand/unlock/route"
+    );
+
+    const headers = { cookie: `content_os_session=${owner.token}` };
+    const json = { ...headers, "content-type": "application/json" };
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const url = "http://localhost/api/projects/p/brand";
+
+    const empty = await GET(new Request(url, { headers }), context);
+    expect(empty.status).toBe(200);
+    expect((await empty.json()).brand).toBeNull();
+
+    const analyzed = await POST_ANALYZE(
+      new Request(`${url}/analyze`, { method: "POST", headers: json }),
+      context,
+    );
+    expect(analyzed.status).toBe(200);
+    const analyzedBody = (await analyzed.json()) as {
+      brand: { name: string; colors: unknown[]; execution: { name: string } };
+      analyzedSourceIds: string[];
+      aiApplied: boolean;
+    };
+    expect(analyzedBody.brand.name).toBe("Northwind Analytics");
+    expect(analyzedBody.brand.execution.name).toBe("Northwind Analytics");
+    expect(analyzedBody.brand.colors.length).toBeGreaterThan(0);
+    expect(analyzedBody.analyzedSourceIds).toHaveLength(1);
+    expect(analyzedBody.aiApplied).toBe(false);
+
+    // A serialized brand must not carry storage keys or raw evidence internals.
+    const serialized = JSON.stringify(analyzedBody);
+    expect(serialized).not.toContain("storageKey");
+    expect(serialized).not.toContain("content-os-storage://");
+    expect(serialized).not.toContain("locator");
+    expect(serialized).not.toContain("excerpt");
+
+    const read = await GET(new Request(url, { headers }), context);
+    const readBody = (await read.json()) as {
+      brand: { version: number; status: string };
+      sourceStates: Array<{ analyzerId: string }>;
+    };
+    expect(read.status).toBe(200);
+    expect(readBody.brand.version).toBe(1);
+    expect(readBody.sourceStates[0].analyzerId).toBe("brand-text");
+
+    const noChange = await POST_REFRESH(
+      new Request(`${url}/refresh`, { method: "POST", headers }),
+      context,
+    );
+    expect(noChange.status).toBe(200);
+    expect((await noChange.json()).skipped).toBe("UP_TO_DATE");
+
+    const corrected = await PATCH(
+      new Request(url, {
+        method: "PATCH",
+        headers: json,
+        body: JSON.stringify({
+          tagline: "Dashboards in minutes",
+          voiceSignals: [{ kind: "TONE", value: "Direct" }],
+        }),
+      }),
+      context,
+    );
+    expect(corrected.status).toBe(200);
+    const correctedBody = (await corrected.json()) as {
+      brand: { tagline: string; voiceSignals: Array<{ value: string; basis: string }> };
+    };
+    expect(correctedBody.brand.tagline).toBe("Dashboards in minutes");
+    expect(correctedBody.brand.voiceSignals[0].basis).toBe("USER");
+
+    const locked = await POST_LOCK(
+      new Request(`${url}/lock`, { method: "POST", headers }),
+      context,
+    );
+    expect(locked.status).toBe(200);
+    expect((await locked.json()).brand.locked).toBe(true);
+
+    const unlocked = await POST_UNLOCK(
+      new Request(`${url}/unlock`, { method: "POST", headers }),
+      context,
+    );
+    expect(unlocked.status).toBe(200);
+    expect((await unlocked.json()).brand.locked).toBe(false);
+  });
+
+  it("rejects invalid patches and cross-origin writes", async () => {
+    const { owner, project } = await analyzedBrand();
+    const { PATCH } = await import("../../app/api/projects/[id]/brand/route");
+    const { POST: POST_ANALYZE } = await import(
+      "../../app/api/projects/[id]/brand/analyze/route"
+    );
+    const headers = { cookie: `content_os_session=${owner.token}` };
+    const json = { ...headers, "content-type": "application/json" };
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const url = "http://localhost/api/projects/p/brand";
+
+    const emptyPatch = await PATCH(
+      new Request(url, { method: "PATCH", headers: json, body: JSON.stringify({}) }),
+      context,
+    );
+    expect(emptyPatch.status).toBe(400);
+
+    const badRole = await PATCH(
+      new Request(url, {
+        method: "PATCH",
+        headers: json,
+        body: JSON.stringify({ colors: [{ name: "Ink", hex: "#111111", role: "SPARKLY" }] }),
+      }),
+      context,
+    );
+    expect(badRole.status).toBe(400);
+    expect((await badRole.json()).error).toContain("colors[0].role");
+
+    const crossOrigin = await POST_ANALYZE(
+      new Request(`${url}/analyze`, {
+        method: "POST",
+        headers: { ...json, origin: "https://evil.test" },
+      }),
+      context,
+    );
+    expect(crossOrigin.status).toBe(403);
+  });
+
+  it("refuses every brand route for a user outside the project", async () => {
+    const { owner, project } = await analyzedBrand();
+    await services.brandService.analyze(project.id, owner.user.id);
+    const stranger = await registerUser();
+    const { GET, PATCH } = await import("../../app/api/projects/[id]/brand/route");
+    const { POST: POST_ANALYZE } = await import(
+      "../../app/api/projects/[id]/brand/analyze/route"
+    );
+    const { POST: POST_REFRESH } = await import(
+      "../../app/api/projects/[id]/brand/refresh/route"
+    );
+    const { POST: POST_LOCK } = await import("../../app/api/projects/[id]/brand/lock/route");
+    const { POST: POST_UNLOCK } = await import(
+      "../../app/api/projects/[id]/brand/unlock/route"
+    );
+    const headers = { cookie: `content_os_session=${stranger.token}` };
+    const json = { ...headers, "content-type": "application/json" };
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const url = "http://localhost/api/projects/p/brand";
+
+    expect((await GET(new Request(url, { headers }), context)).status).toBe(403);
+    expect(
+      (
+        await PATCH(
+          new Request(url, {
+            method: "PATCH",
+            headers: json,
+            body: JSON.stringify({ name: "Hijacked" }),
+          }),
+          context,
+        )
+      ).status,
+    ).toBe(403);
+    for (const route of [POST_ANALYZE, POST_REFRESH, POST_LOCK, POST_UNLOCK]) {
+      const response = await route(
+        new Request(url, { method: "POST", headers: json }),
+        context,
+      );
+      expect(response.status).toBe(403);
+    }
+
+    // The refusal is the project boundary, not a shape check: nothing changed.
+    const stored = await services.brandService.getProfile(project.id, owner.user.id);
+    expect(stored.profile?.name).toBe("Northwind Analytics");
+  });
+
+  it("requires authentication", async () => {
+    const { project } = await analyzedBrand();
+    const { GET } = await import("../../app/api/projects/[id]/brand/route");
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const response = await GET(
+      new Request("http://localhost/api/projects/p/brand"),
+      context,
+    );
+    expect(response.status).toBe(401);
+  });
+});

@@ -8,6 +8,42 @@
       "model": "Asset",
       "namespace": "public"
     },
+    "brand_asset": {
+      "model": "BrandAsset",
+      "namespace": "public"
+    },
+    "brand_color": {
+      "model": "BrandColor",
+      "namespace": "public"
+    },
+    "brand_conflict": {
+      "model": "BrandConflict",
+      "namespace": "public"
+    },
+    "brand_font": {
+      "model": "BrandFont",
+      "namespace": "public"
+    },
+    "brand_guideline": {
+      "model": "BrandGuideline",
+      "namespace": "public"
+    },
+    "brand_profile": {
+      "model": "BrandProfile",
+      "namespace": "public"
+    },
+    "brand_source_state": {
+      "model": "BrandSourceState",
+      "namespace": "public"
+    },
+    "brand_term": {
+      "model": "BrandTerm",
+      "namespace": "public"
+    },
+    "brand_voice_signal": {
+      "model": "BrandVoiceSignal",
+      "namespace": "public"
+    },
     "browser_observation": {
       "model": "BrowserObservation",
       "namespace": "public"
@@ -184,6 +220,196 @@
               }
             ]
           },
+          "BrandAssetRole": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "LOGO",
+                "value": "LOGO"
+              },
+              {
+                "name": "PRIMARY_LOGO",
+                "value": "PRIMARY_LOGO"
+              },
+              {
+                "name": "MARK",
+                "value": "MARK"
+              },
+              {
+                "name": "WORDMARK",
+                "value": "WORDMARK"
+              },
+              {
+                "name": "ICON",
+                "value": "ICON"
+              },
+              {
+                "name": "FAVICON",
+                "value": "FAVICON"
+              },
+              {
+                "name": "PATTERN",
+                "value": "PATTERN"
+              },
+              {
+                "name": "TEXTURE",
+                "value": "TEXTURE"
+              },
+              {
+                "name": "ILLUSTRATION",
+                "value": "ILLUSTRATION"
+              },
+              {
+                "name": "PHOTOGRAPHY_STYLE",
+                "value": "PHOTOGRAPHY_STYLE"
+              }
+            ]
+          },
+          "BrandColorRole": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "PRIMARY",
+                "value": "PRIMARY"
+              },
+              {
+                "name": "SECONDARY",
+                "value": "SECONDARY"
+              },
+              {
+                "name": "ACCENT",
+                "value": "ACCENT"
+              },
+              {
+                "name": "BACKGROUND",
+                "value": "BACKGROUND"
+              },
+              {
+                "name": "SURFACE",
+                "value": "SURFACE"
+              },
+              {
+                "name": "TEXT",
+                "value": "TEXT"
+              },
+              {
+                "name": "MUTED",
+                "value": "MUTED"
+              },
+              {
+                "name": "BORDER",
+                "value": "BORDER"
+              },
+              {
+                "name": "SUCCESS",
+                "value": "SUCCESS"
+              },
+              {
+                "name": "WARNING",
+                "value": "WARNING"
+              },
+              {
+                "name": "DANGER",
+                "value": "DANGER"
+              },
+              {
+                "name": "NEUTRAL",
+                "value": "NEUTRAL"
+              }
+            ]
+          },
+          "BrandConfidence": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "HIGH",
+                "value": "HIGH"
+              },
+              {
+                "name": "MEDIUM",
+                "value": "MEDIUM"
+              },
+              {
+                "name": "LOW",
+                "value": "LOW"
+              }
+            ]
+          },
+          "BrandFontRole": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "HEADING",
+                "value": "HEADING"
+              },
+              {
+                "name": "BODY",
+                "value": "BODY"
+              },
+              {
+                "name": "DISPLAY",
+                "value": "DISPLAY"
+              },
+              {
+                "name": "MONOSPACE",
+                "value": "MONOSPACE"
+              },
+              {
+                "name": "UI",
+                "value": "UI"
+              },
+              {
+                "name": "CAPTION",
+                "value": "CAPTION"
+              }
+            ]
+          },
+          "BrandOrigin": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "EXTRACTED",
+                "value": "EXTRACTED"
+              },
+              {
+                "name": "INFERRED",
+                "value": "INFERRED"
+              },
+              {
+                "name": "USER",
+                "value": "USER"
+              }
+            ]
+          },
+          "BrandPrecedence": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "INFERENCE",
+                "value": "INFERENCE"
+              },
+              {
+                "name": "GENERAL_EXTRACTION",
+                "value": "GENERAL_EXTRACTION"
+              },
+              {
+                "name": "RECOGNIZED_ASSET",
+                "value": "RECOGNIZED_ASSET"
+              },
+              {
+                "name": "DESIGN_TOKEN",
+                "value": "DESIGN_TOKEN"
+              },
+              {
+                "name": "EXPLICIT_GUIDELINE",
+                "value": "EXPLICIT_GUIDELINE"
+              },
+              {
+                "name": "USER",
+                "value": "USER"
+              }
+            ]
+          },
           "BrandSignalKind": {
             "codecId": "pg/text@1",
             "members": [
@@ -226,6 +452,73 @@
               {
                 "name": "DESIGN_PATTERN",
                 "value": "DESIGN_PATTERN"
+              }
+            ]
+          },
+          "BrandStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "DRAFT",
+                "value": "DRAFT"
+              },
+              {
+                "name": "READY",
+                "value": "READY"
+              },
+              {
+                "name": "STALE",
+                "value": "STALE"
+              }
+            ]
+          },
+          "BrandTermCategory": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "FEATURE",
+                "value": "FEATURE"
+              },
+              {
+                "name": "PROBLEM",
+                "value": "PROBLEM"
+              },
+              {
+                "name": "VALUE_PROP",
+                "value": "VALUE_PROP"
+              },
+              {
+                "name": "CALL_TO_ACTION",
+                "value": "CALL_TO_ACTION"
+              },
+              {
+                "name": "AUDIENCE",
+                "value": "AUDIENCE"
+              },
+              {
+                "name": "COMPETITOR",
+                "value": "COMPETITOR"
+              },
+              {
+                "name": "INDUSTRY_TERM",
+                "value": "INDUSTRY_TERM"
+              }
+            ]
+          },
+          "BrandTermPreference": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "PREFERRED",
+                "value": "PREFERRED"
+              },
+              {
+                "name": "AVOID",
+                "value": "AVOID"
+              },
+              {
+                "name": "NEUTRAL",
+                "value": "NEUTRAL"
               }
             ]
           },
@@ -876,6 +1169,21 @@
               }
             },
             "relations": {
+              "brandAssets": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "assetId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandAsset",
+                  "namespace": "public"
+                }
+              },
               "project": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -922,6 +1230,1842 @@
               },
               "namespaceId": "public",
               "table": "asset"
+            }
+          },
+          "BrandAsset": {
+            "fields": {
+              "assetId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "basis": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandPrecedence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "confidence": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandConfidence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "evidenceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "label": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "origin": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandOrigin",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandAssetRole",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "asset": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "assetId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Asset",
+                  "namespace": "public"
+                }
+              },
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BrandProfile",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "assetId": {
+                  "column": "assetId"
+                },
+                "basis": {
+                  "column": "basis"
+                },
+                "confidence": {
+                  "column": "confidence"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "evidenceIds": {
+                  "column": "evidenceIds"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "label": {
+                  "column": "label"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "origin": {
+                  "column": "origin"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "role": {
+                  "column": "role"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_asset"
+            }
+          },
+          "BrandColor": {
+            "fields": {
+              "basis": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandPrecedence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "confidence": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandConfidence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "evidenceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "hex": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "origin": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandOrigin",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandColorRole",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BrandProfile",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "basis": {
+                  "column": "basis"
+                },
+                "confidence": {
+                  "column": "confidence"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "evidenceIds": {
+                  "column": "evidenceIds"
+                },
+                "hex": {
+                  "column": "hex"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "origin": {
+                  "column": "origin"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "role": {
+                  "column": "role"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_color"
+            }
+          },
+          "BrandConflict": {
+            "fields": {
+              "competing": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "evidenceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "field": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "resolvedBy": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandPrecedence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "retained": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BrandProfile",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "competing": {
+                  "column": "competing"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "evidenceIds": {
+                  "column": "evidenceIds"
+                },
+                "field": {
+                  "column": "field"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "resolvedBy": {
+                  "column": "resolvedBy"
+                },
+                "retained": {
+                  "column": "retained"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_conflict"
+            }
+          },
+          "BrandFont": {
+            "fields": {
+              "basis": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandPrecedence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "confidence": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandConfidence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "evidenceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "family": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "origin": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandOrigin",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "role": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandFontRole",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceUrl": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "style": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "weight": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BrandProfile",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "basis": {
+                  "column": "basis"
+                },
+                "confidence": {
+                  "column": "confidence"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "evidenceIds": {
+                  "column": "evidenceIds"
+                },
+                "family": {
+                  "column": "family"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "origin": {
+                  "column": "origin"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "role": {
+                  "column": "role"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "sourceUrl": {
+                  "column": "sourceUrl"
+                },
+                "style": {
+                  "column": "style"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "weight": {
+                  "column": "weight"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_font"
+            }
+          },
+          "BrandGuideline": {
+            "fields": {
+              "basis": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandPrecedence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "detail": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "evidenceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "origin": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandOrigin",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "title": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BrandProfile",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "basis": {
+                  "column": "basis"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "detail": {
+                  "column": "detail"
+                },
+                "evidenceIds": {
+                  "column": "evidenceIds"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "origin": {
+                  "column": "origin"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "title": {
+                  "column": "title"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_guideline"
+            }
+          },
+          "BrandProfile": {
+            "fields": {
+              "confidence": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandConfidence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "locked": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "positioning": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "tagline": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "textOrigins": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "valueProposition": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "version": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "visualStyle": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "voiceSummary": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "assets": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "profileId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandAsset",
+                  "namespace": "public"
+                }
+              },
+              "colors": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "profileId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandColor",
+                  "namespace": "public"
+                }
+              },
+              "conflicts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "profileId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandConflict",
+                  "namespace": "public"
+                }
+              },
+              "fonts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "profileId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandFont",
+                  "namespace": "public"
+                }
+              },
+              "guidelines": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "profileId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandGuideline",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "terms": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "profileId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandTerm",
+                  "namespace": "public"
+                }
+              },
+              "voiceSignals": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "profileId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandVoiceSignal",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "confidence": {
+                  "column": "confidence"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "locked": {
+                  "column": "locked"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "positioning": {
+                  "column": "positioning"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "tagline": {
+                  "column": "tagline"
+                },
+                "textOrigins": {
+                  "column": "textOrigins"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "valueProposition": {
+                  "column": "valueProposition"
+                },
+                "version": {
+                  "column": "version"
+                },
+                "visualStyle": {
+                  "column": "visualStyle"
+                },
+                "voiceSummary": {
+                  "column": "voiceSummary"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_profile"
+            }
+          },
+          "BrandSourceState": {
+            "fields": {
+              "analyzedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "analyzerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "brandVersion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "contentHash": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceUpdatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "source": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "sourceId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Source",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "analyzedAt": {
+                  "column": "analyzedAt"
+                },
+                "analyzerId": {
+                  "column": "analyzerId"
+                },
+                "brandVersion": {
+                  "column": "brandVersion"
+                },
+                "contentHash": {
+                  "column": "contentHash"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "sourceId": {
+                  "column": "sourceId"
+                },
+                "sourceUpdatedAt": {
+                  "column": "sourceUpdatedAt"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_source_state"
+            }
+          },
+          "BrandTerm": {
+            "fields": {
+              "basis": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandPrecedence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "category": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandTermCategory",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "confidence": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandConfidence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "evidenceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "origin": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandOrigin",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "preference": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandTermPreference",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "term": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BrandProfile",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "basis": {
+                  "column": "basis"
+                },
+                "category": {
+                  "column": "category"
+                },
+                "confidence": {
+                  "column": "confidence"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "evidenceIds": {
+                  "column": "evidenceIds"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "origin": {
+                  "column": "origin"
+                },
+                "preference": {
+                  "column": "preference"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "term": {
+                  "column": "term"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_term"
+            }
+          },
+          "BrandVoiceSignal": {
+            "fields": {
+              "basis": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandPrecedence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "confidence": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandConfidence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "evidenceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "kind": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "origin": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "BrandOrigin",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "value": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "BrandProfile",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "basis": {
+                  "column": "basis"
+                },
+                "confidence": {
+                  "column": "confidence"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "evidenceIds": {
+                  "column": "evidenceIds"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "kind": {
+                  "column": "kind"
+                },
+                "origin": {
+                  "column": "origin"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "value": {
+                  "column": "value"
+                }
+              },
+              "namespaceId": "public",
+              "table": "brand_voice_signal"
             }
           },
           "BrowserObservation": {
@@ -4255,6 +6399,142 @@
                   "namespace": "public"
                 }
               },
+              "brandAssets": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandAsset",
+                  "namespace": "public"
+                }
+              },
+              "brandColors": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandColor",
+                  "namespace": "public"
+                }
+              },
+              "brandConflicts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandConflict",
+                  "namespace": "public"
+                }
+              },
+              "brandFonts": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandFont",
+                  "namespace": "public"
+                }
+              },
+              "brandGuidelines": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandGuideline",
+                  "namespace": "public"
+                }
+              },
+              "brandProfile": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandProfile",
+                  "namespace": "public"
+                }
+              },
+              "brandSourceStates": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandSourceState",
+                  "namespace": "public"
+                }
+              },
+              "brandTerms": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandTerm",
+                  "namespace": "public"
+                }
+              },
+              "brandVoiceSignals": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandVoiceSignal",
+                  "namespace": "public"
+                }
+              },
               "browserSessions": {
                 "cardinality": "1:N",
                 "on": {
@@ -4722,6 +7002,21 @@
               }
             },
             "relations": {
+              "brandSourceStates": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "sourceId"
+                  ]
+                },
+                "to": {
+                  "model": "BrandSourceState",
+                  "namespace": "public"
+                }
+              },
               "browserSessions": {
                 "cardinality": "1:N",
                 "on": {
@@ -5220,6 +7515,1725 @@
                   ],
                   "name": "asset_projectId_idx_a96e4d92",
                   "prefix": "asset_projectId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "brand_asset": {
+              "checks": [
+                {
+                  "expression": "\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')",
+                  "name": "brand_asset_basis_check_0cb76274",
+                  "prefix": "brand_asset_basis_check"
+                },
+                {
+                  "expression": "\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')",
+                  "name": "brand_asset_confidence_check_15ae8318",
+                  "prefix": "brand_asset_confidence_check"
+                },
+                {
+                  "expression": "array_position(\"evidenceIds\", NULL) IS NULL",
+                  "name": "brand_asset_evidenceIds_elem_not_null_4d0cb530",
+                  "prefix": "brand_asset_evidenceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')",
+                  "name": "brand_asset_origin_check_4f78d06c",
+                  "prefix": "brand_asset_origin_check"
+                },
+                {
+                  "expression": "\"role\" IN ('LOGO', 'PRIMARY_LOGO', 'MARK', 'WORDMARK', 'ICON', 'FAVICON', 'PATTERN', 'TEXTURE', 'ILLUSTRATION', 'PHOTOGRAPHY_STYLE')",
+                  "name": "brand_asset_role_check_c9adb556",
+                  "prefix": "brand_asset_role_check"
+                },
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "brand_asset_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "brand_asset_sourceIds_elem_not_null"
+                }
+              ],
+              "columns": {
+                "assetId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "basis": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "RECOGNIZED_ASSET"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandPrecedence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "confidence": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LOW"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandConfidence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "evidenceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "label": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "origin": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EXTRACTED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandOrigin",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "profileId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandAssetRole",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_asset"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_asset"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_profile"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "assetId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_asset"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "asset"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "assetId"
+                  ],
+                  "name": "brand_asset_assetId_idx_4ebe630a",
+                  "prefix": "brand_asset_assetId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "brand_asset_profile_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_asset_projectId_idx_a96e4d92",
+                  "prefix": "brand_asset_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "role"
+                  ],
+                  "name": "brand_asset_project_role_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "brand_color": {
+              "checks": [
+                {
+                  "expression": "\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')",
+                  "name": "brand_color_basis_check_0cb76274",
+                  "prefix": "brand_color_basis_check"
+                },
+                {
+                  "expression": "\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')",
+                  "name": "brand_color_confidence_check_15ae8318",
+                  "prefix": "brand_color_confidence_check"
+                },
+                {
+                  "expression": "array_position(\"evidenceIds\", NULL) IS NULL",
+                  "name": "brand_color_evidenceIds_elem_not_null_4d0cb530",
+                  "prefix": "brand_color_evidenceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')",
+                  "name": "brand_color_origin_check_4f78d06c",
+                  "prefix": "brand_color_origin_check"
+                },
+                {
+                  "expression": "\"role\" IN ('PRIMARY', 'SECONDARY', 'ACCENT', 'BACKGROUND', 'SURFACE', 'TEXT', 'MUTED', 'BORDER', 'SUCCESS', 'WARNING', 'DANGER', 'NEUTRAL')",
+                  "name": "brand_color_role_check_5c11cb2c",
+                  "prefix": "brand_color_role_check"
+                },
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "brand_color_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "brand_color_sourceIds_elem_not_null"
+                }
+              ],
+              "columns": {
+                "basis": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "GENERAL_EXTRACTION"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandPrecedence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "confidence": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LOW"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandConfidence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "evidenceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "hex": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "origin": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EXTRACTED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandOrigin",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "profileId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandColorRole",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_color"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_color"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_profile"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "brand_color_profile_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_color_projectId_idx_a96e4d92",
+                  "prefix": "brand_color_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "role"
+                  ],
+                  "name": "brand_color_project_role_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "brand_conflict": {
+              "checks": [
+                {
+                  "expression": "array_position(\"evidenceIds\", NULL) IS NULL",
+                  "name": "brand_conflict_evidenceIds_elem_not_null_4d0cb530",
+                  "prefix": "brand_conflict_evidenceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"resolvedBy\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')",
+                  "name": "brand_conflict_resolvedBy_check_b61f5589",
+                  "prefix": "brand_conflict_resolvedBy_check"
+                },
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "brand_conflict_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "brand_conflict_sourceIds_elem_not_null"
+                }
+              ],
+              "columns": {
+                "competing": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "evidenceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "field": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "profileId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "resolvedBy": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandPrecedence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "retained": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_conflict"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_conflict"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_profile"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "brand_conflict_profile_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_conflict_projectId_idx_a96e4d92",
+                  "prefix": "brand_conflict_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "field"
+                  ],
+                  "name": "brand_conflict_project_field_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "brand_font": {
+              "checks": [
+                {
+                  "expression": "\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')",
+                  "name": "brand_font_basis_check_0cb76274",
+                  "prefix": "brand_font_basis_check"
+                },
+                {
+                  "expression": "\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')",
+                  "name": "brand_font_confidence_check_15ae8318",
+                  "prefix": "brand_font_confidence_check"
+                },
+                {
+                  "expression": "array_position(\"evidenceIds\", NULL) IS NULL",
+                  "name": "brand_font_evidenceIds_elem_not_null_4d0cb530",
+                  "prefix": "brand_font_evidenceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')",
+                  "name": "brand_font_origin_check_4f78d06c",
+                  "prefix": "brand_font_origin_check"
+                },
+                {
+                  "expression": "\"role\" IN ('HEADING', 'BODY', 'DISPLAY', 'MONOSPACE', 'UI', 'CAPTION')",
+                  "name": "brand_font_role_check_cfaea187",
+                  "prefix": "brand_font_role_check"
+                },
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "brand_font_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "brand_font_sourceIds_elem_not_null"
+                }
+              ],
+              "columns": {
+                "basis": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "GENERAL_EXTRACTION"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandPrecedence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "confidence": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LOW"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandConfidence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "evidenceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "family": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "origin": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EXTRACTED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandOrigin",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "profileId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "role": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandFontRole",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceUrl": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "style": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "weight": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_font"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_font"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_profile"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "brand_font_profile_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_font_projectId_idx_a96e4d92",
+                  "prefix": "brand_font_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "role"
+                  ],
+                  "name": "brand_font_project_role_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "brand_guideline": {
+              "checks": [
+                {
+                  "expression": "\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')",
+                  "name": "brand_guideline_basis_check_0cb76274",
+                  "prefix": "brand_guideline_basis_check"
+                },
+                {
+                  "expression": "array_position(\"evidenceIds\", NULL) IS NULL",
+                  "name": "brand_guideline_evidenceIds_elem_not_null_4d0cb530",
+                  "prefix": "brand_guideline_evidenceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')",
+                  "name": "brand_guideline_origin_check_4f78d06c",
+                  "prefix": "brand_guideline_origin_check"
+                },
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "brand_guideline_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "brand_guideline_sourceIds_elem_not_null"
+                }
+              ],
+              "columns": {
+                "basis": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EXPLICIT_GUIDELINE"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandPrecedence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "detail": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "evidenceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "origin": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EXTRACTED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandOrigin",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "profileId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "title": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_guideline"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_guideline"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_profile"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "brand_guideline_profile_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_guideline_project_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "brand_profile": {
+              "checks": [
+                {
+                  "expression": "\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')",
+                  "name": "brand_profile_confidence_check_15ae8318",
+                  "prefix": "brand_profile_confidence_check"
+                },
+                {
+                  "expression": "\"status\" IN ('DRAFT', 'READY', 'STALE')",
+                  "name": "brand_profile_status_check_09a729f8",
+                  "prefix": "brand_profile_status_check"
+                },
+                {
+                  "expression": "array_position(\"textOrigins\", NULL) IS NULL",
+                  "name": "brand_profile_textOrigins_elem_not_null_70e5d210",
+                  "prefix": "brand_profile_textOrigins_elem_not_null"
+                }
+              ],
+              "columns": {
+                "confidence": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LOW"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandConfidence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "locked": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "positioning": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "DRAFT"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "tagline": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "textOrigins": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "valueProposition": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "version": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "visualStyle": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "voiceSummary": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_profile"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_profile_project_key"
+                }
+              ]
+            },
+            "brand_source_state": {
+              "columns": {
+                "analyzedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "analyzerId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "brandVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "contentHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceUpdatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_source_state"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "sourceId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_source_state"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "source"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_source_state_projectId_idx_a96e4d92",
+                  "prefix": "brand_source_state_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sourceId"
+                  ],
+                  "name": "brand_source_state_source_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "projectId",
+                    "sourceId"
+                  ],
+                  "name": "brand_source_state_source_key"
+                }
+              ]
+            },
+            "brand_term": {
+              "checks": [
+                {
+                  "expression": "\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')",
+                  "name": "brand_term_basis_check_0cb76274",
+                  "prefix": "brand_term_basis_check"
+                },
+                {
+                  "expression": "\"category\" IN ('FEATURE', 'PROBLEM', 'VALUE_PROP', 'CALL_TO_ACTION', 'AUDIENCE', 'COMPETITOR', 'INDUSTRY_TERM')",
+                  "name": "brand_term_category_check_18ff91ea",
+                  "prefix": "brand_term_category_check"
+                },
+                {
+                  "expression": "\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')",
+                  "name": "brand_term_confidence_check_15ae8318",
+                  "prefix": "brand_term_confidence_check"
+                },
+                {
+                  "expression": "array_position(\"evidenceIds\", NULL) IS NULL",
+                  "name": "brand_term_evidenceIds_elem_not_null_4d0cb530",
+                  "prefix": "brand_term_evidenceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')",
+                  "name": "brand_term_origin_check_4f78d06c",
+                  "prefix": "brand_term_origin_check"
+                },
+                {
+                  "expression": "\"preference\" IN ('PREFERRED', 'AVOID', 'NEUTRAL')",
+                  "name": "brand_term_preference_check_d1c098fe",
+                  "prefix": "brand_term_preference_check"
+                },
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "brand_term_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "brand_term_sourceIds_elem_not_null"
+                }
+              ],
+              "columns": {
+                "basis": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "GENERAL_EXTRACTION"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandPrecedence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "category": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "INDUSTRY_TERM"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandTermCategory",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "confidence": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LOW"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandConfidence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "evidenceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "origin": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EXTRACTED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandOrigin",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "preference": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "NEUTRAL"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandTermPreference",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "profileId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "term": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_term"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_term"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_profile"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "brand_term_profile_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_term_projectId_idx_a96e4d92",
+                  "prefix": "brand_term_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "preference"
+                  ],
+                  "name": "brand_term_project_preference_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "brand_voice_signal": {
+              "checks": [
+                {
+                  "expression": "\"basis\" IN ('INFERENCE', 'GENERAL_EXTRACTION', 'RECOGNIZED_ASSET', 'DESIGN_TOKEN', 'EXPLICIT_GUIDELINE', 'USER')",
+                  "name": "brand_voice_signal_basis_check_0cb76274",
+                  "prefix": "brand_voice_signal_basis_check"
+                },
+                {
+                  "expression": "\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')",
+                  "name": "brand_voice_signal_confidence_check_15ae8318",
+                  "prefix": "brand_voice_signal_confidence_check"
+                },
+                {
+                  "expression": "array_position(\"evidenceIds\", NULL) IS NULL",
+                  "name": "brand_voice_signal_evidenceIds_elem_not_null_4d0cb530",
+                  "prefix": "brand_voice_signal_evidenceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"origin\" IN ('EXTRACTED', 'INFERRED', 'USER')",
+                  "name": "brand_voice_signal_origin_check_4f78d06c",
+                  "prefix": "brand_voice_signal_origin_check"
+                },
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "brand_voice_signal_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "brand_voice_signal_sourceIds_elem_not_null"
+                }
+              ],
+              "columns": {
+                "basis": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "RECOGNIZED_ASSET"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandPrecedence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "confidence": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LOW"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandConfidence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "evidenceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "kind": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "origin": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "EXTRACTED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "BrandOrigin",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "profileId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "value": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_voice_signal"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_voice_signal"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "brand_profile"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "brand_voice_profile_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "kind"
+                  ],
+                  "name": "brand_voice_project_kind_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "brand_voice_signal_projectId_idx_a96e4d92",
+                  "prefix": "brand_voice_signal_projectId_idx",
                   "unique": false
                 }
               ],
@@ -8947,6 +12961,76 @@
                 "CONTEXTUAL"
               ]
             },
+            "BrandAssetRole": {
+              "kind": "valueSet",
+              "values": [
+                "LOGO",
+                "PRIMARY_LOGO",
+                "MARK",
+                "WORDMARK",
+                "ICON",
+                "FAVICON",
+                "PATTERN",
+                "TEXTURE",
+                "ILLUSTRATION",
+                "PHOTOGRAPHY_STYLE"
+              ]
+            },
+            "BrandColorRole": {
+              "kind": "valueSet",
+              "values": [
+                "PRIMARY",
+                "SECONDARY",
+                "ACCENT",
+                "BACKGROUND",
+                "SURFACE",
+                "TEXT",
+                "MUTED",
+                "BORDER",
+                "SUCCESS",
+                "WARNING",
+                "DANGER",
+                "NEUTRAL"
+              ]
+            },
+            "BrandConfidence": {
+              "kind": "valueSet",
+              "values": [
+                "HIGH",
+                "MEDIUM",
+                "LOW"
+              ]
+            },
+            "BrandFontRole": {
+              "kind": "valueSet",
+              "values": [
+                "HEADING",
+                "BODY",
+                "DISPLAY",
+                "MONOSPACE",
+                "UI",
+                "CAPTION"
+              ]
+            },
+            "BrandOrigin": {
+              "kind": "valueSet",
+              "values": [
+                "EXTRACTED",
+                "INFERRED",
+                "USER"
+              ]
+            },
+            "BrandPrecedence": {
+              "kind": "valueSet",
+              "values": [
+                "INFERENCE",
+                "GENERAL_EXTRACTION",
+                "RECOGNIZED_ASSET",
+                "DESIGN_TOKEN",
+                "EXPLICIT_GUIDELINE",
+                "USER"
+              ]
+            },
             "BrandSignalKind": {
               "kind": "valueSet",
               "values": [
@@ -8960,6 +13044,34 @@
                 "TAGLINE",
                 "POSITIONING",
                 "DESIGN_PATTERN"
+              ]
+            },
+            "BrandStatus": {
+              "kind": "valueSet",
+              "values": [
+                "DRAFT",
+                "READY",
+                "STALE"
+              ]
+            },
+            "BrandTermCategory": {
+              "kind": "valueSet",
+              "values": [
+                "FEATURE",
+                "PROBLEM",
+                "VALUE_PROP",
+                "CALL_TO_ACTION",
+                "AUDIENCE",
+                "COMPETITOR",
+                "INDUSTRY_TERM"
+              ]
+            },
+            "BrandTermPreference": {
+              "kind": "valueSet",
+              "values": [
+                "PREFERRED",
+                "AVOID",
+                "NEUTRAL"
               ]
             },
             "BrowserSessionStatus": {
@@ -9184,10 +13296,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "17c508283b77d73d869b73dd8127bb0b3f0731e0e08acfff84fdeccb2bdefa4e"
+    "storageHash": "6c77f72461b984d10b46a28826a0a4978533bced104aea4ed33bc993ee05e0fd"
   },
   "execution": {
-    "executionHash": "3bab14cf133ff2ad6364552770db90cd760f670de57c592ca704af41f3e1f7ef",
+    "executionHash": "b4e9213d1d8165ec37af2762ca6b408c78ef3547f2e77bf317f4f3bd04b96e77",
     "mutations": {
       "defaults": [
         {
@@ -9214,6 +13326,240 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "asset"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_asset"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_asset"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_color"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_color"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_conflict"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_conflict"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_font"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_font"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_guideline"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_guideline"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_profile"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_profile"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_source_state"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_source_state"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_term"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_term"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "brand_voice_signal"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "brand_voice_signal"
           }
         },
         {

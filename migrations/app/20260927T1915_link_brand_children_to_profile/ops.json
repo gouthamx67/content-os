@@ -1,0 +1,377 @@
+[
+  {
+    "id": "index.brand_asset.brand_asset_assetId_idx_4ebe630a",
+    "label": "Create index \"brand_asset_assetId_idx_4ebe630a\" on \"brand_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "brand_asset_assetId_idx_4ebe630a",
+        "table": "brand_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"brand_asset_assetId_idx_4ebe630a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset_assetId_idx_4ebe630a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"brand_asset_assetId_idx_4ebe630a\"",
+        "sql": "CREATE INDEX \"brand_asset_assetId_idx_4ebe630a\" ON \"public\".\"brand_asset\" (\"assetId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"brand_asset_assetId_idx_4ebe630a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"brand_asset_assetId_idx_4ebe630a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_asset.brand_asset_assetId_fkey",
+    "label": "Add foreign key \"brand_asset_assetId_fkey\" on \"brand_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_asset_assetId_fkey",
+        "table": "brand_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_asset_assetId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_asset_assetId_fkey",
+          "public",
+          "\"public\".\"brand_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_asset_assetId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_asset\"\nADD CONSTRAINT \"brand_asset_assetId_fkey\"\nFOREIGN KEY (\"assetId\")\nREFERENCES \"public\".\"asset\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_asset_assetId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_asset_assetId_fkey",
+          "public",
+          "\"public\".\"brand_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_asset.brand_asset_profileId_fkey",
+    "label": "Add foreign key \"brand_asset_profileId_fkey\" on \"brand_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_asset_profileId_fkey",
+        "table": "brand_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_asset_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_asset_profileId_fkey",
+          "public",
+          "\"public\".\"brand_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_asset_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_asset\"\nADD CONSTRAINT \"brand_asset_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"brand_profile\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_asset_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_asset_profileId_fkey",
+          "public",
+          "\"public\".\"brand_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_color.brand_color_profileId_fkey",
+    "label": "Add foreign key \"brand_color_profileId_fkey\" on \"brand_color\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_color_profileId_fkey",
+        "table": "brand_color"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_color_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_color_profileId_fkey",
+          "public",
+          "\"public\".\"brand_color\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_color_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_color\"\nADD CONSTRAINT \"brand_color_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"brand_profile\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_color_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_color_profileId_fkey",
+          "public",
+          "\"public\".\"brand_color\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_conflict.brand_conflict_profileId_fkey",
+    "label": "Add foreign key \"brand_conflict_profileId_fkey\" on \"brand_conflict\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_conflict_profileId_fkey",
+        "table": "brand_conflict"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_conflict_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_conflict_profileId_fkey",
+          "public",
+          "\"public\".\"brand_conflict\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_conflict_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_conflict\"\nADD CONSTRAINT \"brand_conflict_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"brand_profile\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_conflict_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_conflict_profileId_fkey",
+          "public",
+          "\"public\".\"brand_conflict\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_font.brand_font_profileId_fkey",
+    "label": "Add foreign key \"brand_font_profileId_fkey\" on \"brand_font\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_font_profileId_fkey",
+        "table": "brand_font"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_font_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_font_profileId_fkey",
+          "public",
+          "\"public\".\"brand_font\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_font_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_font\"\nADD CONSTRAINT \"brand_font_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"brand_profile\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_font_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_font_profileId_fkey",
+          "public",
+          "\"public\".\"brand_font\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_guideline.brand_guideline_profileId_fkey",
+    "label": "Add foreign key \"brand_guideline_profileId_fkey\" on \"brand_guideline\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_guideline_profileId_fkey",
+        "table": "brand_guideline"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_guideline_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_guideline_profileId_fkey",
+          "public",
+          "\"public\".\"brand_guideline\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_guideline_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_guideline\"\nADD CONSTRAINT \"brand_guideline_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"brand_profile\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_guideline_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_guideline_profileId_fkey",
+          "public",
+          "\"public\".\"brand_guideline\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_term.brand_term_profileId_fkey",
+    "label": "Add foreign key \"brand_term_profileId_fkey\" on \"brand_term\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_term_profileId_fkey",
+        "table": "brand_term"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_term_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_term_profileId_fkey",
+          "public",
+          "\"public\".\"brand_term\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_term_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_term\"\nADD CONSTRAINT \"brand_term_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"brand_profile\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_term_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_term_profileId_fkey",
+          "public",
+          "\"public\".\"brand_term\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.brand_voice_signal.brand_voice_signal_profileId_fkey",
+    "label": "Add foreign key \"brand_voice_signal_profileId_fkey\" on \"brand_voice_signal\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "brand_voice_signal_profileId_fkey",
+        "table": "brand_voice_signal"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"brand_voice_signal_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_voice_signal_profileId_fkey",
+          "public",
+          "\"public\".\"brand_voice_signal\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"brand_voice_signal_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"brand_voice_signal\"\nADD CONSTRAINT \"brand_voice_signal_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"brand_profile\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"brand_voice_signal_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "brand_voice_signal_profileId_fkey",
+          "public",
+          "\"public\".\"brand_voice_signal\""
+        ]
+      }
+    ]
+  }
+]

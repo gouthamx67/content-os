@@ -4,6 +4,7 @@ import { ArrowLeft, FolderKanban } from "lucide-react";
 import { getCurrentUser } from "../../../infrastructure/auth/current-user";
 import {
   assetService,
+  brandService,
   browserService,
   inputService,
   intelligenceService,
@@ -14,6 +15,10 @@ import { HttpError } from "../../../lib/http";
 import { serializeSession } from "../../../lib/browser-api";
 import { serializeInput } from "../../../lib/input-api";
 import { serializeGraph } from "../../../lib/intelligence-api";
+import {
+  serializeBrandProfile,
+  serializeBrandSourceStates,
+} from "../../../lib/brand-api";
 import { AppShell } from "../../../components/layout/AppShell";
 import { BrowserPanel } from "../../../components/browser/BrowserPanel";
 import { IntelligencePanel } from "../../../components/intelligence/IntelligencePanel";
@@ -23,6 +28,7 @@ import {
 import {
   SourceAssetForms,
 } from "../../../components/projects/SourceAssetForms";
+import { BrandPanel } from "../../../components/brand/BrandPanel";
 
 type ProjectDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -57,7 +63,7 @@ export default async function ProjectDetailPage({
     throw error;
   }
 
-  const [inputBundle, assets, summary, graph, runs, snapshots, sources, browserSessions] =
+  const [inputBundle, assets, summary, graph, runs, snapshots, sources, browserSessions, brand] =
     await Promise.all([
     inputService.getBundle(id, user.id),
     assetService.list(id, user.id),
@@ -67,6 +73,7 @@ export default async function ProjectDetailPage({
     intelligenceService.listSnapshots(id, user.id, 10),
     sourceService.list(id, user.id),
     browserService.listSessions(id, user.id),
+    brandService.getProfile(id, user.id),
   ]);
 
   return (
@@ -112,6 +119,15 @@ export default async function ProjectDetailPage({
             inputs={inputBundle.inputs.map(serializeInput)}
             versions={inputBundle.versions}
             assets={assets}
+          />
+        </div>
+
+        <div className="mt-8">
+          <BrandPanel
+            projectId={project.id}
+            brand={brand.profile ? serializeBrandProfile(brand.profile) : null}
+            execution={brand.execution}
+            sourceStates={serializeBrandSourceStates(brand.sourceStates)}
           />
         </div>
 
