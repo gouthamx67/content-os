@@ -15,3 +15,5 @@ export const assetService = container.services.assets;
 export const inputService = container.services.inputs;
 
 export const intelligenceService = container.services.intelligence;
+
+export const browserService = container.services.browser;

@@ -1,0 +1,686 @@
+[
+  {
+    "id": "dropCheckConstraint.intelligence_evidence.intelligence_evidence_kind_check_91a4a511",
+    "label": "Drop check constraint \"intelligence_evidence_kind_check_91a4a511\" on \"intelligence_evidence\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "intelligence_evidence_kind_check_91a4a511",
+        "table": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"intelligence_evidence_kind_check_91a4a511\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_evidence_kind_check_91a4a511",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"intelligence_evidence_kind_check_91a4a511\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_evidence\" DROP CONSTRAINT \"intelligence_evidence_kind_check_91a4a511\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"intelligence_evidence_kind_check_91a4a511\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_evidence_kind_check_91a4a511",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.browser_observation",
+    "label": "Create table \"browser_observation\"",
+    "summary": "Creates table \"browser_observation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "browser_observation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"browser_observation\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_observation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"browser_observation\"",
+        "sql": "CREATE TABLE \"public\".\"browser_observation\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"pageId\" text NOT NULL,\n  \"payload\" text NOT NULL,\n  \"sessionId\" text NOT NULL,\n  \"stateHash\" text NOT NULL,\n  \"stepOrder\" int4 NOT NULL,\n  \"title\" text NOT NULL,\n  \"url\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"browser_observation\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_observation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.browser_session",
+    "label": "Create table \"browser_session\"",
+    "summary": "Creates table \"browser_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "browser_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"browser_session\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"browser_session\"",
+        "sql": "CREATE TABLE \"public\".\"browser_session\" (\n  \"actionCount\" int4 DEFAULT 0 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"currentUrl\" text NOT NULL,\n  \"endedAt\" timestamptz,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"goal\" text,\n  \"id\" text NOT NULL,\n  \"initialUrl\" text NOT NULL,\n  \"pageCount\" int4 DEFAULT 0 NOT NULL,\n  \"planner\" text,\n  \"plannerModel\" text,\n  \"projectId\" text NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'QUEUED' NOT NULL,\n  \"successCriteria\" text,\n  \"targetClass\" text NOT NULL,\n  \"targetSourceId\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"browser_session_status_check_be53ae1d\" CHECK (\"status\" IN ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED')),\n  CONSTRAINT \"browser_session_targetClass_check_1846c42f\" CHECK (\"targetClass\" IN ('PUBLIC', 'CONTROLLED_LOCAL'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"browser_session\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.browser_step",
+    "label": "Create table \"browser_step\"",
+    "summary": "Creates table \"browser_step\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "browser_step"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"browser_step\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_step\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"browser_step\"",
+        "sql": "CREATE TABLE \"public\".\"browser_step\" (\n  \"actionType\" text NOT NULL,\n  \"completedAt\" timestamptz,\n  \"durationMs\" int4,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"id\" text NOT NULL,\n  \"inputSummary\" text,\n  \"order\" int4 NOT NULL,\n  \"result\" text,\n  \"sessionId\" text NOT NULL,\n  \"startedAt\" timestamptz,\n  \"stateHashAfter\" text,\n  \"stateHashBefore\" text,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"targetSummary\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"browser_step_status_check_b616a972\" CHECK (\"status\" IN ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'SKIPPED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"browser_step\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_step\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.browser_step.browser_step_order",
+    "label": "Add unique constraint on \"browser_step\" (sessionId, order)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "browser_step_order",
+        "table": "browser_step"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"browser_step_order\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_step_order",
+          "public",
+          "\"public\".\"browser_step\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"browser_step_order\"",
+        "sql": "ALTER TABLE \"public\".\"browser_step\" ADD CONSTRAINT \"browser_step_order\" UNIQUE (\"sessionId\", \"order\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"browser_step_order\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_step_order",
+          "public",
+          "\"public\".\"browser_step\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.intelligence_evidence.intelligence_evidence_kind_check_113d84e9",
+    "label": "Add check constraint \"intelligence_evidence_kind_check_113d84e9\" on \"intelligence_evidence\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "intelligence_evidence_kind_check_113d84e9",
+        "table": "intelligence_evidence"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"intelligence_evidence_kind_check_113d84e9\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_evidence_kind_check_113d84e9",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"intelligence_evidence_kind_check_113d84e9\"",
+        "sql": "ALTER TABLE \"public\".\"intelligence_evidence\" ADD CONSTRAINT \"intelligence_evidence_kind_check_113d84e9\" CHECK (\"kind\" IN ('SOURCE_FRAGMENT', 'REPOSITORY_FILE', 'URL_SECTION', 'DOCUMENT_SECTION', 'IMAGE_REGION', 'VIDEO_TIMESTAMP', 'AUDIO_TIMESTAMP', 'EXTRACTED_METADATA', 'BROWSER_INTERACTION'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"intelligence_evidence_kind_check_113d84e9\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "intelligence_evidence_kind_check_113d84e9",
+          "public",
+          "\"public\".\"intelligence_evidence\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.browser_observation.browser_observation_sessionId_idx_29f415d4",
+    "label": "Create index \"browser_observation_sessionId_idx_29f415d4\" on \"browser_observation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "browser_observation_sessionId_idx_29f415d4",
+        "table": "browser_observation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"browser_observation_sessionId_idx_29f415d4\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_observation_sessionId_idx_29f415d4\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"browser_observation_sessionId_idx_29f415d4\"",
+        "sql": "CREATE INDEX \"browser_observation_sessionId_idx_29f415d4\" ON \"public\".\"browser_observation\" (\"sessionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"browser_observation_sessionId_idx_29f415d4\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_observation_sessionId_idx_29f415d4\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.browser_observation.browser_observation_session_step_idx",
+    "label": "Create index \"browser_observation_session_step_idx\" on \"browser_observation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "browser_observation_session_step_idx",
+        "table": "browser_observation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"browser_observation_session_step_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_observation_session_step_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"browser_observation_session_step_idx\"",
+        "sql": "CREATE INDEX \"browser_observation_session_step_idx\" ON \"public\".\"browser_observation\" (\"sessionId\", \"stepOrder\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"browser_observation_session_step_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_observation_session_step_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.browser_session.browser_session_projectId_idx_a96e4d92",
+    "label": "Create index \"browser_session_projectId_idx_a96e4d92\" on \"browser_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "browser_session_projectId_idx_a96e4d92",
+        "table": "browser_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"browser_session_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"browser_session_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"browser_session_projectId_idx_a96e4d92\" ON \"public\".\"browser_session\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"browser_session_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.browser_session.browser_session_project_created_idx",
+    "label": "Create index \"browser_session_project_created_idx\" on \"browser_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "browser_session_project_created_idx",
+        "table": "browser_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"browser_session_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"browser_session_project_created_idx\"",
+        "sql": "CREATE INDEX \"browser_session_project_created_idx\" ON \"public\".\"browser_session\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"browser_session_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.browser_session.browser_session_project_status_idx",
+    "label": "Create index \"browser_session_project_status_idx\" on \"browser_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "browser_session_project_status_idx",
+        "table": "browser_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"browser_session_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"browser_session_project_status_idx\"",
+        "sql": "CREATE INDEX \"browser_session_project_status_idx\" ON \"public\".\"browser_session\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"browser_session_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.browser_session.browser_session_targetSourceId_idx_385adefa",
+    "label": "Create index \"browser_session_targetSourceId_idx_385adefa\" on \"browser_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "browser_session_targetSourceId_idx_385adefa",
+        "table": "browser_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"browser_session_targetSourceId_idx_385adefa\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session_targetSourceId_idx_385adefa\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"browser_session_targetSourceId_idx_385adefa\"",
+        "sql": "CREATE INDEX \"browser_session_targetSourceId_idx_385adefa\" ON \"public\".\"browser_session\" (\"targetSourceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"browser_session_targetSourceId_idx_385adefa\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_session_targetSourceId_idx_385adefa\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.browser_step.browser_step_sessionId_idx_29f415d4",
+    "label": "Create index \"browser_step_sessionId_idx_29f415d4\" on \"browser_step\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "browser_step_sessionId_idx_29f415d4",
+        "table": "browser_step"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"browser_step_sessionId_idx_29f415d4\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_step_sessionId_idx_29f415d4\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"browser_step_sessionId_idx_29f415d4\"",
+        "sql": "CREATE INDEX \"browser_step_sessionId_idx_29f415d4\" ON \"public\".\"browser_step\" (\"sessionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"browser_step_sessionId_idx_29f415d4\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"browser_step_sessionId_idx_29f415d4\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.browser_observation.browser_observation_sessionId_fkey",
+    "label": "Add foreign key \"browser_observation_sessionId_fkey\" on \"browser_observation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "browser_observation_sessionId_fkey",
+        "table": "browser_observation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"browser_observation_sessionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_observation_sessionId_fkey",
+          "public",
+          "\"public\".\"browser_observation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"browser_observation_sessionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"browser_observation\"\nADD CONSTRAINT \"browser_observation_sessionId_fkey\"\nFOREIGN KEY (\"sessionId\")\nREFERENCES \"public\".\"browser_session\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"browser_observation_sessionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_observation_sessionId_fkey",
+          "public",
+          "\"public\".\"browser_observation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.browser_session.browser_session_projectId_fkey",
+    "label": "Add foreign key \"browser_session_projectId_fkey\" on \"browser_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "browser_session_projectId_fkey",
+        "table": "browser_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"browser_session_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_session_projectId_fkey",
+          "public",
+          "\"public\".\"browser_session\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"browser_session_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"browser_session\"\nADD CONSTRAINT \"browser_session_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"browser_session_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_session_projectId_fkey",
+          "public",
+          "\"public\".\"browser_session\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.browser_session.browser_session_targetSourceId_fkey",
+    "label": "Add foreign key \"browser_session_targetSourceId_fkey\" on \"browser_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "browser_session_targetSourceId_fkey",
+        "table": "browser_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"browser_session_targetSourceId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_session_targetSourceId_fkey",
+          "public",
+          "\"public\".\"browser_session\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"browser_session_targetSourceId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"browser_session\"\nADD CONSTRAINT \"browser_session_targetSourceId_fkey\"\nFOREIGN KEY (\"targetSourceId\")\nREFERENCES \"public\".\"source\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"browser_session_targetSourceId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_session_targetSourceId_fkey",
+          "public",
+          "\"public\".\"browser_session\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.browser_step.browser_step_sessionId_fkey",
+    "label": "Add foreign key \"browser_step_sessionId_fkey\" on \"browser_step\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "browser_step_sessionId_fkey",
+        "table": "browser_step"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"browser_step_sessionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_step_sessionId_fkey",
+          "public",
+          "\"public\".\"browser_step\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"browser_step_sessionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"browser_step\"\nADD CONSTRAINT \"browser_step_sessionId_fkey\"\nFOREIGN KEY (\"sessionId\")\nREFERENCES \"public\".\"browser_session\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"browser_step_sessionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "browser_step_sessionId_fkey",
+          "public",
+          "\"public\".\"browser_step\""
+        ]
+      }
+    ]
+  }
+]

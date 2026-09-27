@@ -334,6 +334,13 @@ export interface IntelligenceGraphTransactions {
 }
 
 export interface IntelligenceRepository {
+  /**
+   * Attaches evidence to an existing project without creating a new graph
+   * version. Used by the browser agent, whose observations are evidence about
+   * a target rather than a re-extraction of its sources.
+   */
+  recordEvidence(projectId: string, evidence: EvidenceValues[]): Promise<void>;
+
   getProduct(projectId: string): Promise<Product | null>;
   updateProduct(projectId: string, changes: UpdateProductInput): Promise<Product | null>;
 

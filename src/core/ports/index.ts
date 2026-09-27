@@ -68,7 +68,9 @@ export type {
 } from "./database";
 
 export * from "./ai-provider";
-export * from "./browser-provider";
+export * from "./browser-planner";
+export * from "./browser-runtime";
+export * from "./browser-session-repository";
 export * from "./renderer-provider";
 export * from "./storage-provider";
 export * from "./image-provider";

@@ -22,6 +22,7 @@ import {
 } from "../domain/intelligence-draft";
 import type {
   CreateIntelligenceRunInput,
+  EvidenceValues,
   IntelligencePersistencePlan,
   IntelligenceRepository,
   UpdateIntelligenceRunInput,
@@ -247,6 +248,12 @@ class InMemoryIntelligenceRepository implements IntelligenceRepository {
   async findEvidenceByKey(_p: string, key: string) {
     return this.graph.evidence.find((item) => item.id === key) ?? null;
   }
+
+  async recordEvidence(projectId: string, evidence: EvidenceValues[]): Promise<void> {
+    this.recordedEvidence.push({ projectId, evidence });
+  }
+
+  recordedEvidence: { projectId: string; evidence: EvidenceValues[] }[] = [];
 
   async applyGraph(_projectId: string, plan: IntelligencePersistencePlan): Promise<void> {
     this.applied.push(plan);

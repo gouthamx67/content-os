@@ -11,6 +11,7 @@ import { PostgresSourceRepository } from "./repositories/postgres-source-reposit
 import { PostgresSourceStorageCoordinator } from "./repositories/postgres-source-storage-coordinator";
 import { PostgresAssetRepository } from "./repositories/postgres-asset-repository";
 import { PostgresIntelligenceRepository } from "./repositories/postgres-intelligence-repository";
+import { PostgresBrowserSessionRepository } from "./repositories/postgres-browser-session-repository";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
 import { WorkspaceService } from "../core/services/workspace-service";
@@ -30,6 +31,16 @@ import { DocumentAnalyzer } from "./analysis/document-analyzer";
 import { MediaAnalyzer } from "./analysis/media-analyzer";
 import { ReferenceAnalyzer } from "./analysis/reference-analyzer";
 import { AiIntelligenceInterpretationProvider } from "./ai/intelligence-interpretation-provider";
+import { AiBrowserPlanner } from "./ai/ai-browser-planner";
+import { PlaywrightBrowserRuntime } from "./browser/playwright-runtime";
+import type { BrowserUploadSource } from "../core/ports/browser-planner";
+import {
+  DEFAULT_BROWSER_NAVIGATION_POLICY,
+  checkBrowserUrl,
+  uploadMimeTypeFor,
+} from "./browser/navigation-policy";
+import { BrowserService } from "../core/services/browser-service";
+import { DeterministicBrowserPlanner } from "../core/services/browser-planner";
 
 const orm = db.orm.public;
 
@@ -41,6 +52,7 @@ const repositories = {
   sources: new PostgresSourceRepository(orm),
   assets: new PostgresAssetRepository(orm),
   intelligence: new PostgresIntelligenceRepository(orm),
+  browserSessions: new PostgresBrowserSessionRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -131,6 +143,77 @@ const intelligenceService = new IntelligenceService({
   interpretationProvider: intelligenceInterpretation,
 });
 
+/**
+ * Browser agent wiring.
+ *
+ * The navigation policy is the security boundary, so the runtime and the
+ * service receive the same checker: a URL the service refuses is also a URL
+ * the request interceptor aborts. Loopback is only reachable for targets a
+ * caller explicitly classifies as CONTROL_LOCAL, which the API never does for
+ * user-supplied URLs.
+ */
+const BROWSER_ARTIFACT_DIR =
+  process.env["CONTENT_OS_BROWSER_ARTIFACT_DIR"] ??
+  join(process.cwd(), ".content-os", "browser-artifacts");
+
+/**
+ * Resolves an upload target by Content OS asset id. The runtime never receives a
+ * host path, so the only way bytes reach a file input is through an asset that
+ * belongs to the same project as the session. Anything else resolves to null and
+ * the action fails as UPLOAD_BLOCKED.
+ */
+async function resolveUploadAsset(
+  assetId: string,
+  projectId: string | null,
+): Promise<BrowserUploadSource | null> {
+  if (!projectId) return null;
+  const asset = await repositories.assets.getById(assetId);
+  if (!asset || asset.projectId !== projectId) return null;
+
+  // Only locally stored objects can be read. A remote asset uri is refused
+  // rather than fetched: the browser runtime must never turn into a downloader.
+  const prefix = "content-os-storage://local/";
+  if (!asset.uri.startsWith(prefix)) return null;
+  const key = decodeURIComponent(asset.uri.slice(prefix.length));
+  if (!key) return null;
+
+  const bytes = await storage.get(key);
+  const name = asset.name.replace(/[\\/]/g, "_");
+  const mimeType = uploadMimeTypeFor(name);
+  if (!mimeType) return null;
+  return { assetId, name, mimeType, bytes };
+}
+
+const browserRuntime = new PlaywrightBrowserRuntime({
+  navigationPolicy: DEFAULT_BROWSER_NAVIGATION_POLICY,
+});
+
+const browserPlanner =
+  process.env["CONTENT_OS_AI_BROWSER"] === "1"
+    ? new AiBrowserPlanner(providers.ai, {
+        checkUrl: (url) => checkBrowserUrl(url, DEFAULT_BROWSER_NAVIGATION_POLICY),
+      })
+    : new DeterministicBrowserPlanner();
+
+const browserService = new BrowserService({
+  sessions: repositories.browserSessions,
+  runtime: browserRuntime,
+  planner: browserPlanner,
+  runtimeOptions: {
+    artifactDir: BROWSER_ARTIFACT_DIR,
+    navigationTimeoutMs: 30_000,
+    actionTimeoutMs: 15_000,
+    uploadResolver: resolveUploadAsset,
+  },
+  checkUrl: (url, targetClass) => {
+    checkBrowserUrl(url, { ...DEFAULT_BROWSER_NAVIGATION_POLICY, targetClass });
+  },
+  intelligence: repositories.intelligence,
+  authorize: async (projectId: string, userId: string) => {
+    await projectService.getAuthorized(projectId, userId);
+  },
+});
+
 export const container = {
   repositories,
   providers,
@@ -143,5 +226,6 @@ export const container = {
     generation: generationService,
     inputs: inputService,
     intelligence: intelligenceService,
+    browser: browserService,
   },
 };

@@ -1648,3 +1648,432 @@ describe("intelligence API integration", () => {
     expect(unknownEntity.status).toBe(404);
   });
 });
+
+/**
+ * Browser agent HTTP boundary.
+ *
+ * These tests deliberately stop at the API and policy boundary: the Chromium
+ * path is covered end to end in playwright-runtime.test.ts, and a full run
+ * against a local fixture would require relaxing the loopback policy that
+ * protects production targets. What is verified here is that a caller cannot
+ * authenticate their way to a target the project never declared.
+ */
+describe("browser session repository integration", () => {
+  async function browserFixture() {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Browser Repository" },
+      owner.user.id,
+    );
+    const target = await services.sourceService.create(
+      project.id,
+      {
+        type: "WEBSITE",
+        name: "Docs site",
+        uri: "https://repo.example.com/docs",
+        metadata: null,
+      },
+      owner.user.id,
+    );
+    return { owner, project, target };
+  }
+
+  it("persists a session, its steps, observations and cancellation", async () => {
+    const [{ db }, repositories] = await Promise.all([
+      import("../../prisma/db"),
+      import("../../infrastructure/repositories/postgres-browser-session-repository"),
+    ]);
+    const repository = new repositories.PostgresBrowserSessionRepository(db.orm.public);
+    const { project, target } = await browserFixture();
+    const sessionId = `brs_${Math.random().toString(36).slice(2, 12)}`;
+
+    const created = await repository.createSession({
+      id: sessionId,
+      projectId: project.id,
+      targetSourceId: target.id,
+      targetClass: "PUBLIC",
+      initialUrl: target.uri!,
+      goal: "Read the docs index",
+      successCriteria: 'text contains "Docs"',
+      status: "RUNNING",
+    });
+    expect(created.status).toBe("RUNNING");
+    expect(created.actionCount).toBe(0);
+
+    // A second row for the same id must not silently duplicate history.
+    const duplicateId = `brs_${Math.random().toString(36).slice(2, 12)}`;
+    const duplicate = await repository.createSession({
+      id: duplicateId,
+      projectId: project.id,
+      targetSourceId: target.id,
+      targetClass: "PUBLIC",
+      initialUrl: target.uri!,
+      goal: "Duplicate write",
+      successCriteria: null,
+      status: "RUNNING",
+    });
+    expect(duplicate.id).toBe(duplicateId);
+
+    const running = await repository.updateSessionState(project.id, sessionId, {
+      status: "RUNNING",
+      currentUrl: "https://repo.example.com/docs/intro",
+      pageCount: 2,
+      actionCount: 1,
+      startedAt: new Date().toISOString(),
+      endedAt: null,
+      errorCode: null,
+      errorMessage: null,
+    });
+    expect(running.pageCount).toBe(2);
+    expect(running.actionCount).toBe(1);
+
+    const step = {
+      order: 1,
+      actionType: "GOTO" as const,
+      targetSummary: null,
+      inputSummary: "https://repo.example.com/docs/intro",
+      status: "COMPLETED" as const,
+      startedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      durationMs: 12,
+      pageStateHashBefore: "before",
+      pageStateHashAfter: "after",
+      result: "ok",
+      errorCode: null,
+      errorMessage: null,
+    };
+    await repository.appendStep(project.id, sessionId, step);
+
+    await repository.recordObservation({
+      sessionId,
+      stepOrder: 1,
+      pageId: "page-1",
+      url: "https://repo.example.com/docs/intro",
+      title: "Docs intro",
+      pageStateHash: "after",
+      payload: JSON.stringify({ url: "https://repo.example.com/docs/intro", title: "Docs intro", pageText: "Docs" }),
+    });
+
+    const trace = await repository.getTrace(project.id, sessionId);
+    expect(trace?.steps).toHaveLength(1);
+    expect(trace?.steps[0]?.actionType).toBe("GOTO");
+
+    const observations = await repository.listObservations(project.id, sessionId);
+    expect(observations).toHaveLength(1);
+    expect(observations[0]?.title).toBe("Docs intro");
+    expect(JSON.parse(observations[0]!.payload) as { pageText: string }).toMatchObject({ pageText: "Docs" });
+
+    const listed = await repository.listSessions(project.id);
+    expect(listed.map((row) => row.id)).toContain(sessionId);
+    expect(listed.map((row) => row.id)).toContain(duplicateId);
+
+    const cancelled = await repository.cancelSession(project.id, sessionId);
+    expect(cancelled?.status).toBe("CANCELLED");
+    expect(cancelled?.endedAt).not.toBeNull();
+
+    // Terminal sessions never reopen, and re-cancelling is a no-op.
+    await expect(
+      repository.updateSessionState(project.id, sessionId, {
+        status: "RUNNING",
+        currentUrl: cancelled!.currentUrl,
+        pageCount: 2,
+        actionCount: 2,
+        startedAt: cancelled!.startedAt,
+        endedAt: null,
+        errorCode: null,
+        errorMessage: null,
+      }),
+    ).rejects.toThrow(/Illegal session transition/);
+    expect((await repository.cancelSession(project.id, sessionId))?.status).toBe("CANCELLED");
+
+    // Another project cannot see or touch these rows.
+    const stranger = await browserFixture();
+    expect(await repository.getSession(stranger.project.id, sessionId)).toBeNull();
+    expect(await repository.getTrace(stranger.project.id, sessionId)).toBeNull();
+    expect(await repository.listObservations(stranger.project.id, sessionId)).toEqual([]);
+    await expect(
+      repository.updateSessionState(stranger.project.id, sessionId, {
+        status: "CANCELLED",
+        currentUrl: "https://evil.example.com",
+        pageCount: 0,
+        actionCount: 0,
+        startedAt: null,
+        endedAt: new Date().toISOString(),
+        errorCode: null,
+        errorMessage: null,
+      }),
+    ).rejects.toThrow(/not found/i);
+  });
+});
+
+describe("browser agent API integration", () => {
+  async function browserProject() {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Browser API" },
+      owner.user.id,
+    );
+    const target = await services.sourceService.create(
+      project.id,
+      {
+        type: "WEBSITE",
+        name: "Launch site",
+        uri: "https://launch.example.com/docs",
+        metadata: null,
+      },
+      owner.user.id,
+    );
+    return { owner, project, target };
+  }
+
+  it("serves parsed observations for a scoped session", async () => {
+    const { db } = await import("../../prisma/db");
+    const { project, target, owner } = await browserProject();
+    const repositories = await import("../../infrastructure/repositories/postgres-browser-session-repository");
+    const repository = new repositories.PostgresBrowserSessionRepository(db.orm.public);
+    const sessionId = `brs_${Math.random().toString(36).slice(2, 12)}`;
+
+    await repository.createSession({
+      id: sessionId,
+      projectId: project.id,
+      targetSourceId: target.id,
+      targetClass: "PUBLIC",
+      initialUrl: target.uri!,
+      goal: "Observe the docs page",
+      successCriteria: null,
+      status: "COMPLETED",
+    });
+    await repository.recordObservation({
+      sessionId,
+      stepOrder: 1,
+      pageId: "page-1",
+      url: target.uri!,
+      title: "Docs",
+      pageStateHash: "hash-1",
+      payload: JSON.stringify({ url: target.uri, title: "Docs", pageText: "Docs index", interactiveElements: [] }),
+    });
+
+    const { GET } = await import("../../app/api/projects/[id]/browser/sessions/[sessionId]/observations/route");
+    const context = { params: Promise.resolve({ id: project.id, sessionId }) };
+    const headers = { cookie: `content_os_session=${owner.token}` };
+    const url = "http://localhost/api/projects/p/browser/sessions/s/observations";
+
+    const response = await GET(new Request(url, { headers }), context);
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      observations: { url: string; title: string; payload: { pageText: string } }[];
+    };
+    expect(body.observations).toHaveLength(1);
+    // Structured, not a serialized string the client has to re-parse.
+    expect(typeof body.observations[0]?.payload).toBe("object");
+    expect(body.observations[0]?.payload.pageText).toBe("Docs index");
+    expect(body.observations[0]?.url).toBe(target.uri);
+
+    const anonymous = await GET(new Request(url), context);
+    expect(anonymous.status).toBe(401);
+
+    const stranger = await registerUser();
+    // A stranger is refused by project authorization, not by a leaked 200.
+    const denied = await GET(
+      new Request(url, { headers: { cookie: `content_os_session=${stranger.token}` } }),
+      context,
+    );
+    expect(denied.status).toBe(403);
+  });
+
+  it("refuses unauthenticated, cross-origin and cross-project run requests", async () => {
+    const { owner, project, target } = await browserProject();
+    const { POST } = await import("../../app/api/projects/[id]/browser/run/route");
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const url = "http://localhost/api/projects/p/browser/run";
+    const body = { targetSourceId: target.id, url: target.uri, goal: "Create a project" };
+
+    const anonymous = await POST(
+      new Request(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+      context,
+    );
+    expect(anonymous.status).toBe(401);
+
+    const stranger = await registerUser();
+    const strangerHeaders = { cookie: `content_os_session=${stranger.token}`, "content-type": "application/json" };
+    const denied = await POST(
+      new Request(url, { method: "POST", headers: strangerHeaders, body: JSON.stringify(body) }),
+      context,
+    );
+    expect(denied.status).toBe(403);
+
+    const crossOrigin = await POST(
+      new Request(url, {
+        method: "POST",
+        headers: { ...strangerHeaders, origin: "https://evil.test" },
+        body: JSON.stringify(body),
+      }),
+      context,
+    );
+    expect(crossOrigin.status).toBe(403);
+
+    const ownerHeaders = { cookie: `content_os_session=${owner.token}`, "content-type": "application/json" };
+    const foreignTarget = await POST(
+      new Request(url, {
+        method: "POST",
+        headers: ownerHeaders,
+        body: JSON.stringify({ ...body, targetSourceId: "source_not_in_project" }),
+      }),
+      context,
+    );
+    expect(foreignTarget.status).toBe(404);
+  });
+
+  it("refuses a start URL that leaves the target source origin", async () => {
+    const { owner, project, target } = await browserProject();
+    const { POST } = await import("../../app/api/projects/[id]/browser/run/route");
+    const response = await POST(
+      new Request("http://localhost/api/projects/p/browser/run", {
+        method: "POST",
+        headers: { cookie: `content_os_session=${owner.token}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          targetSourceId: target.id,
+          url: "https://elsewhere.example.org/",
+          goal: "Create a project",
+        }),
+      }),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toContain("origin");
+  });
+
+  it("refuses a target source without a browsable URL", async () => {
+    const { owner, project } = await browserProject();
+    const document = await services.sourceService.create(
+      project.id,
+      {
+        type: "DOCUMENT",
+        name: "Brief",
+        uri: "content-os-storage://local/brief.md",
+        metadata: null,
+      },
+      owner.user.id,
+    );
+    const { POST } = await import("../../app/api/projects/[id]/browser/run/route");
+    const response = await POST(
+      new Request("http://localhost/api/projects/p/browser/run", {
+        method: "POST",
+        headers: { cookie: `content_os_session=${owner.token}`, "content-type": "application/json" },
+        body: JSON.stringify({ targetSourceId: document.id, goal: "Read the brief" }),
+      }),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it("refuses a target that resolves to cloud metadata", async () => {
+    const owner = await registerUser();
+    const project = await services.projectService.createForWorkspace(
+      owner.workspace!.id,
+      { name: "Metadata target" },
+      owner.user.id,
+    );
+    const target = await services.sourceService.create(
+      project.id,
+      {
+        type: "WEBSITE",
+        name: "Metadata",
+        uri: "http://169.254.169.254/latest/meta-data",
+        metadata: null,
+      },
+      owner.user.id,
+    );
+    const { POST } = await import("../../app/api/projects/[id]/browser/run/route");
+    const response = await POST(
+      new Request("http://localhost/api/projects/p/browser/run", {
+        method: "POST",
+        headers: { cookie: `content_os_session=${owner.token}`, "content-type": "application/json" },
+        body: JSON.stringify({ targetSourceId: target.id, goal: "Read instance metadata" }),
+      }),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toMatch(/non-public|blocked/i);
+    // A refused target must not leave a session behind.
+    const sessions = await services.browserService.listSessions(project.id, owner.user.id);
+    expect(sessions).toEqual([]);
+  });
+
+  it("keeps session reads scoped to the owning workspace", async () => {
+    const { owner, project } = await browserProject();
+    const stranger = await registerUser();
+    const { GET } = await import("../../app/api/projects/[id]/browser/sessions/route");
+    const { GET: GET_SESSION } = await import(
+      "../../app/api/projects/[id]/browser/sessions/[sessionId]/route"
+    );
+    const { POST: POST_CANCEL } = await import(
+      "../../app/api/projects/[id]/browser/sessions/[sessionId]/cancel/route"
+    );
+    const { GET: GET_OBSERVATIONS } = await import(
+      "../../app/api/projects/[id]/browser/sessions/[sessionId]/observations/route"
+    );
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const ownerHeaders = { cookie: `content_os_session=${owner.token}` };
+    const strangerHeaders = { cookie: `content_os_session=${stranger.token}` };
+
+    const ownerList = await GET(
+      new Request("http://localhost/api/projects/p/browser/sessions", { headers: ownerHeaders }),
+      context,
+    );
+    expect(ownerList.status).toBe(200);
+    expect((await ownerList.json()).sessions).toEqual([]);
+
+    const strangerList = await GET(
+      new Request("http://localhost/api/projects/p/browser/sessions", { headers: strangerHeaders }),
+      context,
+    );
+    expect(strangerList.status).toBe(403);
+
+    const sessionContext = {
+      params: Promise.resolve({ id: project.id, sessionId: "bse_missing" }),
+    };
+    for (const route of [GET_SESSION, GET_OBSERVATIONS]) {
+      const anonymous = await route(
+        new Request("http://localhost/api/projects/p/browser/sessions/bse_missing"),
+        sessionContext,
+      );
+      expect(anonymous.status).toBe(401);
+
+      // A stranger is refused at the project boundary, before any lookup.
+      const denied = await route(
+        new Request("http://localhost/api/projects/p/browser/sessions/bse_missing", { headers: strangerHeaders }),
+        sessionContext,
+      );
+      expect(denied.status).toBe(403);
+
+      // A member of the project gets 404 for a session that does not exist,
+      // which keeps the response identical for a wrong id in a real project.
+      const missing = await route(
+        new Request("http://localhost/api/projects/p/browser/sessions/bse_missing", { headers: ownerHeaders }),
+        sessionContext,
+      );
+      expect(missing.status).toBe(404);
+    }
+
+    const cancelDenied = await POST_CANCEL(
+      new Request("http://localhost/api/projects/p/browser/sessions/bse_missing/cancel", {
+        method: "POST",
+        headers: { ...strangerHeaders, origin: "https://evil.test" },
+      }),
+      sessionContext,
+    );
+    expect(cancelDenied.status).toBe(403);
+
+    const cancelMissing = await POST_CANCEL(
+      new Request("http://localhost/api/projects/p/browser/sessions/bse_missing/cancel", {
+        method: "POST",
+        headers: ownerHeaders,
+      }),
+      sessionContext,
+    );
+    expect(cancelMissing.status).toBe(404);
+  });
+});

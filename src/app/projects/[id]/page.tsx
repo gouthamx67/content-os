@@ -4,14 +4,18 @@ import { ArrowLeft, FolderKanban } from "lucide-react";
 import { getCurrentUser } from "../../../infrastructure/auth/current-user";
 import {
   assetService,
+  browserService,
   inputService,
   intelligenceService,
   projectService,
+  sourceService,
 } from "../../../infrastructure/services";
 import { HttpError } from "../../../lib/http";
+import { serializeSession } from "../../../lib/browser-api";
 import { serializeInput } from "../../../lib/input-api";
 import { serializeGraph } from "../../../lib/intelligence-api";
 import { AppShell } from "../../../components/layout/AppShell";
+import { BrowserPanel } from "../../../components/browser/BrowserPanel";
 import { IntelligencePanel } from "../../../components/intelligence/IntelligencePanel";
 import {
   ProjectActions,
@@ -53,13 +57,16 @@ export default async function ProjectDetailPage({
     throw error;
   }
 
-  const [inputBundle, assets, summary, graph, runs, snapshots] = await Promise.all([
+  const [inputBundle, assets, summary, graph, runs, snapshots, sources, browserSessions] =
+    await Promise.all([
     inputService.getBundle(id, user.id),
     assetService.list(id, user.id),
     intelligenceService.getSummary(id, user.id),
     intelligenceService.getGraph(id, user.id),
     intelligenceService.listRuns(id, user.id, 10),
     intelligenceService.listSnapshots(id, user.id, 10),
+    sourceService.list(id, user.id),
+    browserService.listSessions(id, user.id),
   ]);
 
   return (
@@ -105,6 +112,18 @@ export default async function ProjectDetailPage({
             inputs={inputBundle.inputs.map(serializeInput)}
             versions={inputBundle.versions}
             assets={assets}
+          />
+        </div>
+
+        <div className="mt-8">
+          <BrowserPanel
+            projectId={project.id}
+            initialSessions={browserSessions.map(serializeSession)}
+            sources={sources.map((source) => ({
+              id: source.id,
+              name: source.name,
+              uri: source.uri,
+            }))}
           />
         </div>
 

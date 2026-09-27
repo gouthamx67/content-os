@@ -38,6 +38,7 @@ export const EVIDENCE_KINDS = [
   "VIDEO_TIMESTAMP",
   "AUDIO_TIMESTAMP",
   "EXTRACTED_METADATA",
+  "BROWSER_INTERACTION",
 ] as const;
 export type EvidenceKind = (typeof EVIDENCE_KINDS)[number];
 

@@ -134,6 +134,7 @@ model Project {
   intelligenceRelationships   IntelligenceRelationship[]
   intelligenceRuns            IntelligenceRun[]
   intelligenceSnapshots       IntelligenceSnapshot[]
+  browserSessions             BrowserSession[]
 
   @@index([workspaceId])
   @@index([workspaceId, status])
@@ -162,6 +163,7 @@ model Source {
   intelligenceEvidence IntelligenceEvidence[]
   intelligenceClaims   IntelligenceClaim[]
   intelligenceAssets   IntelligenceAsset[]
+  browserSessions      BrowserSession[]
 
   @@index([projectId])
   @@index([projectId, contentHash])
@@ -235,6 +237,7 @@ enum IntelligenceEvidenceKind {
   VIDEO_TIMESTAMP = "VIDEO_TIMESTAMP"
   AUDIO_TIMESTAMP = "AUDIO_TIMESTAMP"
   EXTRACTED_METADATA = "EXTRACTED_METADATA"
+  BROWSER_INTERACTION = "BROWSER_INTERACTION"
 }
 
 enum ExtractionMethod {
@@ -668,6 +671,108 @@ model IntelligenceRun {
   @@index([projectId, status], map: "int_run_project_status_idx")
   @@index([projectId, createdAt], map: "int_run_project_created_idx")
   @@map("intelligence_run")
+}
+
+enum BrowserSessionStatus {
+  @@type("pg/text@1")
+
+  QUEUED = "QUEUED"
+  RUNNING = "RUNNING"
+  COMPLETED = "COMPLETED"
+  FAILED = "FAILED"
+  CANCELLED = "CANCELLED"
+}
+
+enum BrowserTargetClass {
+  @@type("pg/text@1")
+
+  PUBLIC = "PUBLIC"
+  CONTROLLED_LOCAL = "CONTROLLED_LOCAL"
+}
+
+enum BrowserStepStatus {
+  @@type("pg/text@1")
+
+  PENDING = "PENDING"
+  RUNNING = "RUNNING"
+  COMPLETED = "COMPLETED"
+  FAILED = "FAILED"
+  SKIPPED = "SKIPPED"
+}
+
+/// One browser task: a goal, the target it ran against, and its full trace.
+model BrowserSession {
+  id              String                     @id @default(cuid(2))
+  projectId       String
+  targetSourceId  String
+  targetClass     BrowserTargetClass
+  initialUrl      String
+  currentUrl      String
+  status          BrowserSessionStatus       @default(QUEUED)
+  goal            String?
+  successCriteria String?
+  planner         String?
+  plannerModel    String?
+  pageCount       Int                        @default(0)
+  actionCount     Int                        @default(0)
+  errorCode       String?
+  errorMessage    String?
+  startedAt       TimestamptzString?
+  endedAt         TimestamptzString?
+  createdAt       TimestamptzString          @default(now())
+  updatedAt       temporal.updatedAtString()
+
+  project         Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  targetSource    Source                     @relation(fields:[targetSourceId], references:[id], onDelete: Cascade)
+  steps           BrowserStep[]
+  observations    BrowserObservation[]
+
+  @@index([projectId, createdAt], map: "browser_session_project_created_idx")
+  @@index([projectId, status], map: "browser_session_project_status_idx")
+  @@map("browser_session")
+}
+
+/// One validated action plus its before/after state, already redacted.
+model BrowserStep {
+  id              String             @id @default(cuid(2))
+  sessionId       String
+  order           Int
+  actionType      String
+  targetSummary   String?
+  inputSummary    String?
+  status          BrowserStepStatus  @default(PENDING)
+  startedAt       TimestamptzString?
+  completedAt     TimestamptzString?
+  durationMs      Int?
+  stateHashBefore String?
+  stateHashAfter  String?
+  result          String?
+  errorCode       String?
+  errorMessage    String?
+
+  session         BrowserSession     @relation(fields:[sessionId], references:[id], onDelete: Cascade)
+
+  @@unique([sessionId, order], map: "browser_step_order")
+  @@map("browser_step")
+}
+
+/// Compact page state captured around each step, so a trace is reviewable
+/// without replaying the session.
+model BrowserObservation {
+  id        String            @id @default(cuid(2))
+  sessionId String
+  stepOrder Int
+  pageId    String
+  url       String
+  title     String
+  stateHash String
+  payload   String
+  createdAt TimestamptzString @default(now())
+
+  session   BrowserSession    @relation(fields:[sessionId], references:[id], onDelete: Cascade)
+
+  @@index([sessionId, stepOrder], map: "browser_observation_session_step_idx")
+  @@map("browser_observation")
 }
 
 model IntelligenceSnapshot {

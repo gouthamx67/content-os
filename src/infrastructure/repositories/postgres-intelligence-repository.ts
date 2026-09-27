@@ -27,6 +27,7 @@ import type {
   CreateIntelligenceSnapshotInput,
   IntelligenceGraphTransactions,
   IntelligencePersistencePlan,
+  EvidenceValues,
   IntelligenceRepository,
   RelationshipValues,
   UpdateAssetInput,
@@ -817,6 +818,32 @@ export class PostgresIntelligenceRepository implements IntelligenceRepository {
 
   async applyGraph(projectId: string, plan: IntelligencePersistencePlan): Promise<void> {
     await this.transactions.applyGraph(projectId, plan);
+  }
+
+  async recordEvidence(projectId: string, evidence: EvidenceValues[]): Promise<void> {
+    if (evidence.length === 0) return;
+    await db.transaction(async (tx) => {
+      for (const item of evidence) {
+        await tx.orm.public.IntelligenceEvidence.upsert({
+          create: {
+            id: item.id,
+            projectId,
+            sourceId: item.sourceId,
+            kind: item.kind,
+            locator: item.locator,
+            excerpt: item.excerpt,
+            metadata: item.metadata,
+            evidenceKey: item.key,
+          },
+          update: {
+            kind: item.kind,
+            locator: item.locator,
+            excerpt: item.excerpt,
+            metadata: item.metadata,
+          },
+        });
+      }
+    });
   }
 
   async getProduct(projectId: string): Promise<Product | null> {
