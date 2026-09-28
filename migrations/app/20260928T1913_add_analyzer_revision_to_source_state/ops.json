@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.brand_source_state.analyzerRevision",
+    "label": "Add column \"analyzerRevision\" to \"brand_source_state\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "analyzerRevision",
+        "table": "brand_source_state"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"analyzerRevision\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "brand_source_state",
+          "analyzerRevision"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"analyzerRevision\"",
+        "sql": "ALTER TABLE \"public\".\"brand_source_state\" ADD COLUMN \"analyzerRevision\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"analyzerRevision\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "brand_source_state",
+          "analyzerRevision"
+        ]
+      }
+    ]
+  }
+]

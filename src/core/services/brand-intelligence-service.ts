@@ -40,7 +40,7 @@ import type { AssetRepository } from "../ports/asset-repository";
 import type { StorageProvider } from "../ports/storage-provider";
 import type { Source } from "../domain/source";
 import type { Asset } from "../domain/asset";
-import type { BrandSignal } from "../domain/intelligence";
+import type { BrandSignal, Evidence } from "../domain/intelligence";
 import { canonicalEvidenceKey } from "../domain/intelligence-canonical";
 import type { ProjectService } from "./project-service";
 import {
@@ -73,6 +73,14 @@ const TEXT_FIELDS: BrandTextField[] = [
 ];
 
 export type BrandAnalysisTrigger = "INITIAL" | "MANUAL" | "REFRESH" | "SOURCE_CHANGED";
+
+/**
+ * Bump this whenever an analyzer changes what it extracts. A source whose
+ * recorded revision differs is re-read, so an extraction fix reaches profiles
+ * that were analysed under the old behaviour instead of waiting for the
+ * document itself to change.
+ */
+export const BRAND_ANALYZER_REVISION = "2026-09-28.2";
 
 export interface BrandAnalysisOptions {
   trigger?: BrandAnalysisTrigger;
@@ -169,14 +177,22 @@ export class BrandIntelligenceService {
     options: BrandAnalysisOptions = {},
   ): Promise<BrandAnalysisReport> {
     await this.projectService.getAuthorized(projectId, userId);
+    // A failed evidence read is not the same as a project with no evidence, and
+    // only one of them says anything about whether a stored value still has
+    // support. Treating the failure as "no evidence" would retract the whole
+    // profile, so the outcome is kept distinct.
     const [sources, assets, stored, sourceStates, brandSignals, evidence] = await Promise.all([
       this.sourceRepository.listByProject(projectId),
       this.assetRepository.listByProject(projectId),
       this.repository.getByProjectId(projectId),
       this.repository.listSourceStates(projectId),
       this.intelligence.listBrandSignals(projectId).catch(() => [] as BrandSignal[]),
-      this.intelligence.listEvidence(projectId).catch(() => []),
+      this.intelligence
+        .listEvidence(projectId)
+        .then((rows): [Evidence[], boolean] => [rows, true])
+        .catch((): [Evidence[], boolean] => [[], false]),
     ]);
+    const [evidenceRows, evidenceAvailable] = evidence;
 
     const ready = sources.filter((source) => source.status === "READY");
     if (ready.length === 0) {
@@ -186,8 +202,18 @@ export class BrandIntelligenceService {
       );
     }
 
-    const selected = selectSources(ready, sourceStates, options);
-    if (selected.length === 0 && stored) {
+    // A value whose evidence row is gone lost its basis when its source was
+    // deleted. No source looks changed, so without this the profile would sit
+    // on values nothing supports and report itself up to date.
+    const orphaned =
+      stored && evidenceAvailable ? hasOrphanedEvidence(stored, evidenceRows) : false;
+    // Retraction alone is not enough: the remaining sources have to be read
+    // again, or the profile would end up describing only what was deleted
+    // instead of what the surviving documents still say.
+    const selected = orphaned
+      ? [...ready]
+      : selectSources(ready, sourceStates, options);
+    if (selected.length === 0 && stored && !orphaned) {
       const profile = withComputedStatus(stored, sourceStates, ready);
       return {
         profile,
@@ -201,11 +227,14 @@ export class BrandIntelligenceService {
     }
 
     const evidenceByKey = new Map(
-      evidence.map((item) => [
+      evidenceRows.map((item) => [
         canonicalEvidenceKey(item.sourceId, item.kind, item.locator),
         item.id,
       ]),
     );
+    // Which source produced each piece of evidence, so a re-read knows which
+    // stored values it is free to replace.
+    const evidenceSourceById = new Map(evidenceRows.map((item) => [item.id, item.sourceId]));
 
     const notes: string[] = [];
     const runs: AnalysisRun[] = [];
@@ -223,7 +252,28 @@ export class BrandIntelligenceService {
 
     const analyzerEntries = runs.flatMap((run) => entriesFromResult(run.result, evidenceByKey));
     const signalEntries = entriesFromBrandSignals(brandSignals, evidenceByKey);
-    const storedEntries = entriesFromStored(stored);
+
+    // A source that has just been re-read no longer supports the values an
+    // earlier read of it produced. Keeping them would leave a profile holding
+    // both the old reading and the new one, and a value the document no longer
+    // states could never be removed. A user correction is an assertion rather
+    // than a reading, so it is never retracted.
+    const reanalyzed = new Set(
+      runs.flatMap((run) => (run.source ? [run.source.id] : [])),
+    );
+    const storedEntries = entriesFromStored(stored).filter((entry) => {
+      // A correction is an assertion, not a reading, so it outlives both a
+      // re-read and the document that first suggested the value.
+      if (entry.origin === "USER") return true;
+      if (entry.evidenceIds.length === 0) return true;
+      return !entry.evidenceIds.some((id) => {
+        const sourceId = evidenceSourceById.get(id);
+        // No row left means the source was deleted with its evidence, so
+        // nothing supports the value any more.
+        if (!sourceId) return true;
+        return reanalyzed.has(sourceId);
+      });
+    });
 
     let aiApplied = false;
     let aiErrorCode: string | null = null;
@@ -252,6 +302,7 @@ export class BrandIntelligenceService {
         contentHash: source.contentHash,
         sourceUpdatedAt: source.updatedAt,
         analyzerId: analyzerBySource.get(source.id) ?? "unknown",
+        analyzerRevision: BRAND_ANALYZER_REVISION,
         brandVersion: (stored?.version ?? 0) + 1,
         analyzedAt: this.now().toISOString(),
       }));
@@ -324,6 +375,12 @@ export class BrandIntelligenceService {
     if (!stored) {
       throw new BrandError("BRAND_NOT_FOUND", "This project has no brand profile yet");
     }
+    if (stored.locked) {
+      throw new BrandError(
+        "BRAND_LOCKED",
+        "This brand profile is locked. Unlock it before editing it.",
+      );
+    }
 
     const patch: UserBrandPatch = {
       colors: input.colors,
@@ -376,11 +433,14 @@ export class BrandIntelligenceService {
       replacedKinds,
     );
 
+    // A recorded conflict is a claim about a slot that stays true until the
+    // slot is edited again, so a name-only patch must carry it forward instead
+    // of recomputing a profile that no longer holds the displaced value.
     const composed = this.compose({
       projectId,
       stored,
       entries: [...kept, ...userEntries],
-      extraConflictSeeds: displaced,
+      extraConflictSeeds: [...displaced, ...carriedConflictSeeds(stored)],
     });
 
     const textOrigins: BrandTextOrigins = { ...composed.textOrigins };
@@ -586,11 +646,19 @@ export class BrandIntelligenceService {
       textOrigins[field] = winner.origin;
     }
 
-    const conflicts: BrandConflict[] = [
+    // One field yields at most one conflict. Seeds come last, so a conflict
+    // derived from the entries on hand outranks a carried one for the same
+    // field, and an edit of the disputed slot supersedes what was recorded.
+    const byField = new Map<string, BrandConflictSeed>();
+    for (const seed of [
       ...mergedText.conflicts,
       ...mergedMaterial.conflicts,
       ...extraConflictSeeds,
-    ]
+    ]) {
+      if (!byField.has(seed.field)) byField.set(seed.field, seed);
+    }
+
+    const conflicts: BrandConflict[] = [...byField.values()]
       .slice(0, MAX_CONFLICTS)
       .map((seed, index) => toBrandConflict(seed, index, projectId));
 
@@ -655,6 +723,22 @@ function materialValue(entry: BrandMergeEntry): string {
   return entry.value;
 }
 
+/**
+ * Conflicts already on the profile, in the shape compose can merge back in.
+ * A fresh conflict for the same field wins, which is what happens when the
+ * user edits the disputed slot again.
+ */
+function carriedConflictSeeds(stored: BrandProfile): BrandConflictSeed[] {
+  return stored.conflicts.map((conflict) => ({
+    field: conflict.field,
+    retained: conflict.retained,
+    competing: conflict.competing,
+    resolvedBy: conflict.resolvedBy,
+    sourceIds: [...conflict.sourceIds],
+    evidenceIds: [...conflict.evidenceIds],
+  }));
+}
+
 function displacedSlotSeeds(
   storedEntries: readonly BrandMergeEntry[],
   userEntries: readonly BrandMergeEntry[],
@@ -703,7 +787,7 @@ function selectSources(
   return sources.filter((source) => {
     const state = known.get(source.id);
     if (!state) return true;
-    return state.contentHash !== source.contentHash || state.sourceUpdatedAt !== source.updatedAt;
+    return sourceChanged(state, source);
   });
 }
 
@@ -716,7 +800,7 @@ function withComputedStatus(
   const stale = sources.some((source) => {
     const state = known.get(source.id);
     if (!state) return true;
-    return source.contentHash !== state.contentHash || source.updatedAt !== state.sourceUpdatedAt;
+    return sourceChanged(state, source);
   });
   return { ...profile, status: computeBrandStatus(profile, { stale }) };
 }
@@ -1267,4 +1351,32 @@ function buildObservations(runs: readonly AnalysisRun[]): string {
     }
   }
   return lines.join("\n").slice(0, 8_000);
+}
+
+/**
+ * True when the profile still cites evidence the project no longer holds, which
+ * is what a deleted source leaves behind.
+ */
+function hasOrphanedEvidence(
+  stored: BrandProfile,
+  evidence: readonly Evidence[],
+): boolean {
+  const known = new Set(evidence.map((item) => item.id));
+  return entriesFromStored(stored).some(
+    (entry) =>
+      entry.origin !== "USER" &&
+      entry.evidenceIds.length > 0 &&
+      entry.evidenceIds.some((id) => !known.has(id)),
+  );
+}
+
+/**
+ * A source has to be re-read when the document moved or when the analyzer that
+ * read it has changed behaviour. Without the second half, a fixed extractor
+ * would never reach a profile whose sources have not changed.
+ */
+function sourceChanged(state: BrandSourceState, source: Source): boolean {
+  if (state.contentHash !== source.contentHash) return true;
+  if (state.sourceUpdatedAt !== source.updatedAt) return true;
+  return state.analyzerRevision !== BRAND_ANALYZER_REVISION;
 }

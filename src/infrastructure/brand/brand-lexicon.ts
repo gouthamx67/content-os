@@ -50,10 +50,25 @@ export const VOICE_SIGNAL_LEXICON: {
   ],
 };
 
-export const GUIDELINE_PATTERNS: { re: RegExp; title: string; avoid: boolean }[] = [
+/**
+ * A labelled line such as "Voice: plain and direct" is titled by its own label.
+ * One shared title for every label would put unrelated statements in the same
+ * slot and report them as a disagreement.
+ */
+export const GUIDELINE_PATTERNS: {
+  re: RegExp;
+  title: string;
+  avoid: boolean;
+  titledByLabel?: boolean;
+}[] = [
   { re: /^(?:do not|don'?t|never|avoid|no)\s+(.{4,160})$/i, title: "Avoid", avoid: true },
   { re: /^(?:always|use|prefer|write|keep|stick to)\s+(.{4,160})$/i, title: "Guideline", avoid: false },
-  { re: /^(?:voice|tone|style|brand|typography|colors?|colours?|logo|positioning|tagline|mission|values?|audience)(?:\s+is|:|-)\s*(.{4,200})$/i, title: "Brand", avoid: false },
+  {
+    re: /^(voice|tone|style|brand|typography|colors?|colours?|logo|positioning|tagline|mission|values?|audience)(?:\s+is|:|-)\s*(.{4,200})$/i,
+    title: "Brand",
+    avoid: false,
+    titledByLabel: true,
+  },
 ];
 
 export const AVOID_LANGUAGE =

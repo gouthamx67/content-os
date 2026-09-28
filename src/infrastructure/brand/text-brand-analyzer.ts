@@ -111,13 +111,19 @@ export class TextBrandAnalyzer {
       for (const pattern of GUIDELINE_PATTERNS) {
         const match = pattern.re.exec(line);
         if (!match) continue;
-        const detail = collapseWhitespace(match[1] ?? "").replace(/[.;,]$/, "");
+        // A label pattern captures the label in group 1 and the statement in
+        // group 2, and is titled by the label it matched.
+        const detailGroup = pattern.titledByLabel ? 2 : 1;
+        const detail = collapseWhitespace(match[detailGroup] ?? "").replace(/[.;,]$/, "");
         if (detail.length < 6) continue;
+        const title = pattern.titledByLabel
+          ? titleCaseLabel(match[1] ?? "")
+          : pattern.title;
         const key = addEvidence("DOCUMENT_SECTION", `text:guideline:${index + 1}`, line, {
           line: index + 1,
         });
         result.guidelines.push({
-          title: pattern.title,
+          title,
           detail: truncate(detail, 300),
           origin: "EXTRACTED",
           basis: "EXPLICIT_GUIDELINE",
@@ -225,21 +231,35 @@ export class TextBrandAnalyzer {
       const hex = normalizeHexColor(match[0]);
       if (!hex || seen.has(hex)) continue;
       seen.add(hex);
-      const roleEntry = COLOR_ROLE_KEYWORDS.find((entry) => entry.test.test(text));
-      const key = addEvidence("DOCUMENT_SECTION", `text:color:${hex}`, `${hex}`);
+
+      // A role has to come from the line that names this hex. Reading the role
+      // from the whole document would give every color the same role, and two
+      // colors would then compete for one slot.
+      const line = lineContaining(text, match.index ?? 0);
+      const sentence = sentenceContaining(text, match.index ?? 0);
+      const lineRole = COLOR_ROLE_KEYWORDS.find((entry) => entry.test.test(line));
+      const sentenceRole = COLOR_ROLE_KEYWORDS.find((entry) => entry.test.test(sentence));
+      const documentRole = COLOR_ROLE_KEYWORDS.find((entry) => entry.test.test(text));
+
+      // The association weakens as the evidence gets further from the hex.
+      const role = lineRole ?? sentenceRole ?? documentRole;
+      const explicit = Boolean(lineRole ?? sentenceRole);
+      const statedHere = Boolean(lineRole);
+
+      const key = addEvidence("DOCUMENT_SECTION", `text:color:${hex}`, hex);
       result.colors.push({
-        role: (roleEntry?.role as BrandAnalyzerResult["colors"][number]["role"]) ?? "PRIMARY",
-        name: roleEntry
-          ? `${roleEntry.role.charAt(0)}${roleEntry.role.slice(1).toLowerCase()} color`
+        role: (role?.role as BrandAnalyzerResult["colors"][number]["role"]) ?? "PRIMARY",
+        name: role
+          ? `${role.role.charAt(0)}${role.role.slice(1).toLowerCase()} color`
           : `Brand color ${hex}`,
         hex,
-        confidence: roleEntry ? "HIGH" : "MEDIUM",
+        confidence: statedHere ? "HIGH" : role ? "MEDIUM" : "LOW",
         origin: "EXTRACTED",
-        basis: roleEntry ? "EXPLICIT_GUIDELINE" : "GENERAL_EXTRACTION",
+        basis: explicit ? "EXPLICIT_GUIDELINE" : "GENERAL_EXTRACTION",
         evidenceKeys: [key, fullKey],
-        notes: roleEntry
-          ? `Document names it as the ${roleEntry.role.toLowerCase()} color`
-          : null,
+        notes: role
+          ? `Document names it as the ${role.role.toLowerCase()} color`
+          : "No role stated for this color",
       });
     }
   }
@@ -282,14 +302,20 @@ export class TextBrandAnalyzer {
     for (const line of text.split(/\r?\n/)) {
       const match = FONT_LABEL_PATTERN.exec(line);
       if (!match) continue;
-      const roleEntry = FONT_ROLE_KEYWORDS.find((entry) => entry.test.test(match[1] ?? ""));
+      // The role lexicon keys off "<role> font", so the label is rejoined with
+      // the word the line dropped before the colon.
+      const label = `${match[1] ?? ""} font`;
+      const roleEntry = FONT_ROLE_KEYWORDS.find((entry) => entry.test.test(label));
       add(match[2] ?? "", roleEntry?.role ?? null, fontWeight(line));
     }
 
     // "Sora is the heading font" names the family first and the role in prose.
     for (const match of text.matchAll(/\b([A-Z][A-Za-z0-9'\-]{1,30})\s+(?:font|typeface)\b/g)) {
-      const roleEntry = FONT_ROLE_KEYWORDS.find((entry) => entry.test.test(text));
-      add(match[1] ?? "", roleEntry?.role ?? null, fontWeight(text));
+      const word = match[1] ?? "";
+      if (isFontRoleLabel(word)) continue;
+      const line = lineContaining(text, match.index ?? 0);
+      const roleEntry = FONT_ROLE_KEYWORDS.find((entry) => entry.test.test(line));
+      add(word, roleEntry?.role ?? null, fontWeight(line));
     }
   }
 
@@ -406,7 +432,41 @@ const POSITIONING_PATTERN = /\b(?:[A-Z][\w&. ]{1,40}|we)\s+(?:is|are)\s+(?:the|a
  * by end of line rather than more words.
  */
 const FONT_LABEL_PATTERN =
-  /^\s*(?:([A-Za-z][A-Za-z ]{0,20}?)\s+)?(?:font|typeface)\s*(?:family)?\s*[:\-]\s*([A-Z][A-Za-z0-9'\-]{1,30})\s*$/;
+  /^\s*(?:([A-Za-z][A-Za-z ]{0,20}?)\s+)?(?:font|typeface)\s*(?:family)?\s*[:\-]\s*([A-Z][A-Za-z0-9'\-]*(?: [A-Z][A-Za-z0-9'\-]*){0,3})\s*$/;
+
+/**
+ * "Heading font: Sora" also contains "Heading font", so the reverse reading
+ * would file the role word as a family. A word that names a role is never a
+ * family name.
+ */
+function isFontRoleLabel(word: string): boolean {
+  return FONT_ROLE_KEYWORDS.some((entry) => entry.test.test(`${word} font`));
+}
+
+/** "colours" reads better as "Colours" than as "Colours:" in a title slot. */
+function titleCaseLabel(label: string): string {
+  const trimmed = label.trim();
+  if (trimmed.length === 0) return "Brand";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+}
+
+/** The sentence around a hex, so "our primary color is #123456" is still found. */
+function sentenceContaining(text: string, index: number): string {
+  const start = Math.max(
+    text.lastIndexOf(".", index) + 1,
+    text.lastIndexOf("\n", index) + 1,
+  );
+  const rest = text.slice(start);
+  const boundary = rest.search(/[.\n]/);
+  return boundary === -1 ? rest : rest.slice(0, start + boundary);
+}
+
+/** The role in "Sora is the heading font" belongs to the sentence, not the file. */
+function lineContaining(text: string, index: number): string {
+  const start = text.lastIndexOf("\n", Math.max(index - 1, 0)) + 1;
+  const end = text.indexOf("\n", index);
+  return text.slice(start, end === -1 ? text.length : end);
+}
 
 function fontWeight(text: string): string | null {
   return /\b(?:bold|black|heavy|semibold|extrabold)\b/i.test(text) ? "700" : null;

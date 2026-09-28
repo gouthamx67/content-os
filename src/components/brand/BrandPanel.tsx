@@ -122,11 +122,17 @@ export function BrandPanel({
     }`;
   }
 
-  function analyze() {
+  // force is the difference between "read what is new" and "re-read
+  // everything". The button promises the second one, so it has to ask for it.
+  function analyze(force: boolean) {
     return call(
       "analyze",
       `/api/projects/${projectId}/brand/analyze`,
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force }),
+      },
       describeRun,
     );
   }
@@ -233,7 +239,7 @@ export function BrandPanel({
 
         <div className="flex flex-wrap items-center gap-2">
           {!brand ? (
-            <Button onClick={analyze} disabled={busy !== null}>
+            <Button onClick={() => analyze(false)} disabled={busy !== null}>
               <Sparkles size={14} />
               {busy === "analyze" ? "Analyzing" : "Analyze brand"}
             </Button>
@@ -254,7 +260,7 @@ export function BrandPanel({
               </Button>
               <Button
                 variant="secondary"
-                onClick={analyze}
+                onClick={() => analyze(true)}
                 disabled={busy !== null}
                 title="Re-read every source, ignoring change detection"
               >

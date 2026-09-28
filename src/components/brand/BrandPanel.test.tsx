@@ -169,7 +169,35 @@ describe("BrandPanel", () => {
     await waitFor(() => expect(requests).toHaveLength(1));
     expect(requests[0]?.url).toBe(`/api/projects/${projectId}/brand/analyze`);
     expect(requests[0]?.init?.method).toBe("POST");
+    expect(JSON.parse(String(requests[0]?.init?.body))).toEqual({ force: false });
     await waitFor(() => expect(screen.getByText(/Analyzed 1 source/)).toBeTruthy());
+  });
+
+  it("asks for a forced re-analysis when the user says re-analyze all", async () => {
+    stubFetch(() =>
+      jsonResponse({
+        brand: serializeBrandProfile(profile()),
+        skipped: "NONE",
+        analyzedSourceIds: ["src_1"],
+        notes: [],
+      }),
+    );
+    const user = userEvent.setup();
+    render(
+      <BrandPanel
+        projectId={projectId}
+        brand={serializeBrandProfile(profile())}
+        execution={null}
+        sourceStates={[]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /re-analyze all/i }));
+
+    await waitFor(() => expect(requests).toHaveLength(1));
+    // Without the flag the endpoint would only look at changed sources, and the
+    // button would quietly do nothing.
+    expect(JSON.parse(String(requests[0]?.init?.body))).toEqual({ force: true });
   });
 
   it("says an unchanged refresh did nothing instead of claiming a new analysis", async () => {

@@ -169,6 +169,7 @@ function mapSourceState(row: SourceStateRow): BrandSourceState {
     contentHash: row.contentHash,
     sourceUpdatedAt: pgTimestampToIso(row.sourceUpdatedAt),
     analyzerId: row.analyzerId,
+    analyzerRevision: row.analyzerRevision,
     brandVersion: row.brandVersion,
     analyzedAt: pgTimestampToIso(row.analyzedAt),
   };
@@ -449,6 +450,7 @@ export class PostgresBrandRepository implements BrandRepository {
             contentHash: state.contentHash,
             sourceUpdatedAt: state.sourceUpdatedAt,
             analyzerId: state.analyzerId,
+            analyzerRevision: state.analyzerRevision,
             brandVersion: state.brandVersion,
             analyzedAt: state.analyzedAt,
           },
@@ -456,6 +458,7 @@ export class PostgresBrandRepository implements BrandRepository {
             contentHash: state.contentHash,
             sourceUpdatedAt: state.sourceUpdatedAt,
             analyzerId: state.analyzerId,
+            analyzerRevision: state.analyzerRevision,
             brandVersion: state.brandVersion,
             analyzedAt: state.analyzedAt,
           },

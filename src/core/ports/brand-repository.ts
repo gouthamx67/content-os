@@ -55,6 +55,7 @@ export type BrandSourceStateValues = {
   contentHash: string | null;
   sourceUpdatedAt: string;
   analyzerId: string;
+  analyzerRevision: string | null;
   brandVersion: number;
   analyzedAt: string;
 };

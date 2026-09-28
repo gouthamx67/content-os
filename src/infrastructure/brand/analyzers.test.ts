@@ -208,6 +208,78 @@ Book a demo to see Acme automation in action
     ).toBe(true);
   });
 
+  it("titles a labelled guideline by its own label, not a shared one", async () => {
+    const brief = [
+      "Tagline: One source of truth",
+      "Voice: plain and direct",
+      "Positioning: the content operating system for regulated teams",
+    ].join("\n");
+
+    const result = await analyzer.analyze(
+      input({ source: source({ type: "TEXT" }), text: brief }),
+    );
+
+    // One shared title would collapse these into a single slot and make the
+    // merge report unrelated statements as a disagreement.
+    expect(result.guidelines.map((guideline) => guideline.title)).toEqual([
+      "Tagline",
+      "Voice",
+      "Positioning",
+    ]);
+    expect(new Set(result.guidelines.map((guideline) => guideline.title)).size).toBe(3);
+  });
+
+  it("reads a font role from the label rather than from the whole document", async () => {
+    const result = await analyzer.analyze(
+      input({
+        source: source({ type: "TEXT" }),
+        text: ["Heading font: Sora", "Body font: Inter", "Code font: JetBrains Mono"].join("\n"),
+      }),
+    );
+
+    expect(
+      Object.fromEntries(result.fonts.map((font) => [font.family, font.role])),
+    ).toEqual({ Sora: "HEADING", Inter: "BODY", "JetBrains Mono": "MONOSPACE" });
+  });
+
+  it("gives each color the role its own line states", async () => {
+    const result = await analyzer.analyze(
+      input({
+        source: source({ type: "TEXT" }),
+        text: [
+          "Primary color: #1D4ED8",
+          "Accent color: #F59E0B",
+          "Background color: #FFFFFF",
+          "Text color: #111111",
+        ].join("\n"),
+      }),
+    );
+
+    expect(
+      Object.fromEntries(result.colors.map((color) => [color.hex, color.role])),
+    ).toEqual({
+      "#1d4ed8": "PRIMARY",
+      "#f59e0b": "ACCENT",
+      "#ffffff": "BACKGROUND",
+      "#111111": "TEXT",
+    });
+    expect(result.colors.every((color) => color.basis === "EXPLICIT_GUIDELINE")).toBe(true);
+  });
+
+  it("does not invent a role for a color nobody labelled", async () => {
+    const result = await analyzer.analyze(
+      input({
+        source: source({ type: "TEXT" }),
+        text: ["The deck uses #1D4ED8 and #F59E0B throughout."].join("\n"),
+      }),
+    );
+
+    // Nothing here names a role, so neither color may claim a slot on the
+    // strength of a role stated somewhere else in the document.
+    expect(result.colors.map((color) => color.confidence)).toEqual(["LOW", "LOW"]);
+    expect(result.colors.every((color) => color.basis === "GENERAL_EXTRACTION")).toBe(true);
+  });
+
   it("produces nothing for an unreadable pdf", async () => {
     const result = await analyzer.analyze(
       input({

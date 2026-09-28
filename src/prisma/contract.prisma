@@ -1104,19 +1104,20 @@ model BrandConflict {
 /// What the analyzers last read from one source. An unchanged hash means the
 /// source is already represented in the profile, so an incremental run skips it.
 model BrandSourceState {
-  id              String                     @id @default(cuid(2))
-  projectId       String
-  sourceId        String
-  contentHash     String?
-  sourceUpdatedAt TimestamptzString
-  analyzerId      String
-  brandVersion    Int
-  analyzedAt      TimestamptzString          @default(now())
-  createdAt       TimestamptzString          @default(now())
-  updatedAt       temporal.updatedAtString()
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  sourceId         String
+  contentHash      String?
+  sourceUpdatedAt  TimestamptzString
+  analyzerId       String
+  analyzerRevision String?
+  brandVersion     Int
+  analyzedAt       TimestamptzString          @default(now())
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
 
-  project         Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
-  source          Source                     @relation(fields:[sourceId], references:[id], onDelete: Cascade)
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  source           Source                     @relation(fields:[sourceId], references:[id], onDelete: Cascade)
 
   @@unique([projectId, sourceId], map: "brand_source_state_source_key")
   @@index([sourceId], map: "brand_source_state_source_idx")

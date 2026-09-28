@@ -2540,6 +2540,13 @@
                   "kind": "scalar"
                 }
               },
+              "analyzerRevision": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "brandVersion": {
                 "nullable": false,
                 "type": {
@@ -2638,6 +2645,9 @@
                 },
                 "analyzerId": {
                   "column": "analyzerId"
+                },
+                "analyzerRevision": {
+                  "column": "analyzerRevision"
                 },
                 "brandVersion": {
                   "column": "brandVersion"
@@ -8703,6 +8713,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "analyzerRevision": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "brandVersion": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
@@ -13296,7 +13311,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "6c77f72461b984d10b46a28826a0a4978533bced104aea4ed33bc993ee05e0fd"
+    "storageHash": "51ad3137a964ebb61d81d7b9217aa744e853d9430ec996ee1d688631767f3b36"
   },
   "execution": {
     "executionHash": "b4e9213d1d8165ec37af2762ca6b408c78ef3547f2e77bf317f4f3bd04b96e77",

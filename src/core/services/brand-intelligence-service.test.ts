@@ -19,7 +19,7 @@ import type { BrandSourceStateValues, UpdateBrandInput } from "../ports/brand-re
 import type { EvidenceValues, IntelligenceRepository } from "../ports/intelligence-repository";
 import type { Source } from "../domain/source";
 import type { Asset } from "../domain/asset";
-import type { BrandSignal } from "../domain/intelligence";
+import type { BrandSignal, Evidence } from "../domain/intelligence";
 import type {
   BrandInterpretationProvider,
   BrandInterpretationRequest,
@@ -116,17 +116,35 @@ class FakeBrandRepository {
 }
 
 class FakeIntelligence {
+  /** Makes the evidence read fail, the way an unavailable store would. */
+  failEvidenceRead = false;
   readonly recorded: EvidenceValues[] = [];
+  stored: Evidence[] = [];
   readonly brandSignals: BrandSignal[] = [];
 
   readonly repository: Pick<
     IntelligenceRepository,
     "recordEvidence" | "listEvidence" | "listBrandSignals"
   > = {
-    recordEvidence: async (_projectId, values) => {
+    recordEvidence: async (projectId, values) => {
       this.recorded.push(...values);
+      // The real store keeps these rows, and a later analysis needs them to
+      // tell which source produced a stored value.
+      for (const value of values) {
+        const existing = this.stored.find((item) => item.id === value.id);
+        const row = {
+          projectId,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          ...value,
+        };
+        if (existing) Object.assign(existing, row);
+        else this.stored.push(row);
+      }
     },
-    listEvidence: async () => [],
+    listEvidence: async () => {
+      if (this.failEvidenceRead) throw new Error("evidence store unavailable");
+      return [...this.stored];
+    },
     listBrandSignals: async () => this.brandSignals,
   };
 }
@@ -269,10 +287,14 @@ function draft(
   return { key, sourceId, kind, locator, excerpt, metadata: null };
 }
 
-function colorOnly(hex: string, basis: "DESIGN_TOKEN" | "GENERAL_EXTRACTION"): BrandAnalyzerResult {
+function colorOnly(
+  hex: string,
+  basis: "DESIGN_TOKEN" | "GENERAL_EXTRACTION",
+  sourceId = "src_1",
+): BrandAnalyzerResult {
   const result = emptyBrandAnalyzerResult();
-  const key = brandEvidenceKey("src_1", "SOURCE_FRAGMENT", `html:css:${hex}`);
-  result.evidence.push(draft(key, "src_1", "SOURCE_FRAGMENT", `html:css:${hex}`, hex));
+  const key = brandEvidenceKey(sourceId, "SOURCE_FRAGMENT", `html:css:${hex}`);
+  result.evidence.push(draft(key, sourceId, "SOURCE_FRAGMENT", `html:css:${hex}`, hex));
   result.colors.push({
     role: "PRIMARY",
     name: `Brand color ${hex}`,
@@ -493,16 +515,28 @@ describe("BrandIntelligenceService precedence and conflicts", () => {
   });
 
   it("keeps two competing primaries and reports the disagreement", async () => {
-    let call = 0;
+    // Two sources that each name their own primary. A re-read replaces what a
+    // source said last time, but it must not silence the other source, or the
+    // profile would quietly pick a winner instead of reporting a disagreement.
     const { service } = buildService({
-      analyzer: updatingAnalyzer(async () => {
-        call += 1;
-        return call === 1 ? colorOnly("#4f46e5", "DESIGN_TOKEN") : colorOnly("#111111", "DESIGN_TOKEN");
-      }),
+      sources: [
+        source({ id: "src_1", contentHash: "hash_1" }),
+        source({
+          id: "src_2",
+          name: "Design tokens",
+          uri: "https://acme.test/tokens.json",
+          type: "TEXT",
+          mimeType: "application/json",
+          contentHash: "hash_2",
+          storageKey: "key_2",
+        }),
+      ],
+      analyzer: updatingAnalyzer(async (input) =>
+        colorOnly(input.source?.id === "src_2" ? "#111111" : "#4f46e5", "DESIGN_TOKEN", input.source?.id ?? "src_1"),
+      ),
     });
 
-    await service.analyze(PROJECT_ID, USER_ID);
-    const report = await service.analyze(PROJECT_ID, USER_ID, { force: true });
+    const report = await service.analyze(PROJECT_ID, USER_ID);
 
     expect(report.profile.colors).toHaveLength(2);
     expect(report.profile.conflicts).toHaveLength(1);
@@ -513,18 +547,44 @@ describe("BrandIntelligenceService precedence and conflicts", () => {
   });
 
   it("reports a term both preferred and avoided", async () => {
-    const preferred: BrandAnalyzerResult = websiteResult();
-    preferred.terms[0]!.preference = "PREFERRED";
-    const avoided: BrandAnalyzerResult = websiteResult();
-    avoided.terms[0]!.preference = "AVOID";
+    const termResult = (preference: "PREFERRED" | "AVOID", sourceId: string): BrandAnalyzerResult => {
+      const result = emptyBrandAnalyzerResult();
+      const key = brandEvidenceKey(sourceId, "SOURCE_FRAGMENT", "text:vocabulary");
+      result.evidence.push(draft(key, sourceId, "SOURCE_FRAGMENT", "text:vocabulary", "content operations"));
+      result.terms.push({
+        term: "content operations",
+        category: "FEATURE",
+        preference,
+        confidence: "MEDIUM",
+        origin: "EXTRACTED",
+        basis: preference === "AVOID" ? "EXPLICIT_GUIDELINE" : "GENERAL_EXTRACTION",
+        evidenceKeys: [key],
+        notes: null,
+      });
+      return result;
+    };
 
-    let call = 0;
     const { service } = buildService({
-      analyzer: updatingAnalyzer(async () => (call++ === 0 ? preferred : avoided)),
+      sources: [
+        source({ id: "src_1", contentHash: "hash_1" }),
+        source({
+          id: "src_2",
+          name: "Voice guide",
+          uri: null,
+          type: "TEXT",
+          mimeType: "text/plain",
+          contentHash: "hash_2",
+          storageKey: "key_2",
+        }),
+      ],
+      analyzer: updatingAnalyzer(async (input) =>
+        input.source?.id === "src_2"
+          ? termResult("AVOID", "src_2")
+          : termResult("PREFERRED", "src_1"),
+      ),
     });
 
-    await service.analyze(PROJECT_ID, USER_ID);
-    const report = await service.analyze(PROJECT_ID, USER_ID, { force: true });
+    const report = await service.analyze(PROJECT_ID, USER_ID);
 
     expect(report.profile.conflicts.some((conflict) => conflict.field === "term:content operations")).toBe(true);
   });
@@ -573,6 +633,205 @@ describe("BrandIntelligenceService user corrections", () => {
     expect(conflict?.resolvedBy).toBe("USER");
     // The displaced value carried evidence, so the conflict must point at it.
     expect(conflict?.evidenceIds.length).toBeGreaterThan(0);
+  });
+
+  it("keeps a recorded conflict when an unrelated field is edited next", async () => {
+    const { service } = buildService({ analyzer: updatingAnalyzer(async () => colorOnly("#4f46e5", "DESIGN_TOKEN")) });
+
+    await service.analyze(PROJECT_ID, USER_ID);
+    const paletteEdit = await service.update(PROJECT_ID, USER_ID, {
+      colors: [{ name: "Ink", hex: "#111111", role: "PRIMARY" }],
+    });
+    expect(paletteEdit.conflicts.map((item) => item.field)).toEqual(["color:primary"]);
+
+    // The name edit replaces nothing, but the displaced color is no longer an
+    // entry, so recomputing from entries alone would quietly forget the clash.
+    const nameEdit = await service.update(PROJECT_ID, USER_ID, { name: "Acme Holdings" });
+
+    const conflict = nameEdit.conflicts.find((item) => item.field === "color:primary");
+    expect(conflict?.retained).toContain("#111111");
+    expect(conflict?.competing).toContain("#4f46e5");
+    expect(conflict?.resolvedBy).toBe("USER");
+  });
+
+  it("refuses to edit a locked profile", async () => {
+    const { service } = buildService({});
+
+    await service.analyze(PROJECT_ID, USER_ID);
+    await service.setLock(PROJECT_ID, USER_ID, true);
+
+    await expect(
+      service.update(PROJECT_ID, USER_ID, { name: "Something else" }),
+    ).rejects.toMatchObject({ code: "BRAND_LOCKED" });
+    await expect(
+      service.update(PROJECT_ID, USER_ID, {
+        colors: [{ name: "Ink", hex: "#111111", role: "PRIMARY" }],
+      }),
+    ).rejects.toMatchObject({ code: "BRAND_LOCKED" });
+  });
+
+  it("retracts an extracted value a re-read no longer supports", async () => {
+    let round = 0;
+    const { service } = buildService({
+      analyzer: updatingAnalyzer(async () => {
+        round += 1;
+        return round === 1
+          ? colorOnly("#1d4ed8", "DESIGN_TOKEN")
+          : emptyBrandAnalyzerResult();
+      }),
+    });
+
+    const first = await service.analyze(PROJECT_ID, USER_ID);
+    expect(first.profile.colors.map((color) => color.hex)).toEqual(["#1d4ed8"]);
+
+    // Force a re-read with the document unchanged. The analyzer no longer finds
+    // the color, so keeping the stored copy would leave a value in the profile
+    // that nothing in the source supports.
+    const reread = await service.analyze(PROJECT_ID, USER_ID, { force: true });
+    expect(reread.profile.colors).toHaveLength(0);
+  });
+
+  it("re-reads a source whose recorded analyzer revision is out of date", async () => {
+    const analyzeSpy = vi.fn(async () => websiteResult());
+    const { service, repository } = buildService({ analyzer: updatingAnalyzer(analyzeSpy) });
+
+    await service.analyze(PROJECT_ID, USER_ID);
+    expect(analyzeSpy).toHaveBeenCalledTimes(1);
+
+    // Pretend the profile was last read by an earlier version of the analyzer.
+    const states = await repository.listSourceStates(PROJECT_ID);
+    await repository.saveSourceStates(
+      PROJECT_ID,
+      states.map((state) => ({ ...state, analyzerRevision: "an-ancient-revision" })),
+    );
+
+    const afterUpgrade = await service.analyze(PROJECT_ID, USER_ID);
+    // An extraction fix has to reach profiles whose documents never changed.
+    expect(afterUpgrade.skipped).toBe("NONE");
+    expect(analyzeSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("retracts a value whose source was deleted", async () => {
+    let round = 0;
+    const intelligence = new FakeIntelligence();
+    const { service } = buildService({
+      intelligence,
+      analyzer: updatingAnalyzer(async () => {
+        round += 1;
+        return round === 1
+          ? colorOnly("#1d4ed8", "DESIGN_TOKEN")
+          : emptyBrandAnalyzerResult();
+      }),
+    });
+
+    await service.analyze(PROJECT_ID, USER_ID);
+    expect((await service.getProfile(PROJECT_ID, USER_ID)).profile?.colors).toHaveLength(1);
+
+    // Deleting a source deletes its evidence rows. A value whose evidence is
+    // gone has lost its basis, so it must not outlive the document.
+    intelligence.stored.length = 0;
+    const reread = await service.analyze(PROJECT_ID, USER_ID, { force: true });
+    expect(reread.profile.colors).toHaveLength(0);
+  });
+
+  it("does not report up to date when a value has lost its source", async () => {
+    let round = 0;
+    const intelligence = new FakeIntelligence();
+    const { service } = buildService({
+      intelligence,
+      analyzer: updatingAnalyzer(async () => {
+        round += 1;
+        return round === 1
+          ? colorOnly("#1d4ed8", "DESIGN_TOKEN")
+          : emptyBrandAnalyzerResult();
+      }),
+    });
+
+    await service.analyze(PROJECT_ID, USER_ID);
+    expect((await service.refresh(PROJECT_ID, USER_ID)).skipped).toBe("UP_TO_DATE");
+
+    intelligence.stored.length = 0;
+
+    // Deleting a source deletes its evidence. The document is unchanged, so
+    // nothing looks stale, but the profile is no longer up to date: it still
+    // holds a value nothing supports.
+    const afterDeletion = await service.refresh(PROJECT_ID, USER_ID);
+    expect(afterDeletion.skipped).toBe("NONE");
+    expect(afterDeletion.profile.colors).toHaveLength(0);
+  });
+
+  it("recomputes from the surviving sources after one is deleted", async () => {
+    const repository = new FakeBrandRepository();
+    const intelligence = new FakeIntelligence();
+    const both = buildService({
+      repository,
+      intelligence,
+      sources: [source(), source({ id: "src_2", name: "Design tokens", contentHash: "hash_2" })],
+      analyzer: updatingAnalyzer(async (input) =>
+        colorOnly(input.source?.id === "src_2" ? "#111111" : "#1d4ed8", "DESIGN_TOKEN", input.source?.id ?? "src_1"),
+      ),
+    });
+    await both.service.analyze(PROJECT_ID, USER_ID);
+    expect((await both.service.getProfile(PROJECT_ID, USER_ID)).profile?.colors).toHaveLength(2);
+
+    // The second source is deleted, taking its evidence rows with it, which is
+    // what the store does on delete. Retracting the orphaned value is not enough
+    // on its own: the profile has to be read again from what is left, or it
+    // would end up describing only the deletion.
+    intelligence.stored = intelligence.stored.filter((item) => item.sourceId !== "src_2");
+
+    const surviving = buildService({
+      repository,
+      intelligence,
+      sources: [source()],
+      analyzer: updatingAnalyzer(async () => colorOnly("#1d4ed8", "DESIGN_TOKEN")),
+    });
+
+    const after = await surviving.service.refresh(PROJECT_ID, USER_ID);
+    expect(after.skipped).toBe("NONE");
+    expect(after.profile.colors.map((color) => color.hex)).toEqual(["#1d4ed8"]);
+  });
+
+  it("keeps the profile when the evidence read fails", async () => {
+    const intelligence = new FakeIntelligence();
+    const { service } = buildService({
+      intelligence,
+      analyzer: updatingAnalyzer(async () => colorOnly("#1d4ed8", "DESIGN_TOKEN")),
+    });
+
+    await service.analyze(PROJECT_ID, USER_ID);
+    expect((await service.getProfile(PROJECT_ID, USER_ID)).profile?.colors).toHaveLength(1);
+
+    // A repository that cannot be read is not a project without evidence.
+    // Retracting on this alone would empty every profile whenever the store
+    // hiccups.
+    intelligence.failEvidenceRead = true;
+
+    const afterFailure = await service.refresh(PROJECT_ID, USER_ID);
+    expect(afterFailure.profile.colors.map((color) => color.hex)).toEqual(["#1d4ed8"]);
+  });
+
+  it("keeps a user correction through a re-read that retracts the old value", async () => {
+    let round = 0;
+    const { service } = buildService({
+      analyzer: updatingAnalyzer(async () => {
+        round += 1;
+        return round === 1
+          ? colorOnly("#1d4ed8", "DESIGN_TOKEN")
+          : emptyBrandAnalyzerResult();
+      }),
+    });
+
+    await service.analyze(PROJECT_ID, USER_ID);
+    const corrected = await service.update(PROJECT_ID, USER_ID, {
+      colors: [{ name: "Ink", hex: "#0b1220", role: "PRIMARY" }],
+    });
+    expect(corrected.colors.map((color) => color.hex)).toEqual(["#0b1220"]);
+
+    const reread = await service.analyze(PROJECT_ID, USER_ID, { force: true });
+    // The user asserted this value; a re-read retracts readings, not assertions.
+    expect(reread.profile.colors.map((color) => color.hex)).toEqual(["#0b1220"]);
+    expect(reread.profile.colors[0]?.origin).toBe("USER");
   });
 
   it("does not record a conflict for a slot the user left alone", async () => {
@@ -722,8 +981,10 @@ describe("BrandIntelligenceService incremental analysis", () => {
 
   it("re-analyzes only the source whose content changed", async () => {
     const repository = new FakeBrandRepository();
+    const intelligence = new FakeIntelligence();
     const first = buildService({
       repository,
+      intelligence,
       sources: [source(), source({ id: "src_2", name: "Acme docs", contentHash: "hash_2" })],
     });
     await first.service.analyze(PROJECT_ID, USER_ID);
@@ -735,6 +996,7 @@ describe("BrandIntelligenceService incremental analysis", () => {
     });
     const changed = buildService({
       repository,
+      intelligence,
       sources: [source(), source({ id: "src_2", name: "Acme docs", contentHash: "hash_changed" })],
       analyzer: updatingAnalyzer(spy),
     });
@@ -761,11 +1023,13 @@ describe("BrandIntelligenceService incremental analysis", () => {
 
   it("does not treat a failed source as making the brand stale", async () => {
     const repository = new FakeBrandRepository();
-    const first = buildService({ repository });
+    const intelligence = new FakeIntelligence();
+    const first = buildService({ repository, intelligence });
     await first.service.analyze(PROJECT_ID, USER_ID);
 
     const broken = buildService({
       repository,
+      intelligence,
       sources: [source(), source({ id: "src_2", status: "FAILED" })],
     });
     const view = await broken.service.getProfile(PROJECT_ID, USER_ID);

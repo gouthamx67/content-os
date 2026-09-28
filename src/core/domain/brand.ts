@@ -243,6 +243,7 @@ export type BrandSourceState = {
   contentHash: string | null;
   sourceUpdatedAt: string;
   analyzerId: string;
+  analyzerRevision: string | null;
   brandVersion: number;
   analyzedAt: string;
 };
