@@ -40,6 +40,13 @@ async function cleanup() {
     (id) => orm.Source.where({ id }).delete(),
   );
 
+  // Intents hang off projects, so they go first or the project delete trips its
+  // own foreign key.
+  await clearRows(
+    await orm.ContentIntent.all(),
+    (id) => orm.ContentIntent.where({ id }).delete(),
+  );
+
   await clearRows(
     await orm.Project.all(),
     (id) => orm.Project.where({ id }).delete(),
@@ -2503,5 +2510,348 @@ describe("brand API integration", () => {
       context,
     );
     expect(response.status).toBe(401);
+  });
+});
+
+async function projectForIntent(owner: {
+  workspace?: { id: string };
+  user: { id: string };
+}) {
+  expect(owner.workspace).toBeTruthy();
+  return services.projectService.createForWorkspace(
+    owner.workspace!.id,
+    { name: "Intent project" },
+    owner.user.id,
+  );
+}
+
+describe("content intent integration (real postgres)", () => {
+  async function analyzedIntentProject() {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Brand brief", value: BRAND_BRIEF },
+    ]);
+    return { owner, project };
+  }
+
+  it("survives a round trip through postgres with its constraints intact", async () => {
+    const { owner, project } = await analyzedIntentProject();
+
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make three 45 second cinematic launch videos announcing our pricing for LinkedIn, 16:9, confident",
+    });
+    expect(resolved.intent.status).toBe("RESOLVED");
+    expect(resolved.intent.contentTypeId).toBe("video.launch");
+    expect(resolved.intent.quantity).toBe(3);
+    expect(resolved.intent.durationSeconds).toBe(45);
+
+    // Read it back through a second service call, so what is asserted is what
+    // storage actually kept rather than what the resolver held in memory.
+    const stored = await services.contentIntentService.get(
+      project.id,
+      resolved.intent.id,
+      owner.user.id,
+    );
+    expect(stored.intent.rawRequest).toBe(
+      "Make three 45 second cinematic launch videos announcing our pricing for LinkedIn, 16:9, confident",
+    );
+    expect(stored.intent.platforms).toEqual(["linkedin"]);
+    expect(stored.intent.quantity).toBe(3);
+    expect(stored.intent.aspectRatio).toBe("16:9");
+    expect(stored.intent.constraints.length).toBeGreaterThan(0);
+    for (const constraint of stored.intent.constraints) {
+      expect(["USER", "PROJECT", "BRAND", "AI", "SYSTEM"]).toContain(constraint.source);
+    }
+    // Three videos of one length is a real open question, and it is the only one:
+    // a batch of different lengths is the one thing storage must not guess.
+    expect(stored.clarifications.map((entry) => entry.field)).toEqual(["quantity"]);
+    for (const clarification of stored.clarifications) {
+      expect(clarification.question.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("keeps a custom ratio as its dimensions across storage", async () => {
+    const { owner, project } = await analyzedIntentProject();
+
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a launch video for LinkedIn at 1080x1920",
+    });
+    expect(resolved.intent.aspectRatio).toBe("CUSTOM");
+    expect(resolved.intent.customAspectRatio).toEqual({ width: 1080, height: 1920 });
+
+    // A bare "CUSTOM" would be unreadable; the dimensions are the meaning.
+    const stored = await services.contentIntentService.get(
+      project.id,
+      resolved.intent.id,
+      owner.user.id,
+    );
+    expect(stored.intent.customAspectRatio).toEqual({ width: 1080, height: 1920 });
+    const ratioConstraint = stored.intent.constraints.find(
+      (constraint) => constraint.key === "aspectRatio",
+    );
+    expect(ratioConstraint?.value).toBe("1080x1920");
+  });
+
+  it("lists newest first and applies a correction to the stored row", async () => {
+    const { owner, project } = await analyzedIntentProject();
+    const userId = owner.user.id;
+
+    const first = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId,
+      request: "Make a 15 second explainer video for YouTube",
+    });
+    const second = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId,
+      request: "Make a 15 second launch video for LinkedIn",
+    });
+
+    const listed = await services.contentIntentService.list(project.id, userId);
+    expect(listed.map((view) => view.intent.id)).toEqual([second.intent.id, first.intent.id]);
+
+    const updated = await services.contentIntentService.update(
+      project.id,
+      first.intent.id,
+      userId,
+      { durationSeconds: 40, platforms: ["youtube", "linkedin"] },
+    );
+    expect(updated.intent.durationSeconds).toBe(40);
+    expect(updated.intent.platforms).toEqual(["youtube", "linkedin"]);
+
+    const reread = await services.contentIntentService.get(
+      project.id,
+      first.intent.id,
+      userId,
+    );
+    expect(reread.intent.durationSeconds).toBe(40);
+    expect(reread.intent.quantity).toBe(1);
+  });
+
+  it("degrades a malformed stored constraint instead of failing the read", async () => {
+    const { owner, project } = await analyzedIntentProject();
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn",
+    });
+
+    // Written straight to the column, past the repository: this is what a bad
+    // migration or a hand edit would leave behind.
+    await orm.ContentIntent.where({ id: resolved.intent.id }).update({
+      constraints: "not json",
+    });
+
+    const stored = await services.contentIntentService.get(
+      project.id,
+      resolved.intent.id,
+      owner.user.id,
+    );
+    expect(stored.intent.id).toBe(resolved.intent.id);
+    expect(stored.intent.constraints).toEqual([]);
+  });
+
+  it("hides another project's intent behind the same not-found answer", async () => {
+    const { owner, project } = await analyzedIntentProject();
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn",
+    });
+
+    const stranger = await registerUser();
+    const strangerProject = await projectForIntent(stranger);
+
+    await expect(
+      services.contentIntentService.get(
+        strangerProject.id,
+        resolved.intent.id,
+        stranger.user.id,
+      ),
+    ).rejects.toMatchObject({ code: "INTENT_NOT_FOUND" });
+
+    const strangerList = await services.contentIntentService.list(
+      strangerProject.id,
+      stranger.user.id,
+    );
+    expect(strangerList).toEqual([]);
+  });
+});
+
+describe("content intent API integration", () => {
+  // The collection and item routes take different params, so they are kept apart
+  // rather than merged into one object typed as the union of both.
+  async function intentRoutes() {
+    const collection = await import("../../app/api/projects/[id]/intent/route");
+    const item = await import("../../app/api/projects/[id]/intent/[intentId]/route");
+    return { collection, item };
+  }
+
+  it("resolves, lists, reads and corrects over HTTP with no session and no other user", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    const { collection, item } = await intentRoutes();
+    const { POST, GET } = collection;
+    const { GET: GET_ITEM, PATCH } = item;
+
+    const headers = { cookie: `content_os_session=${owner.token}` };
+    const json = { ...headers, "content-type": "application/json" };
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const url = `http://localhost/api/projects/${project.id}/intent`;
+
+    // No sourceIds at all: someone asking in their own words attaches nothing.
+    const created = await POST(
+      new Request(url, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({ request: "Make a 30 second launch video for LinkedIn" }),
+      }),
+      context,
+    );
+    expect(created.status).toBe(200);
+    const createdBody = (await created.json()) as {
+      intent: { id: string; contentTypeId: string; status: string };
+      clarifications: unknown[];
+      registry: { contentTypes: Array<{ key: string; label: string }> };
+    };
+    expect(createdBody.intent.contentTypeId).toBe("video.launch");
+    expect(createdBody.intent.status).toBe("RESOLVED");
+    expect(createdBody.registry.contentTypes.length).toBeGreaterThan(0);
+
+    const listed = await GET(new Request(url, { headers }), context);
+    expect(listed.status).toBe(200);
+    const listedBody = (await listed.json()) as {
+      intents: Array<{ intent: { id: string } }>;
+    };
+    expect(listedBody.intents.map((entry) => entry.intent.id)).toEqual([createdBody.intent.id]);
+
+    const itemContext = {
+      params: Promise.resolve({ id: project.id, intentId: createdBody.intent.id }),
+    };
+    const patched = await PATCH(
+      new Request(`${url}/${createdBody.intent.id}`, {
+        method: "PATCH",
+        headers: json,
+        body: JSON.stringify({ durationSeconds: 20, tone: "direct" }),
+      }),
+      itemContext,
+    );
+    expect(patched.status).toBe(200);
+    const patchedBody = (await patched.json()) as {
+      intent: { durationSeconds: number; tone: string };
+    };
+    expect(patchedBody.intent.durationSeconds).toBe(20);
+    expect(patchedBody.intent.tone).toBe("direct");
+
+    const read = await GET_ITEM(new Request(`${url}/${createdBody.intent.id}`, { headers }), itemContext);
+    expect(read.status).toBe(200);
+    expect(((await read.json()) as { intent: { durationSeconds: number } }).intent.durationSeconds).toBe(20);
+
+    // Unauthenticated reads and writes are refused before any storage is touched.
+    const anonymous = { params: Promise.resolve({ id: project.id }) };
+    expect((await GET(new Request(url), anonymous)).status).toBe(401);
+    expect(
+      (
+        await POST(
+          new Request(url, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ request: "Make a video" }),
+          }),
+          anonymous,
+        )
+      ).status,
+    ).toBe(401);
+
+    const stranger = await registerUser();
+    const strangerProject = await projectForIntent(stranger);
+    const strangerRoutes = await intentRoutes();
+    const strangerHeaders = { cookie: `content_os_session=${stranger.token}` };
+    const strangerContext = { params: Promise.resolve({ id: strangerProject.id }) };
+    expect(
+      (
+        await strangerRoutes.collection.GET(
+          new Request(url, { headers: strangerHeaders }),
+          strangerContext,
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await strangerRoutes.item.GET(
+          new Request(`${url}/${createdBody.intent.id}`, { headers: strangerHeaders }),
+          { params: Promise.resolve({ id: strangerProject.id, intentId: createdBody.intent.id }) },
+        )
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await strangerRoutes.item.PATCH(
+          new Request(`${url}/${createdBody.intent.id}`, {
+            method: "PATCH",
+            headers: { ...strangerHeaders, "content-type": "application/json" },
+            body: JSON.stringify({ durationSeconds: 90 }),
+          }),
+          { params: Promise.resolve({ id: strangerProject.id, intentId: createdBody.intent.id }) },
+        )
+      ).status,
+    ).toBe(404);
+  });
+
+  it("answers an under-specified request with a question, not an invention", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    const { collection } = await intentRoutes();
+    const { POST } = collection;
+    const json = {
+      cookie: `content_os_session=${owner.token}`,
+      "content-type": "application/json",
+    };
+
+    const response = await POST(
+      new Request(`http://localhost/api/projects/${project.id}/intent`, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({ request: "Make something about our new pricing page" }),
+      }),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      intent: { status: string; contentTypeId: string; unresolvedFields: string[] };
+      clarifications: Array<{ field: string; question: string }>;
+    };
+    if (body.intent.status === "NEEDS_CLARIFICATION") {
+      expect(body.intent.contentTypeId).toBe("");
+      expect(body.clarifications.map((entry) => entry.field)).toContain("contentType");
+    }
+  });
+
+  it("rejects a request that breaks a platform's own rules, naming the rule", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    const { collection } = await intentRoutes();
+    const { POST } = collection;
+    const json = {
+      cookie: `content_os_session=${owner.token}`,
+      "content-type": "application/json",
+    };
+
+    const response = await POST(
+      new Request(`http://localhost/api/projects/${project.id}/intent`, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({ request: "Make a 30 second thumbnail" }),
+      }),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    expect(response.status).toBe(422);
+    const body = (await response.json()) as { issues: string[] };
+    expect(body.issues).toContain("CONTENT_TYPE_DOES_NOT_SUPPORT_DURATION");
   });
 });

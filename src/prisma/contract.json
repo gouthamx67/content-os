@@ -56,6 +56,10 @@
       "model": "BrowserStep",
       "namespace": "public"
     },
+    "content_intent": {
+      "model": "ContentIntent",
+      "namespace": "public"
+    },
     "intelligence_asset": {
       "model": "IntelligenceAsset",
       "namespace": "public"
@@ -643,6 +647,31 @@
               }
             ]
           },
+          "ContentChannel": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "VIDEO",
+                "value": "VIDEO"
+              },
+              {
+                "name": "IMAGE",
+                "value": "IMAGE"
+              },
+              {
+                "name": "TEXT",
+                "value": "TEXT"
+              },
+              {
+                "name": "AUDIO",
+                "value": "AUDIO"
+              },
+              {
+                "name": "CAMPAIGN",
+                "value": "CAMPAIGN"
+              }
+            ]
+          },
           "ExtractionMethod": {
             "codecId": "pg/text@1",
             "members": [
@@ -986,6 +1015,65 @@
               {
                 "name": "PARTIAL",
                 "value": "PARTIAL"
+              }
+            ]
+          },
+          "IntentConfidence": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "HIGH",
+                "value": "HIGH"
+              },
+              {
+                "name": "MEDIUM",
+                "value": "MEDIUM"
+              },
+              {
+                "name": "LOW",
+                "value": "LOW"
+              }
+            ]
+          },
+          "IntentResolutionMode": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "EXPLICIT",
+                "value": "EXPLICIT"
+              },
+              {
+                "name": "INFERRED",
+                "value": "INFERRED"
+              },
+              {
+                "name": "PARTIAL",
+                "value": "PARTIAL"
+              },
+              {
+                "name": "NEEDS_CLARIFICATION",
+                "value": "NEEDS_CLARIFICATION"
+              }
+            ]
+          },
+          "IntentStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "DRAFT",
+                "value": "DRAFT"
+              },
+              {
+                "name": "RESOLVED",
+                "value": "RESOLVED"
+              },
+              {
+                "name": "NEEDS_CLARIFICATION",
+                "value": "NEEDS_CLARIFICATION"
+              },
+              {
+                "name": "BLOCKED",
+                "value": "BLOCKED"
               }
             ]
           },
@@ -3654,6 +3742,332 @@
               },
               "namespaceId": "public",
               "table": "browser_step"
+            }
+          },
+          "ContentIntent": {
+            "fields": {
+              "aspectRatio": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "audience": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "brandVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "channel": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ContentChannel",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "confidence": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "IntentConfidence",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "constraints": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "contentType": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "cta": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "duration": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "intelligenceVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "language": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "platforms": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "purpose": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "quantity": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "rawRequest": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "resolution": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "IntentResolutionMode",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "IntentStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "style": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "subjects": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "tone": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "unresolved": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "aspectRatio": {
+                  "column": "aspectRatio"
+                },
+                "audience": {
+                  "column": "audience"
+                },
+                "brandVersion": {
+                  "column": "brandVersion"
+                },
+                "channel": {
+                  "column": "channel"
+                },
+                "confidence": {
+                  "column": "confidence"
+                },
+                "constraints": {
+                  "column": "constraints"
+                },
+                "contentType": {
+                  "column": "contentType"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "cta": {
+                  "column": "cta"
+                },
+                "duration": {
+                  "column": "duration"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "intelligenceVersion": {
+                  "column": "intelligenceVersion"
+                },
+                "language": {
+                  "column": "language"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "platforms": {
+                  "column": "platforms"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "purpose": {
+                  "column": "purpose"
+                },
+                "quantity": {
+                  "column": "quantity"
+                },
+                "rawRequest": {
+                  "column": "rawRequest"
+                },
+                "resolution": {
+                  "column": "resolution"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "style": {
+                  "column": "style"
+                },
+                "subjects": {
+                  "column": "subjects"
+                },
+                "tone": {
+                  "column": "tone"
+                },
+                "unresolved": {
+                  "column": "unresolved"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "content_intent"
             }
           },
           "IntelligenceAsset": {
@@ -6557,6 +6971,21 @@
                 },
                 "to": {
                   "model": "BrowserSession",
+                  "namespace": "public"
+                }
+              },
+              "contentIntents": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "ContentIntent",
                   "namespace": "public"
                 }
               },
@@ -9708,6 +10137,277 @@
                   "name": "browser_step_order"
                 }
               ]
+            },
+            "content_intent": {
+              "checks": [
+                {
+                  "expression": "\"channel\" IN ('VIDEO', 'IMAGE', 'TEXT', 'AUDIO', 'CAMPAIGN')",
+                  "name": "content_intent_channel_check_1c241ad4",
+                  "prefix": "content_intent_channel_check"
+                },
+                {
+                  "expression": "\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')",
+                  "name": "content_intent_confidence_check_15ae8318",
+                  "prefix": "content_intent_confidence_check"
+                },
+                {
+                  "expression": "array_position(\"notes\", NULL) IS NULL",
+                  "name": "content_intent_notes_elem_not_null_f914e30f",
+                  "prefix": "content_intent_notes_elem_not_null"
+                },
+                {
+                  "expression": "array_position(\"platforms\", NULL) IS NULL",
+                  "name": "content_intent_platforms_elem_not_null_53a1bdb5",
+                  "prefix": "content_intent_platforms_elem_not_null"
+                },
+                {
+                  "expression": "\"resolution\" IN ('EXPLICIT', 'INFERRED', 'PARTIAL', 'NEEDS_CLARIFICATION')",
+                  "name": "content_intent_resolution_check_eb7780a0",
+                  "prefix": "content_intent_resolution_check"
+                },
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "content_intent_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "content_intent_sourceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"status\" IN ('DRAFT', 'RESOLVED', 'NEEDS_CLARIFICATION', 'BLOCKED')",
+                  "name": "content_intent_status_check_f3b4e003",
+                  "prefix": "content_intent_status_check"
+                },
+                {
+                  "expression": "array_position(\"unresolved\", NULL) IS NULL",
+                  "name": "content_intent_unresolved_elem_not_null_b05bd153",
+                  "prefix": "content_intent_unresolved_elem_not_null"
+                }
+              ],
+              "columns": {
+                "aspectRatio": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "audience": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "brandVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "channel": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ContentChannel",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "confidence": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "MEDIUM"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "IntentConfidence",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "constraints": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "contentType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "cta": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "duration": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "intelligenceVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "language": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "platforms": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "purpose": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "quantity": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "rawRequest": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "resolution": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "IntentResolutionMode",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "IntentStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "style": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "subjects": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "tone": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "unresolved": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "content_intent"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "content_intent_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "content_intent_project_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status"
+                  ],
+                  "name": "content_intent_project_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             },
             "intelligence_asset": {
               "checks": [
@@ -13138,6 +13838,16 @@
                 "CONTRADICTED"
               ]
             },
+            "ContentChannel": {
+              "kind": "valueSet",
+              "values": [
+                "VIDEO",
+                "IMAGE",
+                "TEXT",
+                "AUDIO",
+                "CAMPAIGN"
+              ]
+            },
             "ExtractionMethod": {
               "kind": "valueSet",
               "values": [
@@ -13262,6 +13972,32 @@
                 "PARTIAL"
               ]
             },
+            "IntentConfidence": {
+              "kind": "valueSet",
+              "values": [
+                "HIGH",
+                "MEDIUM",
+                "LOW"
+              ]
+            },
+            "IntentResolutionMode": {
+              "kind": "valueSet",
+              "values": [
+                "EXPLICIT",
+                "INFERRED",
+                "PARTIAL",
+                "NEEDS_CLARIFICATION"
+              ]
+            },
+            "IntentStatus": {
+              "kind": "valueSet",
+              "values": [
+                "DRAFT",
+                "RESOLVED",
+                "NEEDS_CLARIFICATION",
+                "BLOCKED"
+              ]
+            },
             "ProjectStatus": {
               "kind": "valueSet",
               "values": [
@@ -13311,10 +14047,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "51ad3137a964ebb61d81d7b9217aa744e853d9430ec996ee1d688631767f3b36"
+    "storageHash": "c8d1c07e8f5cfa633164cddeacf0580ffd507fce3ae63e40bdc0a4db0f0acc94"
   },
   "execution": {
-    "executionHash": "b4e9213d1d8165ec37af2762ca6b408c78ef3547f2e77bf317f4f3bd04b96e77",
+    "executionHash": "786b99d64d2e61aa51a66f3b63a76721cc7a0be30e8744e0cbf5a64a32f9fd32",
     "mutations": {
       "defaults": [
         {
@@ -13623,6 +14359,32 @@
             "column": "id",
             "namespace": "public",
             "table": "browser_step"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "content_intent"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "content_intent"
           }
         },
         {

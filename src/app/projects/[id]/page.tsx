@@ -6,6 +6,7 @@ import {
   assetService,
   brandService,
   browserService,
+  contentIntentService,
   inputService,
   intelligenceService,
   projectService,
@@ -19,6 +20,10 @@ import {
   serializeBrandProfile,
   serializeBrandSourceStates,
 } from "../../../lib/brand-api";
+import {
+  contentIntentRegistry,
+  serializeContentIntentView,
+} from "../../../lib/content-intent-api";
 import { AppShell } from "../../../components/layout/AppShell";
 import { BrowserPanel } from "../../../components/browser/BrowserPanel";
 import { IntelligencePanel } from "../../../components/intelligence/IntelligencePanel";
@@ -29,6 +34,7 @@ import {
   SourceAssetForms,
 } from "../../../components/projects/SourceAssetForms";
 import { BrandPanel } from "../../../components/brand/BrandPanel";
+import { IntentPanel } from "../../../components/intent/IntentPanel";
 
 type ProjectDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -63,7 +69,18 @@ export default async function ProjectDetailPage({
     throw error;
   }
 
-  const [inputBundle, assets, summary, graph, runs, snapshots, sources, browserSessions, brand] =
+  const [
+    inputBundle,
+    assets,
+    summary,
+    graph,
+    runs,
+    snapshots,
+    sources,
+    browserSessions,
+    brand,
+    intents,
+  ] =
     await Promise.all([
     inputService.getBundle(id, user.id),
     assetService.list(id, user.id),
@@ -74,6 +91,7 @@ export default async function ProjectDetailPage({
     sourceService.list(id, user.id),
     browserService.listSessions(id, user.id),
     brandService.getProfile(id, user.id),
+    contentIntentService.list(id, user.id),
   ]);
 
   return (
@@ -119,6 +137,14 @@ export default async function ProjectDetailPage({
             inputs={inputBundle.inputs.map(serializeInput)}
             versions={inputBundle.versions}
             assets={assets}
+          />
+        </div>
+
+        <div className="mt-8">
+          <IntentPanel
+            projectId={project.id}
+            initialIntents={intents.map(serializeContentIntentView)}
+            initialRegistry={contentIntentRegistry()}
           />
         </div>
 

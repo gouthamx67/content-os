@@ -19,3 +19,5 @@ export const intelligenceService = container.services.intelligence;
 export const brandService = container.services.brand;
 
 export const browserService = container.services.browser;
+
+export const contentIntentService = container.services.contentIntent;

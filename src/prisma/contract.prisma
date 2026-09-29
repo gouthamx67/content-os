@@ -146,6 +146,8 @@ model Project {
   brandConflicts              BrandConflict[]
   brandSourceStates           BrandSourceState[]
 
+  contentIntents              ContentIntent[]
+
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@map("project")
@@ -804,6 +806,42 @@ model IntelligenceSnapshot {
   @@map("intelligence_snapshot")
 }
 
+enum IntentResolutionMode {
+  @@type("pg/text@1")
+
+  EXPLICIT = "EXPLICIT"
+  INFERRED = "INFERRED"
+  PARTIAL = "PARTIAL"
+  NEEDS_CLARIFICATION = "NEEDS_CLARIFICATION"
+}
+
+enum IntentStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  RESOLVED = "RESOLVED"
+  NEEDS_CLARIFICATION = "NEEDS_CLARIFICATION"
+  BLOCKED = "BLOCKED"
+}
+
+enum IntentConfidence {
+  @@type("pg/text@1")
+
+  HIGH = "HIGH"
+  MEDIUM = "MEDIUM"
+  LOW = "LOW"
+}
+
+enum ContentChannel {
+  @@type("pg/text@1")
+
+  VIDEO = "VIDEO"
+  IMAGE = "IMAGE"
+  TEXT = "TEXT"
+  AUDIO = "AUDIO"
+  CAMPAIGN = "CAMPAIGN"
+}
+
 enum BrandOrigin {
   @@type("pg/text@1")
 
@@ -1122,4 +1160,51 @@ model BrandSourceState {
   @@unique([projectId, sourceId], map: "brand_source_state_source_key")
   @@index([sourceId], map: "brand_source_state_source_idx")
   @@map("brand_source_state")
+}
+
+/// One content request, resolved as far as the evidence allows. The record is
+/// the boundary between "what the user asked for" (CP09) and "what we should
+/// make" (CP10): it carries the request, the answer, and how each answer was
+/// reached, and it carries no creative direction at all.
+model ContentIntent {
+  id                  String                     @id @default(cuid(2))
+  projectId           String
+  rawRequest          String
+  channel             ContentChannel
+  contentType         String?
+  purpose             String?
+  platforms           String[]
+  audience            String?
+  language            String?
+  tone                String?
+  style               String?
+  cta                 String?
+  duration            Int?
+  quantity            Int                        @default(1)
+  aspectRatio         String?
+  /// JSON text, matching the rest of the contract: the shapes behind it are
+  /// validated in the domain, not by the database.
+  constraints         String
+  subjects            String
+  resolution          IntentResolutionMode
+  status              IntentStatus
+  confidence          IntentConfidence           @default(MEDIUM)
+  /// The fields still being asked about. An empty contentType with this list
+  /// holding "contentType" is a draft awaiting an answer, not a broken row.
+  unresolved          String[]
+  notes               String[]
+  sourceIds           String[]
+  /// The brand and intelligence versions this reading was made against, so a
+  /// later change to either can be traced rather than silently inherited.
+  brandVersion        Int?
+  intelligenceVersion Int?
+  createdAt           TimestamptzString          @default(now())
+  updatedAt           temporal.updatedAtString()
+
+  project             Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  @@index([projectId], map: "content_intent_project_idx")
+  @@index([projectId, createdAt], map: "content_intent_project_created_idx")
+  @@index([projectId, status], map: "content_intent_project_status_idx")
+  @@map("content_intent")
 }

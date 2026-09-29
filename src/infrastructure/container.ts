@@ -13,6 +13,7 @@ import { PostgresAssetRepository } from "./repositories/postgres-asset-repositor
 import { PostgresIntelligenceRepository } from "./repositories/postgres-intelligence-repository";
 import { PostgresBrowserSessionRepository } from "./repositories/postgres-browser-session-repository";
 import { PostgresBrandRepository } from "./repositories/postgres-brand-repository";
+import { PostgresContentIntentRepository } from "./repositories/postgres-content-intent-repository";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
 import { WorkspaceService } from "../core/services/workspace-service";
@@ -49,6 +50,9 @@ import { TextBrandAnalyzer } from "./brand/text-brand-analyzer";
 import { RepositoryBrandAnalyzer } from "./brand/repository-brand-analyzer";
 import { CreativeBrandAnalyzer } from "./brand/creative-brand-analyzer";
 import { AiBrandInterpretationProvider } from "./ai/brand-interpretation-provider";
+import { AiContentIntentInterpreter } from "./ai/content-intent-interpreter";
+import { ContentIntentValidator } from "../core/services/content-intent-validator";
+import { ContentIntentService } from "../core/services/content-intent-service";
 
 const orm = db.orm.public;
 
@@ -62,6 +66,7 @@ const repositories = {
   intelligence: new PostgresIntelligenceRepository(orm),
   browserSessions: new PostgresBrowserSessionRepository(orm),
   brand: new PostgresBrandRepository(orm),
+  contentIntents: new PostgresContentIntentRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -252,6 +257,26 @@ const brandService = new BrandIntelligenceService({
   interpretationProvider: brandInterpretation,
 });
 
+/**
+ * Content intent is deterministic first and model-assisted second. The same
+ * interpretation gate as intelligence and brand applies: with it off, a request
+ * is resolved entirely by the parser and the resolver, and a request the parser
+ * cannot read is asked about rather than guessed at.
+ */
+const contentIntentInterpretation =
+  process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+    ? new AiContentIntentInterpreter(providers.ai)
+    : null;
+
+const contentIntentService = new ContentIntentService({
+  projectService,
+  repository: repositories.contentIntents,
+  validator: new ContentIntentValidator(),
+  brand: repositories.brand,
+  intelligence: repositories.intelligence,
+  interpretationProvider: contentIntentInterpretation,
+});
+
 export const container = {
   repositories,
   providers,
@@ -266,5 +291,6 @@ export const container = {
     intelligence: intelligenceService,
     brand: brandService,
     browser: browserService,
+    contentIntent: contentIntentService,
   },
 };

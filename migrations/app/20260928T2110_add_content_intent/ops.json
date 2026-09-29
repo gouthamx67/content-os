@@ -1,0 +1,200 @@
+[
+  {
+    "id": "table.content_intent",
+    "label": "Create table \"content_intent\"",
+    "summary": "Creates table \"content_intent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "content_intent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"content_intent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_intent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"content_intent\"",
+        "sql": "CREATE TABLE \"public\".\"content_intent\" (\n  \"aspectRatio\" text,\n  \"audience\" text,\n  \"brandVersion\" int4,\n  \"channel\" text NOT NULL,\n  \"confidence\" text DEFAULT 'MEDIUM' NOT NULL,\n  \"constraints\" text NOT NULL,\n  \"contentType\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"cta\" text,\n  \"duration\" int4,\n  \"id\" text NOT NULL,\n  \"intelligenceVersion\" int4,\n  \"language\" text,\n  \"notes\" text[] NOT NULL,\n  \"platforms\" text[] NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"purpose\" text,\n  \"quantity\" int4 DEFAULT 1 NOT NULL,\n  \"rawRequest\" text NOT NULL,\n  \"resolution\" text NOT NULL,\n  \"sourceIds\" text[] NOT NULL,\n  \"status\" text NOT NULL,\n  \"style\" text,\n  \"subjects\" text NOT NULL,\n  \"tone\" text,\n  \"unresolved\" text[] NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"content_intent_channel_check_1c241ad4\" CHECK (\"channel\" IN ('VIDEO', 'IMAGE', 'TEXT', 'AUDIO', 'CAMPAIGN')),\n  CONSTRAINT \"content_intent_confidence_check_15ae8318\" CHECK (\"confidence\" IN ('HIGH', 'MEDIUM', 'LOW')),\n  CONSTRAINT \"content_intent_notes_elem_not_null_f914e30f\" CHECK (array_position(\"notes\", NULL) IS NULL),\n  CONSTRAINT \"content_intent_platforms_elem_not_null_53a1bdb5\" CHECK (array_position(\"platforms\", NULL) IS NULL),\n  CONSTRAINT \"content_intent_resolution_check_eb7780a0\" CHECK (\"resolution\" IN ('EXPLICIT', 'INFERRED', 'PARTIAL', 'NEEDS_CLARIFICATION')),\n  CONSTRAINT \"content_intent_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL),\n  CONSTRAINT \"content_intent_status_check_f3b4e003\" CHECK (\"status\" IN ('DRAFT', 'RESOLVED', 'NEEDS_CLARIFICATION', 'BLOCKED')),\n  CONSTRAINT \"content_intent_unresolved_elem_not_null_b05bd153\" CHECK (array_position(\"unresolved\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"content_intent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_intent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.content_intent.content_intent_project_created_idx",
+    "label": "Create index \"content_intent_project_created_idx\" on \"content_intent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "content_intent_project_created_idx",
+        "table": "content_intent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"content_intent_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_intent_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"content_intent_project_created_idx\"",
+        "sql": "CREATE INDEX \"content_intent_project_created_idx\" ON \"public\".\"content_intent\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"content_intent_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_intent_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.content_intent.content_intent_project_idx",
+    "label": "Create index \"content_intent_project_idx\" on \"content_intent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "content_intent_project_idx",
+        "table": "content_intent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"content_intent_project_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_intent_project_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"content_intent_project_idx\"",
+        "sql": "CREATE INDEX \"content_intent_project_idx\" ON \"public\".\"content_intent\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"content_intent_project_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_intent_project_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.content_intent.content_intent_project_status_idx",
+    "label": "Create index \"content_intent_project_status_idx\" on \"content_intent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "content_intent_project_status_idx",
+        "table": "content_intent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"content_intent_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_intent_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"content_intent_project_status_idx\"",
+        "sql": "CREATE INDEX \"content_intent_project_status_idx\" ON \"public\".\"content_intent\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"content_intent_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_intent_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.content_intent.content_intent_projectId_fkey",
+    "label": "Add foreign key \"content_intent_projectId_fkey\" on \"content_intent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "content_intent_projectId_fkey",
+        "table": "content_intent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"content_intent_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_intent_projectId_fkey",
+          "public",
+          "\"public\".\"content_intent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"content_intent_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"content_intent\"\nADD CONSTRAINT \"content_intent_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"content_intent_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_intent_projectId_fkey",
+          "public",
+          "\"public\".\"content_intent\""
+        ]
+      }
+    ]
+  }
+]
