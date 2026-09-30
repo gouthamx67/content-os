@@ -60,6 +60,10 @@
       "model": "ContentIntent",
       "namespace": "public"
     },
+    "creative_direction": {
+      "model": "CreativeDirection",
+      "namespace": "public"
+    },
     "intelligence_asset": {
       "model": "IntelligenceAsset",
       "namespace": "public"
@@ -126,6 +130,14 @@
     },
     "source": {
       "model": "Source",
+      "namespace": "public"
+    },
+    "storyboard": {
+      "model": "Storyboard",
+      "namespace": "public"
+    },
+    "storyboard_scene": {
+      "model": "StoryboardScene",
       "namespace": "public"
     },
     "user": {
@@ -672,6 +684,44 @@
               }
             ]
           },
+          "CreativeDirectionStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "DRAFT",
+                "value": "DRAFT"
+              },
+              {
+                "name": "SELECTED",
+                "value": "SELECTED"
+              },
+              {
+                "name": "REJECTED",
+                "value": "REJECTED"
+              },
+              {
+                "name": "ARCHIVED",
+                "value": "ARCHIVED"
+              }
+            ]
+          },
+          "CreativeMode": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "GUIDED",
+                "value": "GUIDED"
+              },
+              {
+                "name": "BALANCED",
+                "value": "BALANCED"
+              },
+              {
+                "name": "WILD",
+                "value": "WILD"
+              }
+            ]
+          },
           "ExtractionMethod": {
             "codecId": "pg/text@1",
             "members": [
@@ -1169,6 +1219,84 @@
               {
                 "name": "OTHER",
                 "value": "OTHER"
+              }
+            ]
+          },
+          "StoryboardSceneType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "HOOK",
+                "value": "HOOK"
+              },
+              {
+                "name": "PROBLEM",
+                "value": "PROBLEM"
+              },
+              {
+                "name": "REVEAL",
+                "value": "REVEAL"
+              },
+              {
+                "name": "PRODUCT_DEMO",
+                "value": "PRODUCT_DEMO"
+              },
+              {
+                "name": "WORKFLOW",
+                "value": "WORKFLOW"
+              },
+              {
+                "name": "FEATURE",
+                "value": "FEATURE"
+              },
+              {
+                "name": "TRANSFORMATION",
+                "value": "TRANSFORMATION"
+              },
+              {
+                "name": "PROOF",
+                "value": "PROOF"
+              },
+              {
+                "name": "SOCIAL_PROOF",
+                "value": "SOCIAL_PROOF"
+              },
+              {
+                "name": "CTA",
+                "value": "CTA"
+              },
+              {
+                "name": "TRANSITION",
+                "value": "TRANSITION"
+              },
+              {
+                "name": "CUSTOM",
+                "value": "CUSTOM"
+              }
+            ]
+          },
+          "StoryboardStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "DRAFT",
+                "value": "DRAFT"
+              },
+              {
+                "name": "READY",
+                "value": "READY"
+              },
+              {
+                "name": "SELECTED",
+                "value": "SELECTED"
+              },
+              {
+                "name": "LOCKED",
+                "value": "LOCKED"
+              },
+              {
+                "name": "ARCHIVED",
+                "value": "ARCHIVED"
               }
             ]
           },
@@ -3965,6 +4093,21 @@
               }
             },
             "relations": {
+              "creativeDirections": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "intentId"
+                  ]
+                },
+                "to": {
+                  "model": "CreativeDirection",
+                  "namespace": "public"
+                }
+              },
               "project": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -3978,6 +4121,21 @@
                 },
                 "to": {
                   "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "storyboards": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "intentId"
+                  ]
+                },
+                "to": {
+                  "model": "Storyboard",
                   "namespace": "public"
                 }
               }
@@ -4068,6 +4226,337 @@
               },
               "namespaceId": "public",
               "table": "content_intent"
+            }
+          },
+          "CreativeDirection": {
+            "fields": {
+              "angle": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "audienceAngle": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "brandVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "creativeRunId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "cta": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "editedByUser": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "emotionalAngle": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "hook": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "intelligenceVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "intentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mode": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "CreativeMode",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "musicDirection": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "narrativeSummary": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "proofStrategy": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "rationale": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "soundDirection": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "CreativeDirectionStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "strengthScore": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "thesis": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "visualStrategy": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "voiceDirection": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "intent": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "intentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "ContentIntent",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "storyboards": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "directionId"
+                  ]
+                },
+                "to": {
+                  "model": "Storyboard",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "angle": {
+                  "column": "angle"
+                },
+                "audienceAngle": {
+                  "column": "audienceAngle"
+                },
+                "brandVersion": {
+                  "column": "brandVersion"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "creativeRunId": {
+                  "column": "creativeRunId"
+                },
+                "cta": {
+                  "column": "cta"
+                },
+                "editedByUser": {
+                  "column": "editedByUser"
+                },
+                "emotionalAngle": {
+                  "column": "emotionalAngle"
+                },
+                "hook": {
+                  "column": "hook"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "intelligenceVersion": {
+                  "column": "intelligenceVersion"
+                },
+                "intentId": {
+                  "column": "intentId"
+                },
+                "mode": {
+                  "column": "mode"
+                },
+                "musicDirection": {
+                  "column": "musicDirection"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "narrativeSummary": {
+                  "column": "narrativeSummary"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "proofStrategy": {
+                  "column": "proofStrategy"
+                },
+                "rationale": {
+                  "column": "rationale"
+                },
+                "soundDirection": {
+                  "column": "soundDirection"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "strengthScore": {
+                  "column": "strengthScore"
+                },
+                "thesis": {
+                  "column": "thesis"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "visualStrategy": {
+                  "column": "visualStrategy"
+                },
+                "voiceDirection": {
+                  "column": "voiceDirection"
+                }
+              },
+              "namespaceId": "public",
+              "table": "creative_direction"
             }
           },
           "IntelligenceAsset": {
@@ -6989,6 +7478,21 @@
                   "namespace": "public"
                 }
               },
+              "creativeDirections": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "CreativeDirection",
+                  "namespace": "public"
+                }
+              },
               "intelligenceAssets": {
                 "cardinality": "1:N",
                 "on": {
@@ -7197,6 +7701,21 @@
                 },
                 "to": {
                   "model": "Source",
+                  "namespace": "public"
+                }
+              },
+              "storyboards": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "Storyboard",
                   "namespace": "public"
                 }
               },
@@ -7583,6 +8102,516 @@
               },
               "namespaceId": "public",
               "table": "source"
+            }
+          },
+          "Storyboard": {
+            "fields": {
+              "actualDurationMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "aspectRatio": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "brandVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "creativeRunId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "directionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "intelligenceVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "intentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "platforms": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "StoryboardStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "targetDurationMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "version": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "direction": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "directionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "CreativeDirection",
+                  "namespace": "public"
+                }
+              },
+              "intent": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "intentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "ContentIntent",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "scenes": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "storyboardId"
+                  ]
+                },
+                "to": {
+                  "model": "StoryboardScene",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "actualDurationMs": {
+                  "column": "actualDurationMs"
+                },
+                "aspectRatio": {
+                  "column": "aspectRatio"
+                },
+                "brandVersion": {
+                  "column": "brandVersion"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "creativeRunId": {
+                  "column": "creativeRunId"
+                },
+                "directionId": {
+                  "column": "directionId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "intelligenceVersion": {
+                  "column": "intelligenceVersion"
+                },
+                "intentId": {
+                  "column": "intentId"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "platforms": {
+                  "column": "platforms"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "targetDurationMs": {
+                  "column": "targetDurationMs"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "version": {
+                  "column": "version"
+                }
+              },
+              "namespaceId": "public",
+              "table": "storyboard"
+            }
+          },
+          "StoryboardScene": {
+            "fields": {
+              "claimIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "durationMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "endMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "evidenceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "featureIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "musicDirection": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "notes": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "order": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "purpose": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sfxCues": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "shots": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "startMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "storyboardId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "textOverlays": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "transitionIn": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "transitionOut": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "StoryboardSceneType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "voiceoverPlan": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "workflowIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "storyboard": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "storyboardId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Storyboard",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "claimIds": {
+                  "column": "claimIds"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "durationMs": {
+                  "column": "durationMs"
+                },
+                "endMs": {
+                  "column": "endMs"
+                },
+                "evidenceIds": {
+                  "column": "evidenceIds"
+                },
+                "featureIds": {
+                  "column": "featureIds"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "musicDirection": {
+                  "column": "musicDirection"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "notes": {
+                  "column": "notes"
+                },
+                "order": {
+                  "column": "order"
+                },
+                "purpose": {
+                  "column": "purpose"
+                },
+                "sfxCues": {
+                  "column": "sfxCues"
+                },
+                "shots": {
+                  "column": "shots"
+                },
+                "startMs": {
+                  "column": "startMs"
+                },
+                "storyboardId": {
+                  "column": "storyboardId"
+                },
+                "textOverlays": {
+                  "column": "textOverlays"
+                },
+                "transitionIn": {
+                  "column": "transitionIn"
+                },
+                "transitionOut": {
+                  "column": "transitionOut"
+                },
+                "type": {
+                  "column": "type"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "voiceoverPlan": {
+                  "column": "voiceoverPlan"
+                },
+                "workflowIds": {
+                  "column": "workflowIds"
+                }
+              },
+              "namespaceId": "public",
+              "table": "storyboard_scene"
             }
           },
           "User": {
@@ -10399,6 +11428,259 @@
                     "status"
                   ],
                   "name": "content_intent_project_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "creative_direction": {
+              "checks": [
+                {
+                  "expression": "\"mode\" IN ('GUIDED', 'BALANCED', 'WILD')",
+                  "name": "creative_direction_mode_check_3a33d9eb",
+                  "prefix": "creative_direction_mode_check"
+                },
+                {
+                  "expression": "\"status\" IN ('DRAFT', 'SELECTED', 'REJECTED', 'ARCHIVED')",
+                  "name": "creative_direction_status_check_43a18074",
+                  "prefix": "creative_direction_status_check"
+                }
+              ],
+              "columns": {
+                "angle": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "audienceAngle": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "brandVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "creativeRunId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "cta": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "editedByUser": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "emotionalAngle": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "hook": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "intelligenceVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "intentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "mode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "CreativeMode",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "musicDirection": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "narrativeSummary": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "proofStrategy": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "rationale": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "soundDirection": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "DRAFT"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "CreativeDirectionStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "strengthScore": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "thesis": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "visualStrategy": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "voiceDirection": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "creative_direction"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "intentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "creative_direction"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "content_intent"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "intentId"
+                  ],
+                  "name": "creative_direction_intentId_idx_e8967b69",
+                  "prefix": "creative_direction_intentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "intentId",
+                    "createdAt"
+                  ],
+                  "name": "creative_direction_intent_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "intentId",
+                    "status"
+                  ],
+                  "name": "creative_direction_intent_status_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "creative_direction_project_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "creativeRunId"
+                  ],
+                  "name": "creative_direction_run_idx",
                   "unique": false
                 }
               ],
@@ -13447,6 +14729,426 @@
               },
               "uniques": []
             },
+            "storyboard": {
+              "checks": [
+                {
+                  "expression": "array_position(\"platforms\", NULL) IS NULL",
+                  "name": "storyboard_platforms_elem_not_null_53a1bdb5",
+                  "prefix": "storyboard_platforms_elem_not_null"
+                },
+                {
+                  "expression": "\"status\" IN ('DRAFT', 'READY', 'SELECTED', 'LOCKED', 'ARCHIVED')",
+                  "name": "storyboard_status_check_e8dc73a3",
+                  "prefix": "storyboard_status_check"
+                }
+              ],
+              "columns": {
+                "actualDurationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "aspectRatio": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "brandVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "creativeRunId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "directionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "intelligenceVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "intentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "platforms": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "DRAFT"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "StoryboardStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "targetDurationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "version": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "storyboard"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "intentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "storyboard"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "content_intent"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "directionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "storyboard"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "creative_direction"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "directionId"
+                  ],
+                  "name": "storyboard_direction_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "intentId"
+                  ],
+                  "name": "storyboard_intent_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "storyboard_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "storyboard_project_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status"
+                  ],
+                  "name": "storyboard_project_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "storyboard_scene": {
+              "checks": [
+                {
+                  "expression": "array_position(\"claimIds\", NULL) IS NULL",
+                  "name": "storyboard_scene_claimIds_elem_not_null_40174445",
+                  "prefix": "storyboard_scene_claimIds_elem_not_null"
+                },
+                {
+                  "expression": "array_position(\"evidenceIds\", NULL) IS NULL",
+                  "name": "storyboard_scene_evidenceIds_elem_not_null_4d0cb530",
+                  "prefix": "storyboard_scene_evidenceIds_elem_not_null"
+                },
+                {
+                  "expression": "array_position(\"featureIds\", NULL) IS NULL",
+                  "name": "storyboard_scene_featureIds_elem_not_null_b2754430",
+                  "prefix": "storyboard_scene_featureIds_elem_not_null"
+                },
+                {
+                  "expression": "\"endMs\" > \"startMs\"",
+                  "name": "storyboard_scene_positive_duration_8886a046",
+                  "prefix": "storyboard_scene_positive_duration"
+                },
+                {
+                  "expression": "\"type\" IN ('HOOK', 'PROBLEM', 'REVEAL', 'PRODUCT_DEMO', 'WORKFLOW', 'FEATURE', 'TRANSFORMATION', 'PROOF', 'SOCIAL_PROOF', 'CTA', 'TRANSITION', 'CUSTOM')",
+                  "name": "storyboard_scene_type_check_08f7327c",
+                  "prefix": "storyboard_scene_type_check"
+                },
+                {
+                  "expression": "array_position(\"workflowIds\", NULL) IS NULL",
+                  "name": "storyboard_scene_workflowIds_elem_not_null_86e06725",
+                  "prefix": "storyboard_scene_workflowIds_elem_not_null"
+                }
+              ],
+              "columns": {
+                "claimIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "durationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "endMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "evidenceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "featureIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "musicDirection": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "notes": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "order": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "purpose": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sfxCues": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "shots": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "startMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "storyboardId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "textOverlays": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "transitionIn": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "transitionOut": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "StoryboardSceneType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "voiceoverPlan": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "workflowIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "storyboardId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "storyboard_scene"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "storyboard"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "storyboardId"
+                  ],
+                  "name": "storyboard_scene_storyboard_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "storyboardId",
+                    "order"
+                  ],
+                  "name": "storyboard_scene_order"
+                }
+              ]
+            },
             "user": {
               "columns": {
                 "createdAt": {
@@ -13848,6 +15550,23 @@
                 "CAMPAIGN"
               ]
             },
+            "CreativeDirectionStatus": {
+              "kind": "valueSet",
+              "values": [
+                "DRAFT",
+                "SELECTED",
+                "REJECTED",
+                "ARCHIVED"
+              ]
+            },
+            "CreativeMode": {
+              "kind": "valueSet",
+              "values": [
+                "GUIDED",
+                "BALANCED",
+                "WILD"
+              ]
+            },
             "ExtractionMethod": {
               "kind": "valueSet",
               "values": [
@@ -14033,6 +15752,33 @@
                 "OTHER"
               ]
             },
+            "StoryboardSceneType": {
+              "kind": "valueSet",
+              "values": [
+                "HOOK",
+                "PROBLEM",
+                "REVEAL",
+                "PRODUCT_DEMO",
+                "WORKFLOW",
+                "FEATURE",
+                "TRANSFORMATION",
+                "PROOF",
+                "SOCIAL_PROOF",
+                "CTA",
+                "TRANSITION",
+                "CUSTOM"
+              ]
+            },
+            "StoryboardStatus": {
+              "kind": "valueSet",
+              "values": [
+                "DRAFT",
+                "READY",
+                "SELECTED",
+                "LOCKED",
+                "ARCHIVED"
+              ]
+            },
             "WorkspaceRole": {
               "kind": "valueSet",
               "values": [
@@ -14047,10 +15793,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "c8d1c07e8f5cfa633164cddeacf0580ffd507fce3ae63e40bdc0a4db0f0acc94"
+    "storageHash": "c6daf43392b955612357b182d09b85aa28a184de543914b142b8075d05a0cee0"
   },
   "execution": {
-    "executionHash": "786b99d64d2e61aa51a66f3b63a76721cc7a0be30e8744e0cbf5a64a32f9fd32",
+    "executionHash": "0eba0a0befbf245308ca7278632d8a1ab594540b5be1c0d6611a3a3a8e6efbf0",
     "mutations": {
       "defaults": [
         {
@@ -14385,6 +16131,32 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "content_intent"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "creative_direction"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "creative_direction"
           }
         },
         {
@@ -14752,6 +16524,58 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "source"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "storyboard"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "storyboard"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "storyboard_scene"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "storyboard_scene"
           }
         },
         {

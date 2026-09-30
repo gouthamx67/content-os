@@ -1,0 +1,320 @@
+[
+  {
+    "id": "table.creative_direction",
+    "label": "Create table \"creative_direction\"",
+    "summary": "Creates table \"creative_direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "creative_direction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"creative_direction\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"creative_direction\"",
+        "sql": "CREATE TABLE \"public\".\"creative_direction\" (\n  \"angle\" text NOT NULL,\n  \"audienceAngle\" text NOT NULL,\n  \"brandVersion\" int4,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"creativeRunId\" text NOT NULL,\n  \"cta\" text,\n  \"editedByUser\" bool DEFAULT false NOT NULL,\n  \"emotionalAngle\" text NOT NULL,\n  \"hook\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"intelligenceVersion\" int4,\n  \"intentId\" text NOT NULL,\n  \"mode\" text NOT NULL,\n  \"musicDirection\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"narrativeSummary\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"proofStrategy\" text NOT NULL,\n  \"rationale\" text NOT NULL,\n  \"soundDirection\" text NOT NULL,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"strengthScore\" int4 NOT NULL,\n  \"thesis\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"visualStrategy\" text NOT NULL,\n  \"voiceDirection\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"creative_direction_mode_check_3a33d9eb\" CHECK (\"mode\" IN ('GUIDED', 'BALANCED', 'WILD')),\n  CONSTRAINT \"creative_direction_status_check_43a18074\" CHECK (\"status\" IN ('DRAFT', 'SELECTED', 'REJECTED', 'ARCHIVED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"creative_direction\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.creative_direction.creative_direction_intentId_idx_e8967b69",
+    "label": "Create index \"creative_direction_intentId_idx_e8967b69\" on \"creative_direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "creative_direction_intentId_idx_e8967b69",
+        "table": "creative_direction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"creative_direction_intentId_idx_e8967b69\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_intentId_idx_e8967b69\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"creative_direction_intentId_idx_e8967b69\"",
+        "sql": "CREATE INDEX \"creative_direction_intentId_idx_e8967b69\" ON \"public\".\"creative_direction\" (\"intentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"creative_direction_intentId_idx_e8967b69\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_intentId_idx_e8967b69\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.creative_direction.creative_direction_intent_created_idx",
+    "label": "Create index \"creative_direction_intent_created_idx\" on \"creative_direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "creative_direction_intent_created_idx",
+        "table": "creative_direction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"creative_direction_intent_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_intent_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"creative_direction_intent_created_idx\"",
+        "sql": "CREATE INDEX \"creative_direction_intent_created_idx\" ON \"public\".\"creative_direction\" (\"intentId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"creative_direction_intent_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_intent_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.creative_direction.creative_direction_intent_status_idx",
+    "label": "Create index \"creative_direction_intent_status_idx\" on \"creative_direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "creative_direction_intent_status_idx",
+        "table": "creative_direction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"creative_direction_intent_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_intent_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"creative_direction_intent_status_idx\"",
+        "sql": "CREATE INDEX \"creative_direction_intent_status_idx\" ON \"public\".\"creative_direction\" (\"intentId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"creative_direction_intent_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_intent_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.creative_direction.creative_direction_project_idx",
+    "label": "Create index \"creative_direction_project_idx\" on \"creative_direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "creative_direction_project_idx",
+        "table": "creative_direction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"creative_direction_project_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_project_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"creative_direction_project_idx\"",
+        "sql": "CREATE INDEX \"creative_direction_project_idx\" ON \"public\".\"creative_direction\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"creative_direction_project_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_project_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.creative_direction.creative_direction_run_idx",
+    "label": "Create index \"creative_direction_run_idx\" on \"creative_direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "creative_direction_run_idx",
+        "table": "creative_direction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"creative_direction_run_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_run_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"creative_direction_run_idx\"",
+        "sql": "CREATE INDEX \"creative_direction_run_idx\" ON \"public\".\"creative_direction\" (\"projectId\", \"creativeRunId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"creative_direction_run_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"creative_direction_run_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.creative_direction.creative_direction_projectId_fkey",
+    "label": "Add foreign key \"creative_direction_projectId_fkey\" on \"creative_direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "creative_direction_projectId_fkey",
+        "table": "creative_direction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"creative_direction_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "creative_direction_projectId_fkey",
+          "public",
+          "\"public\".\"creative_direction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"creative_direction_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"creative_direction\"\nADD CONSTRAINT \"creative_direction_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"creative_direction_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "creative_direction_projectId_fkey",
+          "public",
+          "\"public\".\"creative_direction\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.creative_direction.creative_direction_intentId_fkey",
+    "label": "Add foreign key \"creative_direction_intentId_fkey\" on \"creative_direction\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "creative_direction_intentId_fkey",
+        "table": "creative_direction"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"creative_direction_intentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "creative_direction_intentId_fkey",
+          "public",
+          "\"public\".\"creative_direction\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"creative_direction_intentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"creative_direction\"\nADD CONSTRAINT \"creative_direction_intentId_fkey\"\nFOREIGN KEY (\"intentId\")\nREFERENCES \"public\".\"content_intent\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"creative_direction_intentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "creative_direction_intentId_fkey",
+          "public",
+          "\"public\".\"creative_direction\""
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,524 @@
+[
+  {
+    "id": "table.storyboard",
+    "label": "Create table \"storyboard\"",
+    "summary": "Creates table \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"storyboard\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"storyboard\"",
+        "sql": "CREATE TABLE \"public\".\"storyboard\" (\n  \"actualDurationMs\" int4 NOT NULL,\n  \"aspectRatio\" text,\n  \"brandVersion\" int4,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"creativeRunId\" text NOT NULL,\n  \"directionId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"intelligenceVersion\" int4,\n  \"intentId\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"platforms\" text[] NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"targetDurationMs\" int4 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"version\" int4 DEFAULT 1 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"storyboard_platforms_elem_not_null_53a1bdb5\" CHECK (array_position(\"platforms\", NULL) IS NULL),\n  CONSTRAINT \"storyboard_status_check_e8dc73a3\" CHECK (\"status\" IN ('DRAFT', 'READY', 'SELECTED', 'LOCKED', 'ARCHIVED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"storyboard\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.storyboard_scene",
+    "label": "Create table \"storyboard_scene\"",
+    "summary": "Creates table \"storyboard_scene\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "storyboard_scene"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"storyboard_scene\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_scene\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"storyboard_scene\"",
+        "sql": "CREATE TABLE \"public\".\"storyboard_scene\" (\n  \"claimIds\" text[] NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"durationMs\" int4 NOT NULL,\n  \"endMs\" int4 NOT NULL,\n  \"evidenceIds\" text[] NOT NULL,\n  \"featureIds\" text[] NOT NULL,\n  \"id\" text NOT NULL,\n  \"musicDirection\" text,\n  \"name\" text NOT NULL,\n  \"notes\" text NOT NULL,\n  \"order\" int4 NOT NULL,\n  \"purpose\" text NOT NULL,\n  \"sfxCues\" text NOT NULL,\n  \"shots\" text NOT NULL,\n  \"startMs\" int4 NOT NULL,\n  \"storyboardId\" text NOT NULL,\n  \"textOverlays\" text NOT NULL,\n  \"transitionIn\" text,\n  \"transitionOut\" text,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"voiceoverPlan\" text,\n  \"workflowIds\" text[] NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"storyboard_scene_claimIds_elem_not_null_40174445\" CHECK (array_position(\"claimIds\", NULL) IS NULL),\n  CONSTRAINT \"storyboard_scene_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"storyboard_scene_featureIds_elem_not_null_b2754430\" CHECK (array_position(\"featureIds\", NULL) IS NULL),\n  CONSTRAINT \"storyboard_scene_positive_duration_8886a046\" CHECK (\"endMs\" > \"startMs\"),\n  CONSTRAINT \"storyboard_scene_type_check_08f7327c\" CHECK (\"type\" IN ('HOOK', 'PROBLEM', 'REVEAL', 'PRODUCT_DEMO', 'WORKFLOW', 'FEATURE', 'TRANSFORMATION', 'PROOF', 'SOCIAL_PROOF', 'CTA', 'TRANSITION', 'CUSTOM')),\n  CONSTRAINT \"storyboard_scene_workflowIds_elem_not_null_86e06725\" CHECK (array_position(\"workflowIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"storyboard_scene\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_scene\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.storyboard_scene.storyboard_scene_order",
+    "label": "Add unique constraint on \"storyboard_scene\" (storyboardId, order)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "storyboard_scene_order",
+        "table": "storyboard_scene"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"storyboard_scene_order\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_scene_order",
+          "public",
+          "\"public\".\"storyboard_scene\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"storyboard_scene_order\"",
+        "sql": "ALTER TABLE \"public\".\"storyboard_scene\" ADD CONSTRAINT \"storyboard_scene_order\" UNIQUE (\"storyboardId\", \"order\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"storyboard_scene_order\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_scene_order",
+          "public",
+          "\"public\".\"storyboard_scene\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.storyboard.storyboard_direction_idx",
+    "label": "Create index \"storyboard_direction_idx\" on \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "storyboard_direction_idx",
+        "table": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"storyboard_direction_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_direction_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"storyboard_direction_idx\"",
+        "sql": "CREATE INDEX \"storyboard_direction_idx\" ON \"public\".\"storyboard\" (\"directionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"storyboard_direction_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_direction_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.storyboard.storyboard_intent_idx",
+    "label": "Create index \"storyboard_intent_idx\" on \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "storyboard_intent_idx",
+        "table": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"storyboard_intent_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_intent_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"storyboard_intent_idx\"",
+        "sql": "CREATE INDEX \"storyboard_intent_idx\" ON \"public\".\"storyboard\" (\"intentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"storyboard_intent_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_intent_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.storyboard.storyboard_project_created_idx",
+    "label": "Create index \"storyboard_project_created_idx\" on \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "storyboard_project_created_idx",
+        "table": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"storyboard_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"storyboard_project_created_idx\"",
+        "sql": "CREATE INDEX \"storyboard_project_created_idx\" ON \"public\".\"storyboard\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"storyboard_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.storyboard.storyboard_project_idx",
+    "label": "Create index \"storyboard_project_idx\" on \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "storyboard_project_idx",
+        "table": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"storyboard_project_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_project_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"storyboard_project_idx\"",
+        "sql": "CREATE INDEX \"storyboard_project_idx\" ON \"public\".\"storyboard\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"storyboard_project_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_project_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.storyboard.storyboard_project_status_idx",
+    "label": "Create index \"storyboard_project_status_idx\" on \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "storyboard_project_status_idx",
+        "table": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"storyboard_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"storyboard_project_status_idx\"",
+        "sql": "CREATE INDEX \"storyboard_project_status_idx\" ON \"public\".\"storyboard\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"storyboard_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.storyboard_scene.storyboard_scene_storyboard_idx",
+    "label": "Create index \"storyboard_scene_storyboard_idx\" on \"storyboard_scene\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "storyboard_scene_storyboard_idx",
+        "table": "storyboard_scene"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"storyboard_scene_storyboard_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_scene_storyboard_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"storyboard_scene_storyboard_idx\"",
+        "sql": "CREATE INDEX \"storyboard_scene_storyboard_idx\" ON \"public\".\"storyboard_scene\" (\"storyboardId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"storyboard_scene_storyboard_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"storyboard_scene_storyboard_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.storyboard.storyboard_projectId_fkey",
+    "label": "Add foreign key \"storyboard_projectId_fkey\" on \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "storyboard_projectId_fkey",
+        "table": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"storyboard_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_projectId_fkey",
+          "public",
+          "\"public\".\"storyboard\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"storyboard_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"storyboard\"\nADD CONSTRAINT \"storyboard_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"storyboard_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_projectId_fkey",
+          "public",
+          "\"public\".\"storyboard\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.storyboard.storyboard_intentId_fkey",
+    "label": "Add foreign key \"storyboard_intentId_fkey\" on \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "storyboard_intentId_fkey",
+        "table": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"storyboard_intentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_intentId_fkey",
+          "public",
+          "\"public\".\"storyboard\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"storyboard_intentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"storyboard\"\nADD CONSTRAINT \"storyboard_intentId_fkey\"\nFOREIGN KEY (\"intentId\")\nREFERENCES \"public\".\"content_intent\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"storyboard_intentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_intentId_fkey",
+          "public",
+          "\"public\".\"storyboard\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.storyboard.storyboard_directionId_fkey",
+    "label": "Add foreign key \"storyboard_directionId_fkey\" on \"storyboard\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "storyboard_directionId_fkey",
+        "table": "storyboard"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"storyboard_directionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_directionId_fkey",
+          "public",
+          "\"public\".\"storyboard\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"storyboard_directionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"storyboard\"\nADD CONSTRAINT \"storyboard_directionId_fkey\"\nFOREIGN KEY (\"directionId\")\nREFERENCES \"public\".\"creative_direction\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"storyboard_directionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_directionId_fkey",
+          "public",
+          "\"public\".\"storyboard\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.storyboard_scene.storyboard_scene_storyboardId_fkey",
+    "label": "Add foreign key \"storyboard_scene_storyboardId_fkey\" on \"storyboard_scene\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "storyboard_scene_storyboardId_fkey",
+        "table": "storyboard_scene"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"storyboard_scene_storyboardId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_scene_storyboardId_fkey",
+          "public",
+          "\"public\".\"storyboard_scene\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"storyboard_scene_storyboardId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"storyboard_scene\"\nADD CONSTRAINT \"storyboard_scene_storyboardId_fkey\"\nFOREIGN KEY (\"storyboardId\")\nREFERENCES \"public\".\"storyboard\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"storyboard_scene_storyboardId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "storyboard_scene_storyboardId_fkey",
+          "public",
+          "\"public\".\"storyboard_scene\""
+        ]
+      }
+    ]
+  }
+]

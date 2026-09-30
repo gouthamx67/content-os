@@ -21,3 +21,7 @@ export const brandService = container.services.brand;
 export const browserService = container.services.browser;
 
 export const contentIntentService = container.services.contentIntent;
+
+export const creativeDirectorService = container.services.creativeDirections;
+
+export const storyboardService = container.services.storyboards;

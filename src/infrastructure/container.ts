@@ -14,6 +14,8 @@ import { PostgresIntelligenceRepository } from "./repositories/postgres-intellig
 import { PostgresBrowserSessionRepository } from "./repositories/postgres-browser-session-repository";
 import { PostgresBrandRepository } from "./repositories/postgres-brand-repository";
 import { PostgresContentIntentRepository } from "./repositories/postgres-content-intent-repository";
+import { PostgresCreativeDirectionRepository } from "./repositories/postgres-creative-direction-repository";
+import { PostgresStoryboardRepository } from "./repositories/postgres-storyboard-repository";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
 import { WorkspaceService } from "../core/services/workspace-service";
@@ -53,6 +55,11 @@ import { AiBrandInterpretationProvider } from "./ai/brand-interpretation-provide
 import { AiContentIntentInterpreter } from "./ai/content-intent-interpreter";
 import { ContentIntentValidator } from "../core/services/content-intent-validator";
 import { ContentIntentService } from "../core/services/content-intent-service";
+import { AiCreativeDirector } from "./ai/creative-director";
+import { CreativeDirectorService } from "../core/services/creative-director-service";
+import { DeterministicCreativeDirector } from "../core/services/deterministic-creative-director";
+import { StoryboardService } from "../core/services/storyboard-service";
+import { AiStoryboardPlanner } from "./ai/storyboard-planner";
 
 const orm = db.orm.public;
 
@@ -67,6 +74,8 @@ const repositories = {
   browserSessions: new PostgresBrowserSessionRepository(orm),
   brand: new PostgresBrandRepository(orm),
   contentIntents: new PostgresContentIntentRepository(orm),
+  creativeDirections: new PostgresCreativeDirectionRepository(orm),
+  storyboards: new PostgresStoryboardRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -277,6 +286,48 @@ const contentIntentService = new ContentIntentService({
   interpretationProvider: contentIntentInterpretation,
 });
 
+/**
+ * A model may propose directions, and the deterministic director stands behind it
+ * whether or not one is configured. The order matters: a model failure falls
+ * through to the styles rather than leaving the project with nothing.
+ */
+const creativeDirectors = [
+  ...(process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+    ? [new AiCreativeDirector(providers.ai)]
+    : []),
+  new DeterministicCreativeDirector(),
+];
+
+const creativeDirectorService = new CreativeDirectorService({
+  projectService,
+  intentRepository: repositories.contentIntents,
+  repository: repositories.creativeDirections,
+  intelligenceRepository: repositories.intelligence,
+  brandRepository: repositories.brand,
+  assetRepository: repositories.assets,
+  directors: creativeDirectors,
+});
+
+/**
+ * The same arrangement as the directors: a model may fill in the beats, and the
+ * deterministic planner stands behind it whether or not one is configured. The
+ * fallback is not a nicety here — the beats themselves come from the deterministic
+ * planner, so without it there is no plan to fall back *to*.
+ */
+const storyboardService = new StoryboardService({
+  projectService,
+  intentRepository: repositories.contentIntents,
+  directionRepository: repositories.creativeDirections,
+  repository: repositories.storyboards,
+  intelligenceRepository: repositories.intelligence,
+  brandRepository: repositories.brand,
+  assetRepository: repositories.assets,
+  browserSessionRepository: repositories.browserSessions,
+  planners: process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+    ? [new AiStoryboardPlanner(providers.ai)]
+    : [],
+});
+
 export const container = {
   repositories,
   providers,
@@ -292,5 +343,7 @@ export const container = {
     brand: brandService,
     browser: browserService,
     contentIntent: contentIntentService,
+    creativeDirections: creativeDirectorService,
+    storyboards: storyboardService,
   },
 };

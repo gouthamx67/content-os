@@ -147,6 +147,8 @@ model Project {
   brandSourceStates           BrandSourceState[]
 
   contentIntents              ContentIntent[]
+  creativeDirections          CreativeDirection[]
+  storyboards                 Storyboard[]
 
   @@index([workspaceId])
   @@index([workspaceId, status])
@@ -832,6 +834,191 @@ enum IntentConfidence {
   LOW = "LOW"
 }
 
+enum CreativeMode {
+  @@type("pg/text@1")
+
+  GUIDED = "GUIDED"
+  BALANCED = "BALANCED"
+  WILD = "WILD"
+}
+
+enum CreativeDirectionStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  SELECTED = "SELECTED"
+  REJECTED = "REJECTED"
+  ARCHIVED = "ARCHIVED"
+}
+
+enum StoryboardStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  READY = "READY"
+  SELECTED = "SELECTED"
+  LOCKED = "LOCKED"
+  ARCHIVED = "ARCHIVED"
+}
+
+enum StoryboardSceneType {
+  @@type("pg/text@1")
+
+  HOOK = "HOOK"
+  PROBLEM = "PROBLEM"
+  REVEAL = "REVEAL"
+  PRODUCT_DEMO = "PRODUCT_DEMO"
+  WORKFLOW = "WORKFLOW"
+  FEATURE = "FEATURE"
+  TRANSFORMATION = "TRANSFORMATION"
+  PROOF = "PROOF"
+  SOCIAL_PROOF = "SOCIAL_PROOF"
+  CTA = "CTA"
+  TRANSITION = "TRANSITION"
+  CUSTOM = "CUSTOM"
+}
+
+/// A concept for one piece of content: the angle, the thesis, the hook, and how
+/// it would be shown and proven. Nested creative structures are JSON text, the
+/// same way the intent keeps its constraints, because the contract has no map
+/// column and their shapes are the domain's to define.
+model CreativeDirection {
+  id                  String                     @id @default(cuid(2))
+  projectId           String
+  intentId            String
+  /// Every generation is its own group, so regenerating adds options instead of
+  /// replacing the ones a user may already be reading.
+  creativeRunId       String
+  mode                CreativeMode
+  status              CreativeDirectionStatus    @default(DRAFT)
+  angle               String
+  name                String
+  thesis              String
+  hook                String
+  audienceAngle       String
+  emotionalAngle      String
+  narrativeSummary    String
+  visualStrategy      String
+  proofStrategy       String
+  voiceDirection      String
+  musicDirection      String
+  soundDirection      String
+  cta                 String?
+  rationale           String
+  /// 1-100 fitness against the project's own material. Kept for ordering and
+  /// for noticing regressions, not shown as a verdict on a direction.
+  strengthScore       Int
+  /// True once a human edited it. A later regeneration must not overwrite these.
+  editedByUser        Boolean                    @default(false)
+  brandVersion        Int?
+  intelligenceVersion Int?
+  createdAt           TimestamptzString          @default(now())
+  updatedAt           temporal.updatedAtString()
+
+  project             Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  intent              ContentIntent              @relation(fields:[intentId], references:[id], onDelete: Cascade)
+
+  storyboards         Storyboard[]
+
+  @@index([projectId], map: "creative_direction_project_idx")
+  @@index([intentId, createdAt], map: "creative_direction_intent_created_idx")
+  @@index([intentId, status], map: "creative_direction_intent_status_idx")
+  @@index([projectId, creativeRunId], map: "creative_direction_run_idx")
+  @@map("creative_direction")
+}
+
+/// The plan for one piece of content: the scenes, the shots inside them, the text
+/// that appears, the narration to be written, and the exact time each of those
+/// occupies. It carries no media and no rendered output — a scene says what to
+/// capture and where, and a later checkpoint does the capturing.
+///
+/// Scenes are their own rows because they are the unit of edit, reorder and
+/// selection. Everything inside a scene — shots, overlays, cues, transitions — is
+/// JSON text, the way the intent keeps its constraints and the direction its
+/// nested strategy: the shapes are the domain's to define, and they are only
+/// ever read together with the scene that owns them.
+model Storyboard {
+  id                  String                     @id @default(cuid(2))
+  projectId           String
+  intentId            String
+  /// The direction this was built from. A storyboard never floats free of the
+  /// argument it is illustrating.
+  directionId         String
+  /// The creative run that direction came from, so a whole set of plans can be
+  /// traced to one generation.
+  creativeRunId       String
+  name                String
+  status              StoryboardStatus           @default(DRAFT)
+  /// The duration the request asked for. The timeline has to land on this.
+  targetDurationMs    Int
+  /// What the scenes actually cover. Stored rather than derived so a drift is
+  /// visible instead of something every reader has to recompute.
+  actualDurationMs    Int
+  aspectRatio         String?
+  platforms           String[]
+  brandVersion        Int?
+  intelligenceVersion Int?
+  /// Incremented on every accepted edit and reorder, so a plan that changes under
+  /// a reader is detectable rather than silent.
+  version             Int                        @default(1)
+  createdAt           TimestamptzString          @default(now())
+  updatedAt           temporal.updatedAtString()
+
+  project             Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  intent              ContentIntent              @relation(fields:[intentId], references:[id], onDelete: Cascade)
+  direction           CreativeDirection          @relation(fields:[directionId], references:[id], onDelete: Cascade)
+
+  scenes              StoryboardScene[]
+
+  @@index([projectId], map: "storyboard_project_idx")
+  @@index([projectId, createdAt], map: "storyboard_project_created_idx")
+  @@index([projectId, status], map: "storyboard_project_status_idx")
+  @@index([intentId], map: "storyboard_intent_idx")
+  @@index([directionId], map: "storyboard_direction_idx")
+  @@map("storyboard")
+}
+
+/// One scene on the timeline. Order is dense from zero and the spans are
+/// contiguous, so the sequence of rows is the sequence of time.
+model StoryboardScene {
+  id                String                     @id @default(cuid(2))
+  storyboardId      String
+  order             Int
+  type              StoryboardSceneType
+  name              String
+  /// Why this scene is in the piece, in one line.
+  purpose           String
+  startMs           Int
+  endMs             Int
+  durationMs        Int
+  shots             String
+  textOverlays      String
+  voiceoverPlan     String?
+  musicDirection    String?
+  sfxCues           String
+  transitionIn      String?
+  transitionOut     String?
+  /// Ids of the CP06 material this scene rests on. Ids only: a scene that spelled
+  /// out a benefit in its own words would be a claim nothing checks.
+  featureIds        String[]
+  workflowIds       String[]
+  claimIds          String[]
+  evidenceIds       String[]
+  notes             String
+  createdAt         TimestamptzString          @default(now())
+  updatedAt         temporal.updatedAtString()
+
+  storyboard        Storyboard                 @relation(fields:[storyboardId], references:[id], onDelete: Cascade)
+
+  @@unique([storyboardId, order], map: "storyboard_scene_order")
+  @@index([storyboardId], map: "storyboard_scene_storyboard_idx")
+  /// A scene that does not move forward is not a scene. The domain validator
+  /// enforces this and the timeline contiguity around it; this is the floor that
+  /// holds even against a write that skipped the domain.
+  @@check(expression: "\"endMs\" > \"startMs\"", name: "storyboard_scene_positive_duration")
+  @@map("storyboard_scene")
+}
+
 enum ContentChannel {
   @@type("pg/text@1")
 
@@ -1202,6 +1389,9 @@ model ContentIntent {
   updatedAt           temporal.updatedAtString()
 
   project             Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+
+  creativeDirections  CreativeDirection[]
+  storyboards         Storyboard[]
 
   @@index([projectId], map: "content_intent_project_idx")
   @@index([projectId, createdAt], map: "content_intent_project_created_idx")

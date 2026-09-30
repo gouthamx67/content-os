@@ -34,9 +34,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'c6daf43392b955612357b182d09b85aa28a184de543914b142b8075d05a0cee0'>;
+  StorageHashBase<'333a850fb874e181e1780fecdc353ae59748391ecd9310b00659b3f50239f5dc'>;
 export type ExecutionHash =
-  ExecutionHashBase<'0eba0a0befbf245308ca7278632d8a1ab594540b5be1c0d6611a3a3a8e6efbf0'>;
+  ExecutionHashBase<'2419e44526db916bee129363a490e3920e4734a13861944799298f8df2825c4b'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -916,61 +916,6 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
-    readonly Storyboard: {
-      readonly id: CodecTypes['pg/text@1']['output'];
-      readonly projectId: CodecTypes['pg/text@1']['output'];
-      readonly intentId: CodecTypes['pg/text@1']['output'];
-      readonly directionId: CodecTypes['pg/text@1']['output'];
-      readonly creativeRunId: CodecTypes['pg/text@1']['output'];
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly status: 'DRAFT' | 'READY' | 'SELECTED' | 'LOCKED' | 'ARCHIVED';
-      readonly targetDurationMs: CodecTypes['pg/int4@1']['output'];
-      readonly actualDurationMs: CodecTypes['pg/int4@1']['output'];
-      readonly aspectRatio: CodecTypes['pg/text@1']['output'] | null;
-      readonly platforms: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly brandVersion: CodecTypes['pg/int4@1']['output'] | null;
-      readonly intelligenceVersion: CodecTypes['pg/int4@1']['output'] | null;
-      readonly version: CodecTypes['pg/int4@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
-    readonly StoryboardScene: {
-      readonly id: CodecTypes['pg/text@1']['output'];
-      readonly storyboardId: CodecTypes['pg/text@1']['output'];
-      readonly order: CodecTypes['pg/int4@1']['output'];
-      readonly type:
-        | 'HOOK'
-        | 'PROBLEM'
-        | 'REVEAL'
-        | 'PRODUCT_DEMO'
-        | 'WORKFLOW'
-        | 'FEATURE'
-        | 'TRANSFORMATION'
-        | 'PROOF'
-        | 'SOCIAL_PROOF'
-        | 'CTA'
-        | 'TRANSITION'
-        | 'CUSTOM';
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly purpose: CodecTypes['pg/text@1']['output'];
-      readonly startMs: CodecTypes['pg/int4@1']['output'];
-      readonly endMs: CodecTypes['pg/int4@1']['output'];
-      readonly durationMs: CodecTypes['pg/int4@1']['output'];
-      readonly shots: CodecTypes['pg/text@1']['output'];
-      readonly textOverlays: CodecTypes['pg/text@1']['output'];
-      readonly voiceoverPlan: CodecTypes['pg/text@1']['output'] | null;
-      readonly musicDirection: CodecTypes['pg/text@1']['output'] | null;
-      readonly sfxCues: CodecTypes['pg/text@1']['output'];
-      readonly transitionIn: CodecTypes['pg/text@1']['output'] | null;
-      readonly transitionOut: CodecTypes['pg/text@1']['output'] | null;
-      readonly featureIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly workflowIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly claimIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly notes: CodecTypes['pg/text@1']['output'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    };
     readonly User: {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly email: CodecTypes['pg/text@1']['output'];
@@ -1666,61 +1611,6 @@ export type FieldInputTypes = {
       readonly storageKey: CodecTypes['pg/text@1']['input'] | null;
       readonly errorCode: CodecTypes['pg/text@1']['input'] | null;
       readonly errorMessage: CodecTypes['pg/text@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly Storyboard: {
-      readonly id: CodecTypes['pg/text@1']['input'];
-      readonly projectId: CodecTypes['pg/text@1']['input'];
-      readonly intentId: CodecTypes['pg/text@1']['input'];
-      readonly directionId: CodecTypes['pg/text@1']['input'];
-      readonly creativeRunId: CodecTypes['pg/text@1']['input'];
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly status: 'DRAFT' | 'READY' | 'SELECTED' | 'LOCKED' | 'ARCHIVED';
-      readonly targetDurationMs: CodecTypes['pg/int4@1']['input'];
-      readonly actualDurationMs: CodecTypes['pg/int4@1']['input'];
-      readonly aspectRatio: CodecTypes['pg/text@1']['input'] | null;
-      readonly platforms: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly brandVersion: CodecTypes['pg/int4@1']['input'] | null;
-      readonly intelligenceVersion: CodecTypes['pg/int4@1']['input'] | null;
-      readonly version: CodecTypes['pg/int4@1']['input'];
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-    };
-    readonly StoryboardScene: {
-      readonly id: CodecTypes['pg/text@1']['input'];
-      readonly storyboardId: CodecTypes['pg/text@1']['input'];
-      readonly order: CodecTypes['pg/int4@1']['input'];
-      readonly type:
-        | 'HOOK'
-        | 'PROBLEM'
-        | 'REVEAL'
-        | 'PRODUCT_DEMO'
-        | 'WORKFLOW'
-        | 'FEATURE'
-        | 'TRANSFORMATION'
-        | 'PROOF'
-        | 'SOCIAL_PROOF'
-        | 'CTA'
-        | 'TRANSITION'
-        | 'CUSTOM';
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly purpose: CodecTypes['pg/text@1']['input'];
-      readonly startMs: CodecTypes['pg/int4@1']['input'];
-      readonly endMs: CodecTypes['pg/int4@1']['input'];
-      readonly durationMs: CodecTypes['pg/int4@1']['input'];
-      readonly shots: CodecTypes['pg/text@1']['input'];
-      readonly textOverlays: CodecTypes['pg/text@1']['input'];
-      readonly voiceoverPlan: CodecTypes['pg/text@1']['input'] | null;
-      readonly musicDirection: CodecTypes['pg/text@1']['input'] | null;
-      readonly sfxCues: CodecTypes['pg/text@1']['input'];
-      readonly transitionIn: CodecTypes['pg/text@1']['input'] | null;
-      readonly transitionOut: CodecTypes['pg/text@1']['input'] | null;
-      readonly featureIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly workflowIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly claimIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly notes: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -2422,61 +2312,6 @@ export type StorageColumnTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly uri: CodecTypes['pg/text@1']['output'] | null;
     };
-    readonly storyboard: {
-      readonly actualDurationMs: CodecTypes['pg/int4@1']['output'];
-      readonly aspectRatio: CodecTypes['pg/text@1']['output'] | null;
-      readonly brandVersion: CodecTypes['pg/int4@1']['output'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly creativeRunId: CodecTypes['pg/text@1']['output'];
-      readonly directionId: CodecTypes['pg/text@1']['output'];
-      readonly id: CodecTypes['pg/text@1']['output'];
-      readonly intelligenceVersion: CodecTypes['pg/int4@1']['output'] | null;
-      readonly intentId: CodecTypes['pg/text@1']['output'];
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly platforms: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly projectId: CodecTypes['pg/text@1']['output'];
-      readonly status: 'DRAFT' | 'READY' | 'SELECTED' | 'LOCKED' | 'ARCHIVED';
-      readonly targetDurationMs: CodecTypes['pg/int4@1']['output'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly version: CodecTypes['pg/int4@1']['output'];
-    };
-    readonly storyboard_scene: {
-      readonly claimIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly durationMs: CodecTypes['pg/int4@1']['output'];
-      readonly endMs: CodecTypes['pg/int4@1']['output'];
-      readonly evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly featureIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly id: CodecTypes['pg/text@1']['output'];
-      readonly musicDirection: CodecTypes['pg/text@1']['output'] | null;
-      readonly name: CodecTypes['pg/text@1']['output'];
-      readonly notes: CodecTypes['pg/text@1']['output'];
-      readonly order: CodecTypes['pg/int4@1']['output'];
-      readonly purpose: CodecTypes['pg/text@1']['output'];
-      readonly sfxCues: CodecTypes['pg/text@1']['output'];
-      readonly shots: CodecTypes['pg/text@1']['output'];
-      readonly startMs: CodecTypes['pg/int4@1']['output'];
-      readonly storyboardId: CodecTypes['pg/text@1']['output'];
-      readonly textOverlays: CodecTypes['pg/text@1']['output'];
-      readonly transitionIn: CodecTypes['pg/text@1']['output'] | null;
-      readonly transitionOut: CodecTypes['pg/text@1']['output'] | null;
-      readonly type:
-        | 'HOOK'
-        | 'PROBLEM'
-        | 'REVEAL'
-        | 'PRODUCT_DEMO'
-        | 'WORKFLOW'
-        | 'FEATURE'
-        | 'TRANSFORMATION'
-        | 'PROOF'
-        | 'SOCIAL_PROOF'
-        | 'CTA'
-        | 'TRANSITION'
-        | 'CUSTOM';
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-      readonly voiceoverPlan: CodecTypes['pg/text@1']['output'] | null;
-      readonly workflowIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-    };
     readonly user: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly email: CodecTypes['pg/text@1']['output'];
@@ -3175,61 +3010,6 @@ export type StorageColumnInputTypes = {
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly uri: CodecTypes['pg/text@1']['input'] | null;
     };
-    readonly storyboard: {
-      readonly actualDurationMs: CodecTypes['pg/int4@1']['input'];
-      readonly aspectRatio: CodecTypes['pg/text@1']['input'] | null;
-      readonly brandVersion: CodecTypes['pg/int4@1']['input'] | null;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly creativeRunId: CodecTypes['pg/text@1']['input'];
-      readonly directionId: CodecTypes['pg/text@1']['input'];
-      readonly id: CodecTypes['pg/text@1']['input'];
-      readonly intelligenceVersion: CodecTypes['pg/int4@1']['input'] | null;
-      readonly intentId: CodecTypes['pg/text@1']['input'];
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly platforms: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly projectId: CodecTypes['pg/text@1']['input'];
-      readonly status: 'DRAFT' | 'READY' | 'SELECTED' | 'LOCKED' | 'ARCHIVED';
-      readonly targetDurationMs: CodecTypes['pg/int4@1']['input'];
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly version: CodecTypes['pg/int4@1']['input'];
-    };
-    readonly storyboard_scene: {
-      readonly claimIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly durationMs: CodecTypes['pg/int4@1']['input'];
-      readonly endMs: CodecTypes['pg/int4@1']['input'];
-      readonly evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly featureIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly id: CodecTypes['pg/text@1']['input'];
-      readonly musicDirection: CodecTypes['pg/text@1']['input'] | null;
-      readonly name: CodecTypes['pg/text@1']['input'];
-      readonly notes: CodecTypes['pg/text@1']['input'];
-      readonly order: CodecTypes['pg/int4@1']['input'];
-      readonly purpose: CodecTypes['pg/text@1']['input'];
-      readonly sfxCues: CodecTypes['pg/text@1']['input'];
-      readonly shots: CodecTypes['pg/text@1']['input'];
-      readonly startMs: CodecTypes['pg/int4@1']['input'];
-      readonly storyboardId: CodecTypes['pg/text@1']['input'];
-      readonly textOverlays: CodecTypes['pg/text@1']['input'];
-      readonly transitionIn: CodecTypes['pg/text@1']['input'] | null;
-      readonly transitionOut: CodecTypes['pg/text@1']['input'] | null;
-      readonly type:
-        | 'HOOK'
-        | 'PROBLEM'
-        | 'REVEAL'
-        | 'PRODUCT_DEMO'
-        | 'WORKFLOW'
-        | 'FEATURE'
-        | 'TRANSFORMATION'
-        | 'PROOF'
-        | 'SOCIAL_PROOF'
-        | 'CTA'
-        | 'TRANSITION'
-        | 'CUSTOM';
-      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
-      readonly voiceoverPlan: CodecTypes['pg/text@1']['input'] | null;
-      readonly workflowIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-    };
     readonly user: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly email: CodecTypes['pg/text@1']['input'];
@@ -3326,7 +3106,6 @@ export namespace Models {
     intelligenceSnapshots: public_IntelligenceSnapshot[];
     intelligenceWorkflows: public_IntelligenceWorkflow[];
     sources: public_Source[];
-    storyboards: public_Storyboard[];
     workspace: public_Workspace;
     readonly [RelationKeys]?:
       | 'assets'
@@ -3356,7 +3135,6 @@ export namespace Models {
       | 'intelligenceSnapshots'
       | 'intelligenceWorkflows'
       | 'sources'
-      | 'storyboards'
       | 'workspace';
   };
   export type public_Source = {
@@ -3835,70 +3613,7 @@ export namespace Models {
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     intent: public_ContentIntent;
     project: public_Project;
-    storyboards: public_Storyboard[];
-    readonly [RelationKeys]?: 'intent' | 'project' | 'storyboards';
-  };
-  export type public_Storyboard = {
-    id: CodecTypes['pg/text@1']['output'];
-    projectId: CodecTypes['pg/text@1']['output'];
-    intentId: CodecTypes['pg/text@1']['output'];
-    directionId: CodecTypes['pg/text@1']['output'];
-    creativeRunId: CodecTypes['pg/text@1']['output'];
-    name: CodecTypes['pg/text@1']['output'];
-    status: 'DRAFT' | 'READY' | 'SELECTED' | 'LOCKED' | 'ARCHIVED';
-    targetDurationMs: CodecTypes['pg/int4@1']['output'];
-    actualDurationMs: CodecTypes['pg/int4@1']['output'];
-    aspectRatio: CodecTypes['pg/text@1']['output'] | null;
-    platforms: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-    brandVersion: CodecTypes['pg/int4@1']['output'] | null;
-    intelligenceVersion: CodecTypes['pg/int4@1']['output'] | null;
-    version: CodecTypes['pg/int4@1']['output'];
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    direction: public_CreativeDirection;
-    intent: public_ContentIntent;
-    project: public_Project;
-    scenes: public_StoryboardScene[];
-    readonly [RelationKeys]?: 'direction' | 'intent' | 'project' | 'scenes';
-  };
-  export type public_StoryboardScene = {
-    id: CodecTypes['pg/text@1']['output'];
-    storyboardId: CodecTypes['pg/text@1']['output'];
-    order: CodecTypes['pg/int4@1']['output'];
-    type:
-      | 'HOOK'
-      | 'PROBLEM'
-      | 'REVEAL'
-      | 'PRODUCT_DEMO'
-      | 'WORKFLOW'
-      | 'FEATURE'
-      | 'TRANSFORMATION'
-      | 'PROOF'
-      | 'SOCIAL_PROOF'
-      | 'CTA'
-      | 'TRANSITION'
-      | 'CUSTOM';
-    name: CodecTypes['pg/text@1']['output'];
-    purpose: CodecTypes['pg/text@1']['output'];
-    startMs: CodecTypes['pg/int4@1']['output'];
-    endMs: CodecTypes['pg/int4@1']['output'];
-    durationMs: CodecTypes['pg/int4@1']['output'];
-    shots: CodecTypes['pg/text@1']['output'];
-    textOverlays: CodecTypes['pg/text@1']['output'];
-    voiceoverPlan: CodecTypes['pg/text@1']['output'] | null;
-    musicDirection: CodecTypes['pg/text@1']['output'] | null;
-    sfxCues: CodecTypes['pg/text@1']['output'];
-    transitionIn: CodecTypes['pg/text@1']['output'] | null;
-    transitionOut: CodecTypes['pg/text@1']['output'] | null;
-    featureIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-    workflowIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-    claimIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-    evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-    notes: CodecTypes['pg/text@1']['output'];
-    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
-    storyboard: public_Storyboard;
-    readonly [RelationKeys]?: 'storyboard';
+    readonly [RelationKeys]?: 'intent' | 'project';
   };
   export type public_BrandProfile = {
     id: CodecTypes['pg/text@1']['output'];
@@ -4179,8 +3894,7 @@ export namespace Models {
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     creativeDirections: public_CreativeDirection[];
     project: public_Project;
-    storyboards: public_Storyboard[];
-    readonly [RelationKeys]?: 'creativeDirections' | 'project' | 'storyboards';
+    readonly [RelationKeys]?: 'creativeDirections' | 'project';
   };
 }
 
@@ -4211,8 +3925,6 @@ export declare const models: {
     BrowserObservation: Models.public_BrowserObservation;
     IntelligenceSnapshot: Models.public_IntelligenceSnapshot;
     CreativeDirection: Models.public_CreativeDirection;
-    Storyboard: Models.public_Storyboard;
-    StoryboardScene: Models.public_StoryboardScene;
     BrandProfile: Models.public_BrandProfile;
     BrandColor: Models.public_BrandColor;
     BrandFont: Models.public_BrandFont;
@@ -8172,314 +7884,6 @@ type ContractBase = Omit<
                 },
               ];
             };
-            readonly storyboard: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly projectId: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly intentId: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly directionId: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly creativeRunId: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly name: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly status: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', 'DRAFT'>;
-                  };
-                };
-                readonly targetDurationMs: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly actualDurationMs: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly aspectRatio: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly platforms: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly brandVersion: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly intelligenceVersion: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: true;
-                };
-                readonly version: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/int4@1', 1>;
-                  };
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
-              indexes: readonly [
-                {
-                  readonly name: 'storyboard_project_idx';
-                  readonly columns: readonly ['projectId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'storyboard_project_created_idx';
-                  readonly columns: readonly ['projectId', 'createdAt'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'storyboard_project_status_idx';
-                  readonly columns: readonly ['projectId', 'status'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'storyboard_intent_idx';
-                  readonly columns: readonly ['intentId'];
-                  readonly unique: false;
-                },
-                {
-                  readonly name: 'storyboard_direction_idx';
-                  readonly columns: readonly ['directionId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'storyboard';
-                    readonly columns: readonly ['projectId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'project';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'storyboard';
-                    readonly columns: readonly ['intentId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'content_intent';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'storyboard';
-                    readonly columns: readonly ['directionId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'creative_direction';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
-            readonly storyboard_scene: {
-              columns: {
-                readonly id: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly storyboardId: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly order: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly type: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly name: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly purpose: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly startMs: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly endMs: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly durationMs: {
-                  readonly nativeType: 'int4';
-                  readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
-                };
-                readonly shots: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly textOverlays: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly voiceoverPlan: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly musicDirection: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly sfxCues: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly transitionIn: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly transitionOut: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: true;
-                };
-                readonly featureIds: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly workflowIds: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly claimIds: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly evidenceIds: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly notes: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
-                  readonly nullable: false;
-                };
-                readonly createdAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
-                };
-                readonly updatedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                  readonly nullable: false;
-                };
-              };
-              primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [
-                {
-                  readonly columns: readonly ['storyboardId', 'order'];
-                  readonly name: 'storyboard_scene_order';
-                },
-              ];
-              indexes: readonly [
-                {
-                  readonly name: 'storyboard_scene_storyboard_idx';
-                  readonly columns: readonly ['storyboardId'];
-                  readonly unique: false;
-                },
-              ];
-              foreignKeys: readonly [
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'storyboard_scene';
-                    readonly columns: readonly ['storyboardId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'storyboard';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-              ];
-            };
             readonly user: {
               columns: {
                 readonly id: {
@@ -8931,27 +8335,6 @@ type ContractBase = Omit<
                 'OTHER',
               ];
             };
-            readonly StoryboardSceneType: {
-              readonly kind: 'valueSet';
-              readonly values: readonly [
-                'HOOK',
-                'PROBLEM',
-                'REVEAL',
-                'PRODUCT_DEMO',
-                'WORKFLOW',
-                'FEATURE',
-                'TRANSFORMATION',
-                'PROOF',
-                'SOCIAL_PROOF',
-                'CTA',
-                'TRANSITION',
-                'CUSTOM',
-              ];
-            };
-            readonly StoryboardStatus: {
-              readonly kind: 'valueSet';
-              readonly values: readonly ['DRAFT', 'READY', 'SELECTED', 'LOCKED', 'ARCHIVED'];
-            };
             readonly WorkspaceRole: {
               readonly kind: 'valueSet';
               readonly values: readonly ['OWNER', 'ADMIN', 'MEMBER'];
@@ -9048,14 +8431,6 @@ type ContractBase = Omit<
     readonly creative_direction: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'CreativeDirection';
-    };
-    readonly storyboard: {
-      readonly namespace: 'public' & NamespaceId;
-      readonly model: 'Storyboard';
-    };
-    readonly storyboard_scene: {
-      readonly namespace: 'public' & NamespaceId;
-      readonly model: 'StoryboardScene';
     };
     readonly brand_profile: {
       readonly namespace: 'public' & NamespaceId;
@@ -10736,17 +10111,6 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['id'];
                 };
               };
-              readonly storyboards: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Storyboard';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['intentId'];
-                };
-              };
             };
             readonly storage: {
               readonly table: 'content_intent';
@@ -10918,17 +10282,6 @@ type ContractBase = Omit<
                 readonly on: {
                   readonly localFields: readonly ['projectId'];
                   readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly storyboards: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Storyboard';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['directionId'];
                 };
               };
             };
@@ -12795,17 +12148,6 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['projectId'];
                 };
               };
-              readonly storyboards: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Storyboard';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['projectId'];
-                };
-              };
               readonly workspace: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -13039,301 +12381,6 @@ type ContractBase = Omit<
                 readonly storageKey: { readonly column: 'storageKey' };
                 readonly errorCode: { readonly column: 'errorCode' };
                 readonly errorMessage: { readonly column: 'errorMessage' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly Storyboard: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly projectId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly intentId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly directionId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly creativeRunId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly name: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly status: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly targetDurationMs: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly actualDurationMs: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly aspectRatio: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly platforms: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-                readonly many: true;
-              };
-              readonly brandVersion: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly intelligenceVersion: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly version: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-            };
-            readonly relations: {
-              readonly direction: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'CreativeDirection';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['directionId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly intent: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'ContentIntent';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['intentId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly project: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Project';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['projectId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-              readonly scenes: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'StoryboardScene';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['storyboardId'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'storyboard';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly projectId: { readonly column: 'projectId' };
-                readonly intentId: { readonly column: 'intentId' };
-                readonly directionId: { readonly column: 'directionId' };
-                readonly creativeRunId: { readonly column: 'creativeRunId' };
-                readonly name: { readonly column: 'name' };
-                readonly status: { readonly column: 'status' };
-                readonly targetDurationMs: { readonly column: 'targetDurationMs' };
-                readonly actualDurationMs: { readonly column: 'actualDurationMs' };
-                readonly aspectRatio: { readonly column: 'aspectRatio' };
-                readonly platforms: { readonly column: 'platforms' };
-                readonly brandVersion: { readonly column: 'brandVersion' };
-                readonly intelligenceVersion: { readonly column: 'intelligenceVersion' };
-                readonly version: { readonly column: 'version' };
-                readonly createdAt: { readonly column: 'createdAt' };
-                readonly updatedAt: { readonly column: 'updatedAt' };
-              };
-            };
-          };
-          readonly StoryboardScene: {
-            readonly fields: {
-              readonly id: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly storyboardId: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly order: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly type: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly name: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly purpose: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly startMs: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly endMs: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly durationMs: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
-              };
-              readonly shots: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly textOverlays: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly voiceoverPlan: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly musicDirection: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly sfxCues: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly transitionIn: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly transitionOut: {
-                readonly nullable: true;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly featureIds: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-                readonly many: true;
-              };
-              readonly workflowIds: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-                readonly many: true;
-              };
-              readonly claimIds: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-                readonly many: true;
-              };
-              readonly evidenceIds: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-                readonly many: true;
-              };
-              readonly notes: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-              };
-              readonly createdAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-              readonly updatedAt: {
-                readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-string@1';
-                };
-              };
-            };
-            readonly relations: {
-              readonly storyboard: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'Storyboard';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: false;
-                readonly on: {
-                  readonly localFields: readonly ['storyboardId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
-            };
-            readonly storage: {
-              readonly table: 'storyboard_scene';
-              readonly namespaceId: 'public';
-              readonly fields: {
-                readonly id: { readonly column: 'id' };
-                readonly storyboardId: { readonly column: 'storyboardId' };
-                readonly order: { readonly column: 'order' };
-                readonly type: { readonly column: 'type' };
-                readonly name: { readonly column: 'name' };
-                readonly purpose: { readonly column: 'purpose' };
-                readonly startMs: { readonly column: 'startMs' };
-                readonly endMs: { readonly column: 'endMs' };
-                readonly durationMs: { readonly column: 'durationMs' };
-                readonly shots: { readonly column: 'shots' };
-                readonly textOverlays: { readonly column: 'textOverlays' };
-                readonly voiceoverPlan: { readonly column: 'voiceoverPlan' };
-                readonly musicDirection: { readonly column: 'musicDirection' };
-                readonly sfxCues: { readonly column: 'sfxCues' };
-                readonly transitionIn: { readonly column: 'transitionIn' };
-                readonly transitionOut: { readonly column: 'transitionOut' };
-                readonly featureIds: { readonly column: 'featureIds' };
-                readonly workflowIds: { readonly column: 'workflowIds' };
-                readonly claimIds: { readonly column: 'claimIds' };
-                readonly evidenceIds: { readonly column: 'evidenceIds' };
-                readonly notes: { readonly column: 'notes' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
@@ -13857,33 +12904,6 @@ type ContractBase = Omit<
               { readonly name: 'SELECTED'; readonly value: 'SELECTED' },
               { readonly name: 'REJECTED'; readonly value: 'REJECTED' },
               { readonly name: 'ARCHIVED'; readonly value: 'ARCHIVED' },
-            ];
-          };
-          readonly StoryboardStatus: {
-            readonly codecId: 'pg/text@1';
-            readonly members: readonly [
-              { readonly name: 'DRAFT'; readonly value: 'DRAFT' },
-              { readonly name: 'READY'; readonly value: 'READY' },
-              { readonly name: 'SELECTED'; readonly value: 'SELECTED' },
-              { readonly name: 'LOCKED'; readonly value: 'LOCKED' },
-              { readonly name: 'ARCHIVED'; readonly value: 'ARCHIVED' },
-            ];
-          };
-          readonly StoryboardSceneType: {
-            readonly codecId: 'pg/text@1';
-            readonly members: readonly [
-              { readonly name: 'HOOK'; readonly value: 'HOOK' },
-              { readonly name: 'PROBLEM'; readonly value: 'PROBLEM' },
-              { readonly name: 'REVEAL'; readonly value: 'REVEAL' },
-              { readonly name: 'PRODUCT_DEMO'; readonly value: 'PRODUCT_DEMO' },
-              { readonly name: 'WORKFLOW'; readonly value: 'WORKFLOW' },
-              { readonly name: 'FEATURE'; readonly value: 'FEATURE' },
-              { readonly name: 'TRANSFORMATION'; readonly value: 'TRANSFORMATION' },
-              { readonly name: 'PROOF'; readonly value: 'PROOF' },
-              { readonly name: 'SOCIAL_PROOF'; readonly value: 'SOCIAL_PROOF' },
-              { readonly name: 'CTA'; readonly value: 'CTA' },
-              { readonly name: 'TRANSITION'; readonly value: 'TRANSITION' },
-              { readonly name: 'CUSTOM'; readonly value: 'CUSTOM' },
             ];
           };
           readonly ContentChannel: {
@@ -14497,40 +13517,6 @@ type ContractBase = Omit<
           readonly ref: {
             readonly namespace: 'public';
             readonly table: 'source';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'storyboard';
-            readonly column: 'id';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'cuid2' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'storyboard';
-            readonly column: 'updatedAt';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'storyboard_scene';
-            readonly column: 'id';
-          };
-          readonly onCreate: { readonly kind: 'generator'; readonly id: 'cuid2' };
-        },
-        {
-          readonly ref: {
-            readonly namespace: 'public';
-            readonly table: 'storyboard_scene';
             readonly column: 'updatedAt';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };

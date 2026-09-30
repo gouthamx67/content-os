@@ -2855,3 +2855,1256 @@ describe("content intent API integration", () => {
     expect(body.issues).toContain("CONTENT_TYPE_DOES_NOT_SUPPORT_DURATION");
   });
 });
+
+/**
+ * A brief with concrete, checkable material in it, so a direction generated from
+ * it has real claims and a real product screen to cite.
+ */
+const DIRECTION_BRIEF = [
+  "# Northwind Analytics",
+  "",
+  "Northwind Analytics is a scheduling tool for engineering teams.",
+  "",
+  "## What it does",
+  "",
+  "Scheduled exports send a status report on a fixed schedule, so a team stops chasing people for updates.",
+  "",
+  "## Who it is for",
+  "",
+  "Engineering leads who report progress to stakeholders every week.",
+  "",
+  "## Proof",
+  "",
+  "The product dashboard shows a next run time for every export.",
+  "",
+  "## Voice",
+  "",
+  "Plain and direct. Say single source of truth rather than revolutionary.",
+].join("\n");
+
+describe("creative direction integration (real postgres)", () => {
+  /**
+   * A project with a resolved request, recorded claims, and a captured product
+   * screen: the three things a direction has to be grounded in.
+   */
+  async function directedProject() {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Product brief", value: DIRECTION_BRIEF },
+    ]);
+
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn announcing our scheduling",
+    });
+    expect(resolved.intent.status).toBe("RESOLVED");
+
+    const run = await services.intelligenceService.analyze(
+      project.id,
+      owner.user.id,
+      {},
+    );
+    expect(run).toBeTruthy();
+
+    return { owner, project, intentId: resolved.intent.id };
+  }
+
+  it("keeps the nested strategies readable after a round trip", async () => {
+    const { owner, project, intentId } = await directedProject();
+
+    const generated = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "BALANCED",
+    });
+    expect(generated.directions.length).toBeGreaterThanOrEqual(3);
+
+    // Read back through a second call: what is asserted is what storage kept,
+    // including the JSON columns decoded into objects rather than left as text.
+    const stored = await services.creativeDirectorService.get(
+      project.id,
+      owner.user.id,
+      generated.directions[0].id,
+    );
+
+    expect(typeof stored.hook.statement).toBe("string");
+    expect(Array.isArray(stored.visualStrategy.productMoments)).toBe(true);
+    expect(Array.isArray(stored.visualStrategy.assetIds)).toBe(true);
+    expect(Array.isArray(stored.proofStrategy.claimIds)).toBe(true);
+    expect(stored.creativeRunId).toBe(generated.creativeRunId);
+    expect(stored.mode).toBe("BALANCED");
+    expect(stored.intentId).toBe(intentId);
+  });
+
+  it("stores only ids the project actually holds", async () => {
+    const { owner, project, intentId } = await directedProject();
+    const generated = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "BALANCED",
+    });
+
+    const graph = await services.intelligenceService.getGraph(
+      project.id,
+      owner.user.id,
+    );
+    const claimIds = new Set(graph.claims.map((claim) => claim.id));
+    const evidenceIds = new Set(graph.evidence.map((item) => item.id));
+    const assetIds = new Set(graph.assets.map((asset) => asset.id));
+
+    for (const direction of generated.directions) {
+      for (const id of direction.proofStrategy.claimIds) {
+        expect(claimIds.has(id)).toBe(true);
+      }
+      for (const id of direction.proofStrategy.evidenceIds) {
+        expect(evidenceIds.has(id)).toBe(true);
+      }
+      for (const id of direction.visualStrategy.assetIds) {
+        expect(assetIds.has(id)).toBe(true);
+      }
+    }
+  });
+
+  it("leaves an earlier run untouched when a second set is proposed", async () => {
+    const { owner, project, intentId } = await directedProject();
+    const first = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "BALANCED",
+    });
+    const second = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "WILD",
+    });
+
+    expect(second.creativeRunId).not.toBe(first.creativeRunId);
+    const all = await services.creativeDirectorService.list(project.id, owner.user.id, {
+      intentId,
+    });
+    expect(all.length).toBe(first.directions.length + second.directions.length);
+
+    for (const original of first.directions) {
+      const stored = all.find((entry) => entry.id === original.id);
+      expect(stored?.status).toBe("DRAFT");
+      expect(stored?.editedByUser).toBe(false);
+    }
+  });
+
+  it("keeps one selected direction per intent when selections are replaced", async () => {
+    const { owner, project, intentId } = await directedProject();
+    const generated = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "BALANCED",
+    });
+
+    const first = await services.creativeDirectorService.select(
+      project.id,
+      owner.user.id,
+      generated.directions[0].id,
+    );
+    expect(first.selected.status).toBe("SELECTED");
+    expect(first.demoted).toEqual([]);
+
+    const second = await services.creativeDirectorService.select(
+      project.id,
+      owner.user.id,
+      generated.directions[1].id,
+    );
+    expect(second.selected.status).toBe("SELECTED");
+    // The demoted row is reported by the write that demoted it, not guessed from
+    // a read taken beforehand.
+    expect(second.demoted.map((entry) => entry.id)).toEqual([generated.directions[0].id]);
+    expect(second.demoted[0].status).toBe("DRAFT");
+
+    const all = await services.creativeDirectorService.list(project.id, owner.user.id, {
+      intentId,
+    });
+    expect(all.filter((entry) => entry.status === "SELECTED")).toHaveLength(1);
+  });
+
+  it("will not store a user edit that fabricates a number", async () => {
+    const { owner, project, intentId } = await directedProject();
+    const generated = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "BALANCED",
+    });
+
+    await expect(
+      services.creativeDirectorService.update({
+        projectId: project.id,
+        userId: owner.user.id,
+        directionId: generated.directions[0].id,
+        patch: { thesis: "Teams ship 10x faster with Northwind" },
+      }),
+    ).rejects.toThrow(/no supported claim/i);
+
+    // The refusal left the stored row as it was.
+    const stored = await services.creativeDirectorService.get(
+      project.id,
+      owner.user.id,
+      generated.directions[0].id,
+    );
+    expect(stored.thesis).toBe(generated.directions[0].thesis);
+    expect(stored.editedByUser).toBe(false);
+  });
+
+  it("marks a user edit and leaves it alone on a later run", async () => {
+    const { owner, project, intentId } = await directedProject();
+    const generated = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "BALANCED",
+    });
+    const target = generated.directions[0];
+
+    const edited = await services.creativeDirectorService.update({
+      projectId: project.id,
+      userId: owner.user.id,
+      directionId: target.id,
+      patch: { thesis: "The morning chase is the thing this removes" },
+    });
+    expect(edited.editedByUser).toBe(true);
+    expect(edited.thesis).toBe("The morning chase is the thing this removes");
+
+    await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "BALANCED",
+    });
+
+    const after = await services.creativeDirectorService.get(
+      project.id,
+      owner.user.id,
+      target.id,
+    );
+    expect(after.thesis).toBe("The morning chase is the thing this removes");
+    expect(after.editedByUser).toBe(true);
+  });
+
+  it("refuses Guided mode on a project with no product UI", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn",
+    });
+
+    await expect(
+      services.creativeDirectorService.generate({
+        projectId: project.id,
+        userId: owner.user.id,
+        intentId: resolved.intent.id,
+        mode: "GUIDED",
+      }),
+    ).rejects.toThrow(/needs captured product UI/i);
+  });
+
+  it("refuses to direct a request that is not resolved yet", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make something",
+    });
+
+    await expect(
+      services.creativeDirectorService.generate({
+        projectId: project.id,
+        userId: owner.user.id,
+        intentId: resolved.intent.id,
+        mode: "BALANCED",
+      }),
+    ).rejects.toThrow(/resolve/i);
+  });
+
+  it("will not read or write another user's direction", async () => {
+    const { owner, project, intentId } = await directedProject();
+    const other = await registerUser();
+
+    const generated = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId,
+      mode: "BALANCED",
+    });
+
+    await expect(
+      services.creativeDirectorService.list(project.id, other.user.id),
+    ).rejects.toThrow();
+    await expect(
+      services.creativeDirectorService.get(
+        project.id,
+        other.user.id,
+        generated.directions[0].id,
+      ),
+    ).rejects.toThrow();
+  });
+});
+
+describe("creative direction API integration", () => {
+  async function creativeRoutes() {
+    const collection = await import(
+      "../../app/api/projects/[id]/creative-directions/route"
+    );
+    const generate = await import(
+      "../../app/api/projects/[id]/creative-directions/generate/route"
+    );
+    const item = await import(
+      "../../app/api/projects/[id]/creative-directions/[directionId]/route"
+    );
+    const select = await import(
+      "../../app/api/projects/[id]/creative-directions/[directionId]/select/route"
+    );
+    return { collection, generate, item, select };
+  }
+
+  it("proposes, lists, edits and chooses over HTTP", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Product brief", value: DIRECTION_BRIEF },
+    ]);
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn announcing our scheduling",
+    });
+    await services.intelligenceService.analyze(project.id, owner.user.id, {});
+
+    const { collection, generate, item, select } = await creativeRoutes();
+    const headers = { cookie: `content_os_session=${owner.token}` };
+    const json = { ...headers, "content-type": "application/json" };
+    const context = { params: Promise.resolve({ id: project.id }) };
+    const url = `http://localhost/api/projects/${project.id}/creative-directions`;
+
+    const proposed = await generate.POST(
+      new Request(`${url}/generate`, {
+        method: "POST",
+        headers: json,
+        body: JSON.stringify({ intentId: resolved.intent.id, mode: "BALANCED" }),
+      }),
+      context,
+    );
+    expect(proposed.status).toBe(200);
+    const proposedBody = (await proposed.json()) as {
+      directions: Array<{ id: string; status: string; name: string }>;
+      run: { creativeRunId: string; mode: string };
+      registry: { modes: Array<{ id: string }> };
+    };
+    expect(proposedBody.directions.length).toBeGreaterThanOrEqual(3);
+    expect(proposedBody.directions.length).toBeLessThanOrEqual(5);
+    expect(proposedBody.run.mode).toBe("BALANCED");
+    expect(proposedBody.registry.modes.map((mode) => mode.id)).toEqual([
+      "GUIDED",
+      "BALANCED",
+      "WILD",
+    ]);
+    // The score is the server's ordering, not the reader's ranking.
+    expect(proposedBody.directions[0]).not.toHaveProperty("strengthScore");
+
+    const listed = await collection.GET(
+      new Request(`${url}?intentId=${resolved.intent.id}`, { headers }),
+      context,
+    );
+    expect(listed.status).toBe(200);
+    expect(
+      ((await listed.json()) as { directions: unknown[] }).directions.length,
+    ).toBe(proposedBody.directions.length);
+
+    const first = proposedBody.directions[0].id;
+    const itemContext = {
+      params: Promise.resolve({ id: project.id, directionId: first }),
+    };
+
+    const patched = await item.PATCH(
+      new Request(`${url}/${first}`, {
+        method: "PATCH",
+        headers: json,
+        body: JSON.stringify({ thesis: "The morning chase is the thing this removes" }),
+      }),
+      itemContext,
+    );
+    expect(patched.status).toBe(200);
+    const patchedBody = (await patched.json()) as {
+      direction: { thesis: string; editedByUser: boolean };
+    };
+    expect(patchedBody.direction.thesis).toBe(
+      "The morning chase is the thing this removes",
+    );
+    expect(patchedBody.direction.editedByUser).toBe(true);
+
+    const chosen = await select.POST(new Request(`${url}/${first}/select`, { method: "POST", headers: json }), itemContext);
+    expect(chosen.status).toBe(200);
+    const chosenBody = (await chosen.json()) as {
+      direction: { status: string };
+      demoted: unknown[];
+    };
+    expect(chosenBody.direction.status).toBe("SELECTED");
+    expect(chosenBody.demoted).toEqual([]);
+
+    const second = proposedBody.directions[1].id;
+    const secondContext = {
+      params: Promise.resolve({ id: project.id, directionId: second }),
+    };
+    const swapped = await select.POST(
+      new Request(`${url}/${second}/select`, { method: "POST", headers: json }),
+      secondContext,
+    );
+    expect(swapped.status).toBe(200);
+    const swappedBody = (await swapped.json()) as {
+      direction: { status: string };
+      demoted: Array<{ id: string; status: string }>;
+    };
+    expect(swappedBody.direction.status).toBe("SELECTED");
+    expect(swappedBody.demoted.map((entry) => entry.id)).toEqual([first]);
+
+    const anonymous = { params: Promise.resolve({ id: project.id }) };
+    expect((await collection.GET(new Request(url), anonymous)).status).toBe(401);
+  });
+
+  it("refuses a body that tries to supply the server's own context", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    const { generate } = await creativeRoutes();
+
+    const response = await generate.POST(
+      new Request(
+        `http://localhost/api/projects/${project.id}/creative-directions/generate`,
+        {
+          method: "POST",
+          headers: {
+            cookie: `content_os_session=${owner.token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            intentId: "int_1",
+            mode: "BALANCED",
+            claims: [{ id: "cl_x", text: "We are ten times faster" }],
+          }),
+        },
+      ),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toMatch(/derives claims/);
+  });
+
+  it("refuses a cross-origin generate before it touches anything", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    const { generate } = await creativeRoutes();
+
+    const response = await generate.POST(
+      new Request(
+        `http://localhost/api/projects/${project.id}/creative-directions/generate`,
+        {
+          method: "POST",
+          headers: {
+            cookie: `content_os_session=${owner.token}`,
+            "content-type": "application/json",
+            origin: "https://elsewhere.example",
+          },
+          body: JSON.stringify({ intentId: "int_1", mode: "BALANCED" }),
+        },
+      ),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it("answers a Guided request on a project with no UI with the reason", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn",
+    });
+    const { generate } = await creativeRoutes();
+
+    const response = await generate.POST(
+      new Request(
+        `http://localhost/api/projects/${project.id}/creative-directions/generate`,
+        {
+          method: "POST",
+          headers: {
+            cookie: `content_os_session=${owner.token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ intentId: resolved.intent.id, mode: "GUIDED" }),
+        },
+      ),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+
+    expect(response.status).toBe(422);
+    const body = (await response.json()) as { code: string; error: string };
+    expect(body.code).toBe("CREATIVE_MODE_CONFLICT");
+    expect(body.error).toMatch(/needs captured product UI/i);
+  });
+
+  it("refuses an edit that fabricates a number, naming the field", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Product brief", value: DIRECTION_BRIEF },
+    ]);
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn announcing our scheduling",
+    });
+    await services.intelligenceService.analyze(project.id, owner.user.id, {});
+    const { generate, item } = await creativeRoutes();
+
+    const proposed = await generate.POST(
+      new Request(
+        `http://localhost/api/projects/${project.id}/creative-directions/generate`,
+        {
+          method: "POST",
+          headers: {
+            cookie: `content_os_session=${owner.token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ intentId: resolved.intent.id, mode: "BALANCED" }),
+        },
+      ),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    const body = (await proposed.json()) as { directions: Array<{ id: string }> };
+    const first = body.directions[0].id;
+
+    const response = await item.PATCH(
+      new Request(
+        `http://localhost/api/projects/${project.id}/creative-directions/${first}`,
+        {
+          method: "PATCH",
+          headers: {
+            cookie: `content_os_session=${owner.token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ thesis: "Teams ship 10x faster with Northwind" }),
+        },
+      ),
+      { params: Promise.resolve({ id: project.id, directionId: first }) },
+    );
+
+    expect(response.status).toBe(422);
+    const rejected = (await response.json()) as {
+      code: string;
+      issues: Array<{ code: string; message: string }>;
+    };
+    expect(rejected.code).toBe("CREATIVE_UNSUPPORTED_QUANTIFIED_CLAIM");
+    expect(rejected.issues[0].message).toMatch(/thesis/);
+  });
+
+  it("refuses an edit to a field the server owns", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Product brief", value: DIRECTION_BRIEF },
+    ]);
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn announcing our scheduling",
+    });
+    await services.intelligenceService.analyze(project.id, owner.user.id, {});
+    const { generate, item } = await creativeRoutes();
+
+    const proposed = await generate.POST(
+      new Request(
+        `http://localhost/api/projects/${project.id}/creative-directions/generate`,
+        {
+          method: "POST",
+          headers: {
+            cookie: `content_os_session=${owner.token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ intentId: resolved.intent.id, mode: "BALANCED" }),
+        },
+      ),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+    const body = (await proposed.json()) as { directions: Array<{ id: string }> };
+    const first = body.directions[0].id;
+
+    const response = await item.PATCH(
+      new Request(
+        `http://localhost/api/projects/${project.id}/creative-directions/${first}`,
+        {
+          method: "PATCH",
+          headers: {
+            cookie: `content_os_session=${owner.token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ strengthScore: 100, brandVersion: 9 }),
+        },
+      ),
+      { params: Promise.resolve({ id: project.id, directionId: first }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toMatch(
+      /not editable/,
+    );
+  });
+});
+
+/**
+ * A project with a resolved request, recorded intelligence, and a *selected*
+ * direction. A storyboard needs all three, and the selection is the one a plan
+ * cannot do without: a plan for an argument nobody chose is a plan for the
+ * wrong film.
+ */
+async function storyboardProject() {
+  const owner = await registerUser();
+  const project = await projectForIntent(owner);
+  await services.inputService.createBatch(project.id, owner.user.id, [
+    { type: "text", name: "Product brief", value: DIRECTION_BRIEF },
+  ]);
+
+  const resolved = await services.contentIntentService.resolve({
+    projectId: project.id,
+    userId: owner.user.id,
+    request: "Make a 30 second launch video for LinkedIn announcing our scheduling",
+  });
+  expect(resolved.intent.status).toBe("RESOLVED");
+  await services.intelligenceService.analyze(project.id, owner.user.id, {});
+
+  const generated = await services.creativeDirectorService.generate({
+    projectId: project.id,
+    userId: owner.user.id,
+    intentId: resolved.intent.id,
+    mode: "BALANCED",
+  });
+  const directionId = generated.directions[0].id;
+  await services.creativeDirectorService.select(
+    project.id,
+    owner.user.id,
+    directionId,
+  );
+
+  return { owner, project, intentId: resolved.intent.id, directionId };
+}
+
+describe("storyboard integration (real postgres)", () => {
+  async function plan(ctx: Awaited<ReturnType<typeof storyboardProject>>) {
+    return services.storyboardService.generate({
+      projectId: ctx.project.id,
+      userId: ctx.owner.user.id,
+      intentId: ctx.intentId,
+      directionId: ctx.directionId,
+    });
+  }
+
+  it("keeps the whole plan readable after a round trip", async () => {
+    const ctx = await storyboardProject();
+    const { storyboard } = await plan(ctx);
+
+    // Read back through a second call: what is asserted is what storage kept,
+    // including the scenes decoded out of their own rows rather than left as JSON.
+    const stored = await services.storyboardService.get(
+      ctx.project.id,
+      ctx.owner.user.id,
+      storyboard.id,
+    );
+
+    expect(stored.scenes.length).toBe(storyboard.scenes.length);
+    expect(stored.scenes.map((scene) => scene.id)).toEqual(
+      storyboard.scenes.map((scene) => scene.id),
+    );
+    expect(Array.isArray(stored.scenes[0].shots)).toBe(true);
+    expect(Array.isArray(stored.scenes[0].textOverlays)).toBe(true);
+    expect(Array.isArray(stored.scenes[0].featureIds)).toBe(true);
+    expect(stored.directionId).toBe(ctx.directionId);
+    expect(stored.intentId).toBe(ctx.intentId);
+    expect(stored.status).toBe("DRAFT");
+    expect(stored.version).toBe(1);
+  });
+
+  it("stores a timeline that still adds up after the round trip", async () => {
+    const ctx = await storyboardProject();
+    const { storyboard } = await plan(ctx);
+
+    const stored = await services.storyboardService.get(
+      ctx.project.id,
+      ctx.owner.user.id,
+      storyboard.id,
+    );
+
+    expect(stored.scenes[0].startMs).toBe(0);
+    for (let i = 1; i < stored.scenes.length; i++) {
+      expect(stored.scenes[i].startMs).toBe(stored.scenes[i - 1].endMs);
+      expect(stored.scenes[i].order).toBe(i);
+    }
+    expect(stored.actualDurationMs).toBe(stored.targetDurationMs);
+    expect(stored.scenes.at(-1)!.endMs).toBe(stored.targetDurationMs);
+    const summed = stored.scenes.reduce((total, scene) => total + scene.durationMs, 0);
+    expect(summed).toBe(stored.targetDurationMs);
+  });
+
+  it("points every capture target at a stored scene", async () => {
+    const ctx = await storyboardProject();
+    const { storyboard, captureTargets } = await plan(ctx);
+
+    const stored = await services.storyboardService.get(
+      ctx.project.id,
+      ctx.owner.user.id,
+      storyboard.id,
+    );
+    const sceneIds = new Set(stored.scenes.map((scene) => scene.id));
+
+    for (const target of captureTargets) {
+      expect(sceneIds).toContain(target.sceneId);
+    }
+  });
+
+  it("re-times the whole plan when a scene is edited", async () => {
+    const ctx = await storyboardProject();
+    const { storyboard } = await plan(ctx);
+
+    const edited = await services.storyboardService.updateScenes({
+      projectId: ctx.project.id,
+      userId: ctx.owner.user.id,
+      storyboardId: storyboard.id,
+      scenes: [{ sceneId: storyboard.scenes[0].id, changes: { name: "A sharper opening" } }],
+    });
+
+    const stored = await services.storyboardService.get(
+      ctx.project.id,
+      ctx.owner.user.id,
+      storyboard.id,
+    );
+
+    expect(stored.scenes[0].name).toBe("A sharper opening");
+    expect(stored.version).toBe(2);
+    expect(stored.actualDurationMs).toBe(stored.targetDurationMs);
+    for (let i = 1; i < stored.scenes.length; i++) {
+      expect(stored.scenes[i].startMs).toBe(stored.scenes[i - 1].endMs);
+    }
+    expect(edited.updatedAt > storyboard.updatedAt).toBe(true);
+  });
+
+  it("keeps a move and its new timeline together", async () => {
+    const ctx = await storyboardProject();
+    const { storyboard } = await plan(ctx);
+    const movedId = storyboard.scenes[2].id;
+
+    await services.storyboardService.reorderScene({
+      projectId: ctx.project.id,
+      userId: ctx.owner.user.id,
+      storyboardId: storyboard.id,
+      sceneId: movedId,
+      toIndex: 1,
+    });
+
+    const stored = await services.storyboardService.get(
+      ctx.project.id,
+      ctx.owner.user.id,
+      storyboard.id,
+    );
+
+    expect(stored.scenes[1].id).toBe(movedId);
+    expect(stored.actualDurationMs).toBe(stored.targetDurationMs);
+    expect(stored.scenes.map((scene) => scene.order)).toEqual(
+      stored.scenes.map((_, index) => index),
+    );
+  });
+
+  it("keeps exactly one plan selected for the intent", async () => {
+    const ctx = await storyboardProject();
+    const first = (await plan(ctx)).storyboard;
+    const second = (await plan(ctx)).storyboard;
+
+    const outcome = await services.storyboardService.select(
+      ctx.project.id,
+      ctx.owner.user.id,
+      first.id,
+    );
+    expect(outcome.storyboard.status).toBe("SELECTED");
+
+    await services.storyboardService.select(ctx.project.id, ctx.owner.user.id, second.id);
+
+    const selected = await services.storyboardService.list(
+      ctx.project.id,
+      ctx.owner.user.id,
+      { intentId: ctx.intentId, status: "SELECTED" },
+    );
+    expect(selected.map((board) => board.id)).toEqual([second.id]);
+    expect(
+      (await services.storyboardService.get(ctx.project.id, ctx.owner.user.id, first.id)).status,
+    ).toBe("DRAFT");
+  });
+
+  it("archives the other selection when a plan is locked", async () => {
+    const ctx = await storyboardProject();
+    const first = (await plan(ctx)).storyboard;
+    const second = (await plan(ctx)).storyboard;
+    await services.storyboardService.select(ctx.project.id, ctx.owner.user.id, first.id);
+
+    const outcome = await services.storyboardService.lock(
+      ctx.project.id,
+      ctx.owner.user.id,
+      second.id,
+    );
+
+    expect(outcome.storyboard.status).toBe("LOCKED");
+    expect(outcome.archived.map((board) => board.id)).toEqual([first.id]);
+    const decided = await services.storyboardService.getLocked(
+      ctx.project.id,
+      ctx.owner.user.id,
+      ctx.intentId,
+    );
+    expect(decided?.id).toBe(second.id);
+  });
+
+  it("refuses to edit a locked plan", async () => {
+    const ctx = await storyboardProject();
+    const { storyboard } = await plan(ctx);
+    await services.storyboardService.lock(
+      ctx.project.id,
+      ctx.owner.user.id,
+      storyboard.id,
+    );
+
+    await expect(
+      services.storyboardService.updateScenes({
+        projectId: ctx.project.id,
+        userId: ctx.owner.user.id,
+        storyboardId: storyboard.id,
+        scenes: [{ sceneId: storyboard.scenes[0].id, changes: { name: "One more" } }],
+      }),
+    ).rejects.toMatchObject({ code: "STORYBOARD_LOCKED" });
+  });
+
+  it("will not show one project's plan to a stranger", async () => {
+    const ctx = await storyboardProject();
+    const { storyboard } = await plan(ctx);
+    const stranger = await registerUser();
+
+    await expect(
+      services.storyboardService.get(ctx.project.id, stranger.user.id, storyboard.id),
+    ).rejects.toThrow();
+  });
+});
+
+describe("storyboard API integration", () => {
+  async function storyboardRoutes() {
+    return {
+      collection: await import("../../app/api/projects/[id]/storyboards/route"),
+      generate: await import("../../app/api/projects/[id]/storyboards/generate/route"),
+      item: await import("../../app/api/projects/[id]/storyboards/[storyboardId]/route"),
+      scenes: await import(
+        "../../app/api/projects/[id]/storyboards/[storyboardId]/scenes/route"
+      ),
+      reorder: await import(
+        "../../app/api/projects/[id]/storyboards/[storyboardId]/reorder/route"
+      ),
+      select: await import(
+        "../../app/api/projects/[id]/storyboards/[storyboardId]/select/route"
+      ),
+      lock: await import(
+        "../../app/api/projects/[id]/storyboards/[storyboardId]/lock/route"
+      ),
+    };
+  }
+
+  type Routes = Awaited<ReturnType<typeof storyboardRoutes>>;
+
+  function auth(token: string) {
+    return {
+      cookie: `content_os_session=${token}`,
+      "content-type": "application/json",
+    };
+  }
+
+  async function plannedOverHttp(ctx: {
+    owner: { token: string };
+    project: { id: string };
+    intentId: string;
+    directionId: string;
+  }, routes: Routes) {
+    const context = { params: Promise.resolve({ id: ctx.project.id }) };
+    const response = await routes.generate.POST(
+      new Request(`http://localhost/api/projects/${ctx.project.id}/storyboards/generate`, {
+        method: "POST",
+        headers: auth(ctx.owner.token),
+        body: JSON.stringify({ intentId: ctx.intentId, directionId: ctx.directionId }),
+      }),
+      context,
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      storyboard: { id: string; scenes: Array<{ id: string }> };
+      captureTargets: Array<{ sceneId: string }>;
+      generation: { provider: string; fallbackFrom: string | null };
+      registry: { sceneTypes: string[]; statuses: string[] };
+    };
+    return { ...body, response };
+  }
+
+  it("plans, reads, edits and locks over HTTP", async () => {
+    const ctx = await storyboardProject();
+    const routes = await storyboardRoutes();
+    const planned = await plannedOverHttp(ctx, routes);
+
+    expect(planned.storyboard.scenes.length).toBeGreaterThan(1);
+    expect(planned.generation.provider).toBe("deterministic");
+    expect(planned.registry.sceneTypes).toContain("HOOK");
+    expect(planned.registry.statuses).toContain("LOCKED");
+
+    const sceneIds = new Set(planned.storyboard.scenes.map((scene) => scene.id));
+    for (const target of planned.captureTargets) {
+      expect(sceneIds).toContain(target.sceneId);
+    }
+
+    const listed = await routes.collection.GET(
+      new Request(`http://localhost/api/projects/${ctx.project.id}/storyboards`, {
+        headers: { cookie: `content_os_session=${ctx.owner.token}` },
+      }),
+      { params: Promise.resolve({ id: ctx.project.id }) },
+    );
+    expect(listed.status).toBe(200);
+    expect(((await listed.json()) as { storyboards: unknown[] }).storyboards.length).toBe(1);
+
+    const fetched = await routes.item.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/storyboards/${planned.storyboard.id}`,
+        { headers: { cookie: `content_os_session=${ctx.owner.token}` } },
+      ),
+      {
+        params: Promise.resolve({
+          id: ctx.project.id,
+          storyboardId: planned.storyboard.id,
+        }),
+      },
+    );
+    expect(fetched.status).toBe(200);
+
+    const itemContext = {
+      params: Promise.resolve({ id: ctx.project.id, storyboardId: planned.storyboard.id }),
+    };
+    const itemUrl = `http://localhost/api/projects/${ctx.project.id}/storyboards/${planned.storyboard.id}`;
+
+    const edited = await routes.scenes.POST(
+      new Request(`${itemUrl}/scenes`, {
+        method: "POST",
+        headers: auth(ctx.owner.token),
+        body: JSON.stringify({
+          scenes: [
+            {
+              sceneId: planned.storyboard.scenes[0].id,
+              changes: { name: "A sharper opening" },
+            },
+          ],
+        }),
+      }),
+      itemContext,
+    );
+    expect(edited.status).toBe(200);
+    const editedBody = (await edited.json()) as {
+      storyboard: { version: number; scenes: Array<{ name: string; startMs: number }> };
+    };
+    expect(editedBody.storyboard.version).toBe(2);
+    expect(editedBody.storyboard.scenes[0].name).toBe("A sharper opening");
+
+    const moved = await routes.reorder.POST(
+      new Request(`${itemUrl}/reorder`, {
+        method: "POST",
+        headers: auth(ctx.owner.token),
+        body: JSON.stringify({ sceneId: planned.storyboard.scenes[2].id, toIndex: 1 }),
+      }),
+      itemContext,
+    );
+    expect(moved.status).toBe(200);
+    expect(
+      ((await moved.json()) as { storyboard: { scenes: Array<{ id: string }> } }).storyboard
+        .scenes[1].id,
+    ).toBe(planned.storyboard.scenes[2].id);
+
+    const selected = await routes.select.POST(
+      new Request(`${itemUrl}/select`, { method: "POST", headers: auth(ctx.owner.token) }),
+      itemContext,
+    );
+    expect(selected.status).toBe(200);
+    expect(
+      ((await selected.json()) as { storyboard: { status: string } }).storyboard.status,
+    ).toBe("SELECTED");
+
+    const locked = await routes.lock.POST(
+      new Request(`${itemUrl}/lock`, { method: "POST", headers: auth(ctx.owner.token) }),
+      itemContext,
+    );
+    expect(locked.status).toBe(200);
+    expect(
+      ((await locked.json()) as { storyboard: { status: string } }).storyboard.status,
+    ).toBe("LOCKED");
+  });
+
+  it("refuses to edit a locked plan over HTTP with 403", async () => {
+    const ctx = await storyboardProject();
+    const routes = await storyboardRoutes();
+    const planned = await plannedOverHttp(ctx, routes);
+    const itemContext = {
+      params: Promise.resolve({ id: ctx.project.id, storyboardId: planned.storyboard.id }),
+    };
+    const itemUrl = `http://localhost/api/projects/${ctx.project.id}/storyboards/${planned.storyboard.id}`;
+
+    await routes.lock.POST(
+      new Request(`${itemUrl}/lock`, { method: "POST", headers: auth(ctx.owner.token) }),
+      itemContext,
+    );
+
+    const edited = await routes.scenes.POST(
+      new Request(`${itemUrl}/scenes`, {
+        method: "POST",
+        headers: auth(ctx.owner.token),
+        body: JSON.stringify({
+          scenes: [{ sceneId: planned.storyboard.scenes[0].id, changes: { name: "One more" } }],
+        }),
+      }),
+      itemContext,
+    );
+
+    expect(edited.status).toBe(403);
+    expect(((await edited.json()) as { code: string }).code).toBe("STORYBOARD_LOCKED");
+  });
+
+  it("answers 409 when the direction was never selected", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+    await services.inputService.createBatch(project.id, owner.user.id, [
+      { type: "text", name: "Product brief", value: DIRECTION_BRIEF },
+    ]);
+    const resolved = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: "Make a 30 second launch video for LinkedIn announcing our scheduling",
+    });
+    await services.intelligenceService.analyze(project.id, owner.user.id, {});
+    const generated = await services.creativeDirectorService.generate({
+      projectId: project.id,
+      userId: owner.user.id,
+      intentId: resolved.intent.id,
+      mode: "BALANCED",
+    });
+    const routes = await storyboardRoutes();
+
+    const response = await routes.generate.POST(
+      new Request(`http://localhost/api/projects/${project.id}/storyboards/generate`, {
+        method: "POST",
+        headers: auth(owner.token),
+        body: JSON.stringify({
+          intentId: resolved.intent.id,
+          directionId: generated.directions[0].id,
+        }),
+      }),
+      { params: Promise.resolve({ id: project.id }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(((await response.json()) as { code: string }).code).toBe(
+      "STORYBOARD_DIRECTION_NOT_SELECTED",
+    );
+  });
+
+  it("refuses a body that tries to carry its own timeline or identity", async () => {
+    const ctx = await storyboardProject();
+    const routes = await storyboardRoutes();
+
+    for (const body of [
+      { intentId: ctx.intentId, directionId: ctx.directionId, scenes: [] },
+      { intentId: ctx.intentId, directionId: ctx.directionId, actualDurationMs: 1 },
+      { intentId: ctx.intentId, directionId: ctx.directionId, brandVersion: 9 },
+    ]) {
+      const response = await routes.generate.POST(
+        new Request(`http://localhost/api/projects/${ctx.project.id}/storyboards/generate`, {
+          method: "POST",
+          headers: auth(ctx.owner.token),
+          body: JSON.stringify(body),
+        }),
+        { params: Promise.resolve({ id: ctx.project.id }) },
+      );
+      expect(response.status).toBe(400);
+      expect(((await response.json()) as { error: string }).error).toMatch(/server derives/);
+    }
+  });
+
+  it("refuses an edit that tries to move a scene's identity or timing", async () => {
+    const ctx = await storyboardProject();
+    const routes = await storyboardRoutes();
+    const planned = await plannedOverHttp(ctx, routes);
+    const itemContext = {
+      params: Promise.resolve({ id: ctx.project.id, storyboardId: planned.storyboard.id }),
+    };
+
+    for (const changes of [
+      { startMs: 0 },
+      { endMs: 99_999 },
+      { order: 3 },
+      { id: "sbscene_injected" },
+    ]) {
+      const response = await routes.scenes.POST(
+        new Request(
+          `http://localhost/api/projects/${ctx.project.id}/storyboards/${planned.storyboard.id}/scenes`,
+          {
+            method: "POST",
+            headers: auth(ctx.owner.token),
+            body: JSON.stringify({
+              scenes: [{ sceneId: planned.storyboard.scenes[0].id, changes }],
+            }),
+          },
+        ),
+        itemContext,
+      );
+
+      expect(response.status).toBe(400);
+      expect(((await response.json()) as { error: string }).error).toMatch(
+        /keeps its own identity and timing/,
+      );
+    }
+  });
+
+  it("refuses an edit that smuggles a capture job in through a shot", async () => {
+    const ctx = await storyboardProject();
+    const routes = await storyboardRoutes();
+    const planned = await plannedOverHttp(ctx, routes);
+
+    const response = await routes.scenes.POST(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/storyboards/${planned.storyboard.id}/scenes`,
+        {
+          method: "POST",
+          headers: auth(ctx.owner.token),
+          body: JSON.stringify({
+            scenes: [
+              {
+                sceneId: planned.storyboard.scenes[0].id,
+                changes: {
+                  shots: [
+                    {
+                      id: "shot_sneaky",
+                      visualType: "BROWSER",
+                      description: "A page this project does not have",
+                      productInteraction: "The pricing page",
+                      framing: "Centred",
+                      cameraMotion: "None",
+                      assetIds: [],
+                      evidenceIds: [],
+                      notes: "",
+                      captureRequirement: {
+                        mode: "BROWSER",
+                        target: "A pricing page this project does not have",
+                        workflowId: null,
+                        featureId: null,
+                        browserSessionId: null,
+                        browserTraceId: null,
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: ctx.project.id,
+          storyboardId: planned.storyboard.id,
+        }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toMatch(
+      /cannot set captureRequirement/,
+    );
+  });
+
+  it("refuses an edit that names a field the domain does not have", async () => {
+    const ctx = await storyboardProject();
+    const routes = await storyboardRoutes();
+    const planned = await plannedOverHttp(ctx, routes);
+
+    const response = await routes.scenes.POST(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/storyboards/${planned.storyboard.id}/scenes`,
+        {
+          method: "POST",
+          headers: auth(ctx.owner.token),
+          body: JSON.stringify({
+            scenes: [
+              { sceneId: planned.storyboard.scenes[0].id, changes: { vibes: "spooky" } },
+            ],
+          }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: ctx.project.id,
+          storyboardId: planned.storyboard.id,
+        }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { error: string }).error).toMatch(/unknown fields: vibes/);
+  });
+
+  it("refuses a cross-origin write", async () => {
+    const ctx = await storyboardProject();
+    const routes = await storyboardRoutes();
+
+    const response = await routes.generate.POST(
+      new Request(`http://localhost/api/projects/${ctx.project.id}/storyboards/generate`, {
+        method: "POST",
+        headers: { ...auth(ctx.owner.token), origin: "https://elsewhere.example" },
+        body: JSON.stringify({ intentId: ctx.intentId, directionId: ctx.directionId }),
+      }),
+      { params: Promise.resolve({ id: ctx.project.id }) },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  it("hides a plan from a user who is not in the project", async () => {
+    const ctx = await storyboardProject();
+    const routes = await storyboardRoutes();
+    const planned = await plannedOverHttp(ctx, routes);
+    const stranger = await registerUser();
+
+    const response = await routes.item.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/storyboards/${planned.storyboard.id}`,
+        { headers: { cookie: `content_os_session=${stranger.token}` } },
+      ),
+      {
+        params: Promise.resolve({
+          id: ctx.project.id,
+          storyboardId: planned.storyboard.id,
+        }),
+      },
+    );
+
+    expect(response.status).toBe(403);
+  });
+});

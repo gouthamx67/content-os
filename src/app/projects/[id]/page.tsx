@@ -7,12 +7,15 @@ import {
   brandService,
   browserService,
   contentIntentService,
+  creativeDirectorService,
   inputService,
   intelligenceService,
   projectService,
   sourceService,
+  storyboardService,
 } from "../../../infrastructure/services";
 import { HttpError } from "../../../lib/http";
+import type { ContentIntentView } from "../../../core/services/content-intent-service";
 import { serializeSession } from "../../../lib/browser-api";
 import { serializeInput } from "../../../lib/input-api";
 import { serializeGraph } from "../../../lib/intelligence-api";
@@ -35,6 +38,16 @@ import {
 } from "../../../components/projects/SourceAssetForms";
 import { BrandPanel } from "../../../components/brand/BrandPanel";
 import { IntentPanel } from "../../../components/intent/IntentPanel";
+import { CreativePanel } from "../../../components/creative/CreativePanel";
+import { StoryboardPanel } from "../../../components/storyboard/StoryboardPanel";
+import {
+  serializeStoryboard,
+  storyboardRegistry,
+} from "../../../lib/storyboard-api";
+import {
+  creativeRegistry,
+  serializeCreativeDirection,
+} from "../../../lib/creative-direction-api";
 
 type ProjectDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -80,6 +93,8 @@ export default async function ProjectDetailPage({
     browserSessions,
     brand,
     intents,
+    directions,
+    storyboards,
   ] =
     await Promise.all([
     inputService.getBundle(id, user.id),
@@ -92,6 +107,8 @@ export default async function ProjectDetailPage({
     browserService.listSessions(id, user.id),
     brandService.getProfile(id, user.id),
     contentIntentService.list(id, user.id),
+    creativeDirectorService.list(id, user.id),
+    storyboardService.list(id, user.id),
   ]);
 
   return (
@@ -149,6 +166,24 @@ export default async function ProjectDetailPage({
         </div>
 
         <div className="mt-8">
+          <CreativePanel
+            projectId={project.id}
+            intent={primaryIntent(intents)}
+            initialDirections={directions.map(serializeCreativeDirection)}
+            initialRegistry={creativeRegistry()}
+          />
+        </div>
+
+        <div className="mt-8">
+          <StoryboardPanel
+            projectId={project.id}
+            direction={selectedDirection(directions)}
+            initialStoryboards={storyboards.map(serializeStoryboard)}
+            initialRegistry={storyboardRegistry()}
+          />
+        </div>
+
+        <div className="mt-8">
           <BrandPanel
             projectId={project.id}
             brand={brand.profile ? serializeBrandProfile(brand.profile) : null}
@@ -181,4 +216,39 @@ export default async function ProjectDetailPage({
       </div>
     </AppShell>
   );
+}
+/**
+ * A storyboard plans one argument, so the panel is handed the direction that was
+ * actually chosen. There is at most one chosen direction per intent, and the
+ * newest chosen intent wins — the same argument the creative panel is showing.
+ */
+function selectedDirection(
+  directions: Awaited<ReturnType<typeof creativeDirectorService.list>>,
+) {
+  const chosen = [...directions]
+    .filter((direction) => direction.status === "SELECTED")
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+
+  if (!chosen) return null;
+
+  return { id: chosen.id, name: chosen.name, intentId: chosen.intentId };
+}
+
+/**
+ * Directions are written for one decided brief, so the panel shows the most
+ * recent request. Earlier requests keep their own directions; they are reached
+ * through the list endpoint rather than by being stacked on this page.
+ */
+function primaryIntent(intents: ContentIntentView[]) {
+  const latest = [...intents].sort((a, b) =>
+    b.intent.createdAt.localeCompare(a.intent.createdAt),
+  )[0];
+
+  if (!latest) return null;
+
+  return {
+    id: latest.intent.id,
+    contentTypeName: latest.intent.contentTypeId,
+    status: latest.intent.status,
+  };
 }
