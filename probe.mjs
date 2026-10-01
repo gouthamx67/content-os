@@ -1,0 +1,31 @@
+import { chromium } from "playwright-core";
+const BASE = "http://localhost:3111";
+const s = (await (await fetch(`${BASE}/api/auth/register`, {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({email:`p${Date.now()}@t.local`,password:"BrowserTest123!"})})).headers.get("set-cookie") ?? "").split(";")[0];
+const api = async (p, b) => { const r = await fetch(`${BASE}${p}`, {method:b?"POST":"GET",headers:{"content-type":"application/json",cookie:s},body:b?JSON.stringify(b):undefined}); const t = await r.text(); if (!t) return {}; try { return JSON.parse(t); } catch { return { __status: r.status, __raw: t.slice(0,200) }; } };
+const ws = await api("/api/workspaces", {name:"W"}); const wid = ws.workspace?.id ?? ws.id;
+const pj = await api(`/api/workspaces/${wid}/projects`, {name:"P"}); const pid = pj.project?.id ?? pj.id;
+await api(`/api/projects/${pid}/inputs`, {inputs:[{type:"text",name:"b",value:"Northwind Analytics turns messy product research into a weekly content plan. It analyses every uploaded source, extracts features, workflows, problems and benefits, and proposes content grounded only in those extracted facts. Key features: automated source analysis, evidence-backed entity extraction, weekly planning, and a content gap detector that spots formats the project has never used. Teams struggle with repetitive briefs and inconsistent brand voice across channels. Benefits include less repetitive work, faster drafts, and analytics-ready content."}]});
+await api(`/api/projects/${pid}/intelligence/analyze`, {});
+const gen = await api(`/api/projects/${pid}/recommendations/generate`, {});
+const recs = gen.recommendations ?? [];
+console.log("GEN:", JSON.stringify(gen).slice(0,300));
+console.log("PLATFORMS:", [...new Set(recs.map(r=>r.platform))].join(", "));
+console.log("REASONS:", JSON.stringify(recs.map(r=>r.reasons)).slice(0,700));
+console.log("KEYS:", Object.keys(recs[0] ?? {}).join(", "));
+console.log("REASON FIELD:", JSON.stringify({reason:recs[0]?.reason, rationale:recs[0]?.rationale, why:recs[0]?.why, reasoning:recs[0]?.reasoning}).slice(0,400));
+console.log("PLATFORM DISPLAY NAMES:", recs.map(r=>r.platform).map(p=>`${p}`).join("|"));
+const browser = await chromium.launch({executablePath:"/home/gouthamx67/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome",args:["--no-sandbox"]});
+const ctx = await browser.newContext();
+await ctx.addCookies([{name:s.split("=")[0],value:s.split("=").slice(1).join("="),domain:"localhost",path:"/"}]);
+const page = await ctx.newPage();
+await page.goto(`${BASE}/projects/${pid}`, {waitUntil:"networkidle"});
+await page.waitForTimeout(1500);
+const text = await page.locator("body").innerText();
+for (const r of recs) {
+  const re = new RegExp(`.{60}\\b${r.platform}\\b.{60}`, "s");
+  const m = text.match(re);
+  console.log(`\n--- raw id "${r.platform}" context ---\n${m ? m[0].replace(/\n/g," | ") : "not found"}`);
+}
+console.log("\n=== headings/buttons ===");
+console.log((await page.locator("h1,h2,h3").allInnerTexts()).join(" | "));
+await browser.close();

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { PublicOrm } from "../../prisma/db";
+import { getContentType } from "../domain/content-type";
 
 const TEST_DATABASE_URL =
   "postgresql://contentos:contentos@localhost:5433/content_os_test";
@@ -4107,4 +4108,1154 @@ describe("storyboard API integration", () => {
 
     expect(response.status).toBe(403);
   });
+});
+
+/**
+ * CP12 reads the project's intelligence, brand, assets and existing content, so a
+ * bare project produces nothing: an honest empty list is the correct answer for a
+ * project that has recorded no product. These fixtures therefore give the project
+ * something real to be recommended from before anything is asserted.
+ */
+async function recommendationProject() {
+  const owner = await registerUser();
+  const project = await projectForIntent(owner);
+  await services.inputService.createBatch(project.id, owner.user.id, [
+    { type: "text", name: "Product brief", value: DIRECTION_BRIEF },
+  ]);
+  await services.intelligenceService.analyze(project.id, owner.user.id, {});
+  return { owner, project };
+}
+
+describe("recommendation integration (real postgres)", () => {
+  it("derives grounded recommendations and survives a round trip", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+
+    expect(generated.length).toBeGreaterThan(0);
+
+    // Read back through a second call: what is asserted is what storage kept,
+    // including the score the API is not allowed to show.
+    const listed = await services.contentRecommendationService.list(
+      project.id,
+      owner.user.id,
+    );
+    expect(listed.length).toBe(generated.length);
+
+    const stored = await services.contentRecommendationService.get(
+      project.id,
+      owner.user.id,
+      generated[0].id,
+    );
+
+    expect(stored.title).toBe(generated[0].title);
+    expect(stored.rationale).toBe(generated[0].rationale);
+    expect(stored.reasons).toEqual(generated[0].reasons);
+    expect(stored.subjectType).toBe(generated[0].subjectType);
+    expect(stored.contentTypeId).toBe(generated[0].contentTypeId);
+    expect(stored.channel).toBe(generated[0].channel);
+    expect(stored.status).toBe("ACTIVE");
+  });
+
+  /**
+   * The score is a ranking aid, not a fact about the product, and a client that
+   * could read it would be able to re-rank the list by hand and defeat the
+   * diversity the engine chose. It is dropped from every outward shape.
+   */
+  it("never lets the ranking score reach the caller", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    const listed = await services.contentRecommendationService.list(
+      project.id,
+      owner.user.id,
+    );
+
+    for (const opportunity of [...generated, ...listed]) {
+      expect(opportunity).not.toHaveProperty("priorityScore");
+      expect(opportunity).not.toHaveProperty("projectId");
+    }
+
+    // Storage kept it, so the claim is about the boundary rather than the value
+    // being absent everywhere.
+    const rows = await orm.ContentRecommendation.where((row) =>
+      row.projectId.eq(project.id),
+    ).all();
+    expect(rows.every((row) => typeof row.priorityScore === "number")).toBe(true);
+  });
+
+  it("explains every recommendation and admits what it is missing", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+
+    for (const opportunity of generated) {
+      expect(opportunity.reasons.length).toBeGreaterThan(0);
+      expect(opportunity.title.trim().length).toBeGreaterThan(0);
+      expect(opportunity.rationale.trim().length).toBeGreaterThan(0);
+    }
+  });
+
+  it("varies the subject so one feature does not fill the whole list", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+
+    const subjects = new Set(
+      generated.map((opportunity) => `${opportunity.contentTypeId}|${opportunity.subjectId ?? opportunity.subjectLabel}`),
+    );
+    // Twelve copies of the best feature is not a diverse list, it is one
+    // recommendation repeated.
+    expect(subjects.size).toBeGreaterThanOrEqual(Math.min(3, generated.length));
+  });
+
+  /**
+   * Dismissal is the promise that makes the feature tolerable: a user who has
+   * said no to something must not be shown it again on the next refresh, and
+   * identity has to survive the row being rebuilt, so the key is what decides.
+   */
+  it("keeps a dismissal across a refresh", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const first = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    const target = first[0];
+
+    await services.contentRecommendationService.dismiss(
+      project.id,
+      owner.user.id,
+      target.id,
+    );
+
+    const refreshed = await services.contentRecommendationService.refreshForUser(
+      project.id,
+      owner.user.id,
+    );
+
+    const sameThing = refreshed.find(
+      (opportunity) =>
+        opportunity.contentTypeId === target.contentTypeId &&
+        opportunity.subjectType === target.subjectType &&
+        opportunity.subjectId === target.subjectId &&
+        opportunity.platform === target.platform,
+    );
+
+    expect(sameThing?.status).toBe("DISMISSED");
+    expect(sameThing?.dismissedAt).not.toBeNull();
+
+    const dismissed = await services.contentRecommendationService.list(
+      project.id,
+      owner.user.id,
+      { status: "DISMISSED" },
+    );
+    expect(dismissed.map((opportunity) => opportunity.id)).toContain(target.id);
+  });
+
+  it("does not re-suggest a dismissed item in the active list", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const first = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    await services.contentRecommendationService.dismiss(
+      project.id,
+      owner.user.id,
+      first[0].id,
+    );
+
+    const active = await services.contentRecommendationService.list(
+      project.id,
+      owner.user.id,
+      { status: "ACTIVE" },
+    );
+
+    expect(active.map((opportunity) => opportunity.id)).not.toContain(first[0].id);
+  });
+
+  it("restores a dismissed item when the user changes their mind", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const first = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    await services.contentRecommendationService.dismiss(
+      project.id,
+      owner.user.id,
+      first[0].id,
+    );
+
+    const restored = await services.contentRecommendationService.update(
+      project.id,
+      owner.user.id,
+      first[0].id,
+      { status: "ACTIVE" },
+    );
+
+    expect(restored.status).toBe("ACTIVE");
+    // The row must not carry a dismissal timestamp it is no longer subject to.
+    expect(restored.dismissedAt).toBeNull();
+  });
+
+  it("takes an item up as a resolved content intent", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    const target = generated[0];
+
+    const { recommendation, intentId } = await services.contentRecommendationService.select(
+      project.id,
+      owner.user.id,
+      target.id,
+    );
+
+    expect(recommendation.status).toBe("SELECTED");
+    expect(recommendation.selectedIntentId).toBe(intentId);
+
+    // CP09 owns what was actually asked for: the intent exists, and it was
+    // resolved from the recommendation's own subject rather than invented.
+    const intent = await services.contentIntentService.get(
+      project.id,
+      intentId,
+      owner.user.id,
+    );
+    expect(intent.intent.projectId).toBe(project.id);
+    expect(intent.intent.contentTypeId).toBeTruthy();
+  });
+
+  it("is safe to select twice, and returns the same intent both times", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    const target = generated[0];
+
+    const first = await services.contentRecommendationService.select(
+      project.id,
+      owner.user.id,
+      target.id,
+    );
+    const second = await services.contentRecommendationService.select(
+      project.id,
+      owner.user.id,
+      target.id,
+    );
+
+    expect(second.intentId).toBe(first.intentId);
+  });
+
+  it("keeps a selection across a refresh rather than offering it again", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    const target = generated[0];
+    const { intentId } = await services.contentRecommendationService.select(
+      project.id,
+      owner.user.id,
+      target.id,
+    );
+
+    await services.contentRecommendationService.refreshForUser(project.id, owner.user.id);
+
+    const selected = await services.contentRecommendationService.list(
+      project.id,
+      owner.user.id,
+      { status: "SELECTED" },
+    );
+    const kept = selected.find((opportunity) => opportunity.id === target.id);
+
+    expect(kept).toBeTruthy();
+    expect(kept?.selectedIntentId).toBe(intentId);
+  });
+
+  it("gives a project with nothing recorded an empty list rather than a guess", async () => {
+    const owner = await registerUser();
+    const project = await projectForIntent(owner);
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+
+    // Nothing has been analysed, so there is nothing to ground a suggestion in.
+    // Inventing one here would be the exact failure this feature is for.
+    expect(generated).toEqual([]);
+  });
+
+  it("refuses a user who is not in the project at all", async () => {
+    const { owner, project } = await recommendationProject();
+    const stranger = await registerUser();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+
+    // Authorization is checked before the id is even looked at, so a stranger is
+    // refused without learning that this id exists.
+    await expect(
+      services.contentRecommendationService.get(
+        project.id,
+        stranger.user.id,
+        generated[0].id,
+      ),
+    ).rejects.toThrow();
+  });
+
+  /**
+   * The subtler case, and the reason the repository is project-scoped: a user
+   * who is legitimately in *two* projects asks for a real recommendation through
+   * the wrong one. Authorization succeeds, so the id has to be unresolvable —
+   * an id from another project must be indistinguishable from one that never
+   * existed, or the 200/404 difference leaks the shape of other people's data.
+   */
+  it("reports a recommendation from another project as missing", async () => {
+    const first = await recommendationProject();
+    const generated = await services.contentRecommendationService.generate(
+      first.project.id,
+      first.owner.user.id,
+    );
+    const foreignId = generated[0].id;
+
+    // A second project owned by the same user, so membership is not the thing
+    // that stops the request.
+    const other = await services.projectService.createForWorkspace(
+      first.owner.workspace!.id,
+      { name: "Other project" },
+      first.owner.user.id,
+    );
+
+    await expect(
+      services.contentRecommendationService.get(
+        other.id,
+        first.owner.user.id,
+        foreignId,
+      ),
+    ).rejects.toMatchObject({ code: "RECOMMENDATION_NOT_FOUND" });
+  });
+
+  it("refuses to dismiss a recommendation in a project the user is not in", async () => {
+    const { owner, project } = await recommendationProject();
+    const stranger = await registerUser();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+
+    await expect(
+      services.contentRecommendationService.dismiss(
+        project.id,
+        stranger.user.id,
+        generated[0].id,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("reports a missing recommendation rather than an empty one", async () => {
+    const { owner, project } = await recommendationProject();
+
+    await expect(
+      services.contentRecommendationService.get(
+        project.id,
+        owner.user.id,
+        "rec_does_not_exist",
+      ),
+    ).rejects.toMatchObject({ code: "RECOMMENDATION_NOT_FOUND" });
+  });
+
+  it("keeps two projects' recommendations apart", async () => {
+    const first = await recommendationProject();
+    const second = await recommendationProject();
+
+    await services.contentRecommendationService.generate(first.project.id, first.owner.user.id);
+    await services.contentRecommendationService.generate(second.project.id, second.owner.user.id);
+
+    const secondList = await services.contentRecommendationService.list(
+      second.project.id,
+      second.owner.user.id,
+    );
+
+    const firstIds = new Set(
+      (
+        await orm.ContentRecommendation.where((row) =>
+          row.projectId.eq(first.project.id),
+        ).all()
+      ).map((row) => row.id),
+    );
+
+    for (const opportunity of secondList) {
+      expect(firstIds.has(opportunity.id)).toBe(false);
+    }
+  });
+});
+
+describe("recommendation API integration", () => {
+  async function recommendationRoutes() {
+    return {
+      collection: await import("../../app/api/projects/[id]/recommendations/route"),
+      generate: await import(
+        "../../app/api/projects/[id]/recommendations/generate/route"
+      ),
+      refresh: await import(
+        "../../app/api/projects/[id]/recommendations/refresh/route"
+      ),
+      item: await import(
+        "../../app/api/projects/[id]/recommendations/[recommendationId]/route"
+      ),
+      select: await import(
+        "../../app/api/projects/[id]/recommendations/[recommendationId]/select/route"
+      ),
+      dismiss: await import(
+        "../../app/api/projects/[id]/recommendations/[recommendationId]/dismiss/route"
+      ),
+    };
+  }
+
+  type Routes = Awaited<ReturnType<typeof recommendationRoutes>>;
+
+  function auth(token: string) {
+    return {
+      cookie: `content_os_session=${token}`,
+      "content-type": "application/json",
+    };
+  }
+
+  async function generatedOverHttp(
+    ctx: { owner: { token: string }; project: { id: string } },
+    routes: Routes,
+  ) {
+    const response = await routes.generate.POST(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/generate`,
+        { method: "POST", headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id }) },
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      recommendations: Array<{
+        id: string;
+        title: string;
+        rationale: string;
+        reasons: string[];
+        missingInputs: string[];
+        contentTypeId: string;
+        channel: string;
+        platform: string;
+        subjectType: string;
+        status: string;
+      }>;
+      registry: { channels: string[]; statuses: string[]; contentTypes: unknown[] };
+    };
+    return { ...body, response };
+  }
+
+  it("lists what the project has been told it could make", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+
+    expect(generated.recommendations.length).toBeGreaterThan(0);
+    expect(generated.registry.channels).toContain("VIDEO");
+    expect(generated.registry.statuses).toEqual(["ACTIVE", "DISMISSED", "SELECTED"]);
+    expect(generated.registry.contentTypes.length).toBeGreaterThan(0);
+
+    const listed = await routes.collection.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations`,
+        { headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id }) },
+    );
+
+    expect(listed.status).toBe(200);
+    const body = (await listed.json()) as { recommendations: unknown[] };
+    expect(body.recommendations.length).toBe(generated.recommendations.length);
+  });
+
+  /**
+   * The score is the engine's own ranking aid. A client that could read it could
+   * re-sort the list and defeat the channel diversity the generator chose, so the
+   * wire shape has to be checked field by field, not just spot-checked.
+   */
+  it("never serializes the score or the project it belongs to", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+
+    for (const recommendation of generated.recommendations) {
+      expect(recommendation).not.toHaveProperty("priorityScore");
+      expect(recommendation).not.toHaveProperty("projectId");
+      // The payload is JSON, so a dropped field is genuinely absent on the wire
+      // rather than merely undefined.
+      expect(JSON.stringify(recommendation)).not.toContain("priorityScore");
+    }
+  });
+
+  it("shows every recommendation with a reason behind it", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+
+    for (const recommendation of generated.recommendations) {
+      expect(recommendation.title.length).toBeGreaterThan(0);
+      expect(recommendation.rationale.length).toBeGreaterThan(0);
+      expect(recommendation.reasons.length).toBeGreaterThan(0);
+      expect(Array.isArray(recommendation.missingInputs)).toBe(true);
+    }
+  });
+
+  /**
+   * A request that could name what to recommend would decide the answer, and the
+   * answer is only worth anything if the project chose it.
+   */
+  it("refuses a body that tries to steer the outcome", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+
+    const response = await routes.generate.POST(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/generate`,
+        {
+          method: "POST",
+          headers: auth(ctx.owner.token),
+          body: JSON.stringify({ featureId: "feat_invented", contentTypeId: "video.explainer" }),
+        },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id }) },
+    );
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toContain("derived from the project");
+  });
+
+  it("reads one recommendation by id", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+    const target = generated.recommendations[0];
+
+    const response = await routes.item.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/${target.id}`,
+        { headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id, recommendationId: target.id }) },
+    );
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      recommendation: { id: string; title: string };
+    };
+    expect(body.recommendation.id).toBe(target.id);
+    expect(body.recommendation.title).toBe(target.title);
+  });
+
+  /**
+   * The client owns one decision and nothing else. A body that could rewrite the
+   * rationale would let it make the server display a claim the product graph does
+   * not contain, which is the one failure this feature must not have.
+   */
+  it("refuses a patch that edits anything but the status", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+    const target = generated.recommendations[0];
+
+    for (const body of [
+      { status: "DISMISSED", rationale: "Totally made up" },
+      { status: "DISMISSED", priorityScore: 1 },
+      { status: "DISMISSED", subjectId: "feat_invented" },
+      { status: "DISMISSED", evidenceIds: ["ev_invented"] },
+    ]) {
+      const response = await routes.item.PATCH(
+        new Request(
+          `http://localhost/api/projects/${ctx.project.id}/recommendations/${target.id}`,
+          {
+            method: "PATCH",
+            headers: auth(ctx.owner.token),
+            body: JSON.stringify(body),
+          },
+        ),
+        { params: Promise.resolve({ id: ctx.project.id, recommendationId: target.id }) },
+      );
+
+      expect(response.status).toBe(400);
+    }
+
+    // Nothing above changed the stored row.
+    const after = await routes.item.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/${target.id}`,
+        { headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id, recommendationId: target.id }) },
+    );
+    const stored = (await after.json()) as { recommendation: { status: string } };
+    expect(stored.recommendation.status).toBe("ACTIVE");
+  });
+
+  it("refuses a status the domain does not have", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+
+    const response = await routes.item.PATCH(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/${generated.recommendations[0].id}`,
+        {
+          method: "PATCH",
+          headers: auth(ctx.owner.token),
+          body: JSON.stringify({ status: "PUBLISHED" }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: ctx.project.id,
+          recommendationId: generated.recommendations[0].id,
+        }),
+      },
+    );
+
+    expect(response.status).toBe(422);
+  });
+
+  /**
+   * Selection is not a status a client may set. It creates a real CP09 intent,
+   * and only the route that runs the intent pipeline can do that — so claiming
+   * SELECTED through the patch would produce a row marked taken-up with no intent
+   * behind it.
+   */
+  it("refuses to claim a selection through the patch", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+
+    const response = await routes.item.PATCH(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/${generated.recommendations[0].id}`,
+        {
+          method: "PATCH",
+          headers: auth(ctx.owner.token),
+          body: JSON.stringify({ status: "SELECTED" }),
+        },
+      ),
+      {
+        params: Promise.resolve({
+          id: ctx.project.id,
+          recommendationId: generated.recommendations[0].id,
+        }),
+      },
+    );
+
+    expect(response.status).toBe(409);
+  });
+
+  it("dismisses, and does not offer it again after a refresh", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+    const target = generated.recommendations[0];
+
+    const dismissed = await routes.dismiss.POST(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/${target.id}/dismiss`,
+        { method: "POST", headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id, recommendationId: target.id }) },
+    );
+
+    expect(dismissed.status).toBe(200);
+    const body = (await dismissed.json()) as {
+      recommendation: { status: string; dismissedAt: string | null };
+    };
+    expect(body.recommendation.status).toBe("DISMISSED");
+    expect(body.recommendation.dismissedAt).not.toBeNull();
+
+    await routes.refresh.POST(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/refresh`,
+        { method: "POST", headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id }) },
+    );
+
+    const active = await routes.collection.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations?status=active`,
+        { headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id }) },
+    );
+    const listed = (await active.json()) as { recommendations: Array<{ id: string }> };
+    expect(listed.recommendations.map((entry) => entry.id)).not.toContain(target.id);
+  });
+
+  it("takes one up and hands back the intent it created", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+    const target = generated.recommendations[0];
+
+    const response = await routes.select.POST(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/${target.id}/select`,
+        { method: "POST", headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id, recommendationId: target.id }) },
+    );
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      recommendation: { status: string; selectedIntentId: string };
+      intentId: string;
+    };
+    expect(body.recommendation.status).toBe("SELECTED");
+    expect(body.intentId).toBe(body.recommendation.selectedIntentId);
+
+    // The intent is real and belongs to this project: CP09 resolved it, this
+    // route did not write one.
+    const intents = await orm.ContentIntent.where((row) =>
+      row.projectId.eq(ctx.project.id),
+    ).all();
+    expect(intents.map((row) => row.id)).toContain(body.intentId);
+  });
+
+  it("returns 404 for an id that does not exist", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    await generatedOverHttp(ctx, routes);
+
+    const response = await routes.item.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/rec_nope`,
+        { headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id, recommendationId: "rec_nope" }) },
+    );
+
+    expect(response.status).toBe(404);
+  });
+
+  it("reports another project's id as missing rather than forbidden", async () => {
+    const first = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(first, routes);
+
+    const other = await services.projectService.createForWorkspace(
+      first.owner.workspace!.id,
+      { name: "Other project" },
+      first.owner.user.id,
+    );
+
+    const response = await routes.item.GET(
+      new Request(
+        `http://localhost/api/projects/${other.id}/recommendations/${generated.recommendations[0].id}`,
+        { headers: auth(first.owner.token) },
+      ),
+      {
+        params: Promise.resolve({
+          id: other.id,
+          recommendationId: generated.recommendations[0].id,
+        }),
+      },
+    );
+
+    // A 403 would confirm the id exists somewhere.
+    expect(response.status).toBe(404);
+  });
+
+  it("refuses an unauthenticated caller on every route", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+    const target = generated.recommendations[0];
+
+    const url = (suffix: string) =>
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations${suffix}`,
+      );
+    const context = {
+      params: Promise.resolve({ id: ctx.project.id, recommendationId: target.id }),
+    };
+
+    expect((await routes.collection.GET(url(""), { params: Promise.resolve({ id: ctx.project.id }) })).status).toBe(401);
+    expect((await routes.generate.POST(url("/generate"), { params: Promise.resolve({ id: ctx.project.id }) })).status).toBe(401);
+    expect((await routes.refresh.POST(url("/refresh"), { params: Promise.resolve({ id: ctx.project.id }) })).status).toBe(401);
+    expect((await routes.item.GET(url(`/${target.id}`), context)).status).toBe(401);
+    expect((await routes.select.POST(url(`/${target.id}/select`), context)).status).toBe(401);
+    expect((await routes.dismiss.POST(url(`/${target.id}/dismiss`), context)).status).toBe(401);
+  });
+
+  it("refuses a stranger who is not in the workspace", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const generated = await generatedOverHttp(ctx, routes);
+    const stranger = await registerUser();
+
+    const response = await routes.item.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations/${generated.recommendations[0].id}`,
+        { headers: auth(stranger.token) },
+      ),
+      {
+        params: Promise.resolve({
+          id: ctx.project.id,
+          recommendationId: generated.recommendations[0].id,
+        }),
+      },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
+  /**
+   * R5 — every mutating recommendation route refuses a cross-origin request.
+   *
+   * These are cookie-authenticated writes, so a cross-site form post or fetch
+   * would otherwise be able to dismiss, select or regenerate a user's list
+   * without their consent. The check is asserted per route, because "the helper
+   * exists" and "every write calls it" are different claims.
+   */
+  it("R5: refuses cross-origin writes on every mutating recommendation route", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+    const { owner, project } = ctx;
+
+    const base = `http://localhost/api/projects/${project.id}/recommendations`;
+    const crossOrigin = {
+      cookie: `content_os_session=${owner.token}`,
+      "content-type": "application/json",
+      origin: "https://evil.example",
+    };
+
+    // A target to write against; the requests below must be refused before it
+    // is ever read.
+    const seeded = await generatedOverHttp(ctx, routes);
+    const recommendationId = seeded.recommendations[0].id;
+
+    const params = { params: Promise.resolve({ id: project.id }) };
+    const itemParams = {
+      params: Promise.resolve({ id: project.id, recommendationId }),
+    };
+
+    const refused = [
+      ["generate", routes.generate.POST(new Request(`${base}/generate`, {
+        method: "POST", headers: crossOrigin,
+      }), params)],
+      ["refresh", routes.refresh.POST(new Request(`${base}/refresh`, {
+        method: "POST", headers: crossOrigin,
+      }), params)],
+      ["dismiss", routes.dismiss.POST(new Request(`${base}/${recommendationId}/dismiss`, {
+        method: "POST", headers: crossOrigin,
+      }), itemParams)],
+      ["select", routes.select.POST(new Request(`${base}/${recommendationId}/select`, {
+        method: "POST", headers: crossOrigin,
+      }), itemParams)],
+      ["patch", routes.item.PATCH(new Request(`${base}/${recommendationId}`, {
+        method: "PATCH", headers: crossOrigin, body: JSON.stringify({ status: "ACTIVE" }),
+      }), itemParams)],
+    ] as const;
+
+    for (const [name, pending] of refused) {
+      const response = await pending;
+      expect(response.status, `${name} must refuse a cross-origin write`).toBe(403);
+    }
+
+    // And the row is untouched, proving the refusal happened before any write.
+    const rows = await orm.ContentRecommendation.where((row) =>
+      row.id.eq(recommendationId),
+    ).all();
+    expect(rows[0].status).toBe("ACTIVE");
+  });
+
+  it("refuses a status filter the domain does not have", async () => {
+    const ctx = await recommendationProject();
+    const routes = await recommendationRoutes();
+
+    const response = await routes.collection.GET(
+      new Request(
+        `http://localhost/api/projects/${ctx.project.id}/recommendations?status=published`,
+        { headers: auth(ctx.owner.token) },
+      ),
+      { params: Promise.resolve({ id: ctx.project.id }) },
+    );
+
+    expect(response.status).toBe(400);
+  });
+});
+
+/**
+ * The CP12 audit findings, each proven against the real stack: real project data,
+ * the real service, the real repository and real PostgreSQL. Nothing here is
+ * stubbed below the HTTP boundary except the model itself, which is replaced by
+ * a canned response so the refinement *pipeline* is what is under test.
+ */
+describe("recommendation audit regression suite (real postgres)", () => {
+  /**
+   * R1 — the refinement path must work on candidates that have no row id.
+   *
+   * A generated recommendation is refined before it is persisted, so every
+   * candidate in the batch still has an empty id. Addressing the model output by
+   * id collapses the batch onto one entry, and refinement either drops the rest
+   * or applies one item's reword to another. This drives the real
+   * `AiContentRecommendationRefiner` through the real service with a provider
+   * that echoes a rewrite for every key it was given.
+   */
+  it("R1: refines a whole generated batch, addressed by stable key", async () => {
+    const { owner, project } = await recommendationProject();
+
+    // Imported here, not at module scope: these reach `prisma/db`, which binds
+    // DATABASE_URL as it loads, and beforeAll is what points that at the test
+    // database. A top-level import would bind the dev database instead.
+    const [
+      { container },
+      { ContentRecommendationService },
+      { ContentRecommendationValidator },
+      { RecommendationContextBuilder },
+      { DeterministicContentRecommenderProvider },
+      { AiContentRecommendationRefiner },
+    ] = await Promise.all([
+      import("../../infrastructure/container"),
+      import("./content-recommendation-service"),
+      import("./content-recommendation-validator"),
+      import("./recommendation-context-builder"),
+      import(
+        "../../infrastructure/recommendations/deterministic-content-recommender-provider"
+      ),
+      import("../../infrastructure/ai/content-recommendation-interpreter"),
+    ]);
+
+    // The real repositories, context builder, validator and authorization; only
+    // the model is replaced, so the pipeline under test is the shipping one.
+    const refining = new ContentRecommendationService({
+      projectService: container.services.projects,
+      repository: container.repositories.recommendations,
+      contextBuilder: new RecommendationContextBuilder({
+        intelligenceRepository: container.repositories.intelligence,
+        brandRepository: container.repositories.brand,
+        assetRepository: container.repositories.assets,
+        intentRepository: container.repositories.contentIntents,
+        storyboardRepository: container.repositories.storyboards,
+      }),
+      validator: new ContentRecommendationValidator(),
+      providers: [
+        new DeterministicContentRecommenderProvider(),
+        new AiContentRecommendationRefiner({
+          async generate({
+            messages,
+          }: {
+            messages: Array<{ role: string; content: string }>;
+          }) {
+            // Reads the keys the real prompt put in front of the model and
+            // answers each one, so the merge is genuinely exercised.
+            const prompt = messages[messages.length - 1].content;
+            const keys = [...prompt.matchAll(/^- key: (.+)$/gm)].map((m) => m[1]);
+            expect(keys.length).toBeGreaterThan(1);
+            return {
+              model: "canned",
+              text: JSON.stringify(
+                keys.map((key, index) => ({
+                  key,
+                  title: `Sharpened ${index + 1}`,
+                })),
+              ),
+            };
+          },
+        } as never),
+      ],
+      contentIntentService: container.services.contentIntent,
+    });
+
+    const refined = await refining.generate(project.id, owner.user.id);
+
+    expect(refined.length).toBeGreaterThan(1);
+    // Every candidate carried id: "", so this can only pass if the whole batch
+    // was addressed by key and each rewrite landed on its own item.
+    expect(refined.every((o) => o.title.startsWith("Sharpened "))).toBe(true);
+    expect(new Set(refined.map((o) => o.title)).size).toBe(refined.length);
+    // The grounding survived the model pass untouched.
+    expect(refined.every((o) => o.key.length > 0)).toBe(true);
+    expect(refined.every((o) => o.evidence.sourceIds.length > 0)).toBe(true);
+
+    // And what was refined is what storage kept.
+    const rows = await orm.ContentRecommendation.where((row) =>
+      row.projectId.eq(project.id),
+    ).all();
+    expect(rows.length).toBe(refined.length);
+    expect(rows.every((row) => typeof row.key === "string" && row.key.length > 0)).toBe(true);
+  });
+
+  /**
+   * R2 — `isProgress` must answer the coverage question, not record one.
+   *
+   * The column used to be written at generation time and never revisited, so a
+   * recommendation could claim to be untouched after the project had already
+   * made the thing. Coverage is now derived from the shared history at read time,
+   * which is only observable through the API: create a matching intent, and the
+   * API must report progress for the now-covered recommendation.
+   */
+  it("R2: derives isProgress from coverage at read time, not from a stored flag", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const before = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    expect(before.every((o) => o.isProgress === false)).toBe(true);
+
+    // A product-level recommendation has no subject id, and coverage is stated
+    // per subject, so the matrix is asserted on one that names a subject.
+    const target = before.find((o) => o.subjectId !== null);
+    expect(target).toBeDefined();
+
+    // A CP09 intent for the same content type, platform and subject: a real
+    // record the project now holds, which is what "already covered" means.
+    const definition = getContentType(target!.contentTypeId);
+    const outcome = await services.contentIntentService.resolve({
+      projectId: project.id,
+      userId: owner.user.id,
+      request: `Make a ${definition?.name ?? target!.contentTypeId} for ${target!.platform}`,
+      subjects: [{ type: target!.subjectType, id: target!.subjectId as string }],
+    });
+
+    // The coverage flag is only meaningful once the intent genuinely overlaps
+    // the recommendation, so that overlap is asserted rather than assumed: the
+    // parser decides the content type and platforms from the request text.
+    expect({
+      contentTypeId: outcome.intent.contentTypeId,
+      platforms: outcome.intent.platforms,
+      subjects: outcome.intent.subjects,
+    }).toMatchObject({
+      contentTypeId: target!.contentTypeId,
+      subjects: expect.arrayContaining([
+        expect.objectContaining({ id: target!.subjectId }),
+      ]),
+    });
+    expect(outcome.intent.platforms).toContain(target!.platform);
+
+    const after = await services.contentRecommendationService.list(
+      project.id,
+      owner.user.id,
+    );
+    const sameThing = after.find(
+      (o) =>
+        o.contentTypeId === target!.contentTypeId &&
+        o.subjectId === target!.subjectId &&
+        o.platform === target!.platform,
+    );
+
+    expect(sameThing).toBeDefined();
+    expect(sameThing?.isProgress).toBe(true);
+
+    // The stored row never had a column to get wrong.
+    const rows = await orm.ContentRecommendation.where((row) =>
+      row.projectId.eq(project.id),
+    ).all();
+    expect(rows.every((row) => !("isProgress" in row))).toBe(true);
+  });
+
+  /**
+   * R3 — evidence must point at real documents.
+   *
+   * `sourceIds` used to be filled with intelligence entity ids, so a
+   * recommendation claimed provenance from a "source" that was never a source
+   * document. Every id served here has to resolve to a Source row that belongs to
+   * this project.
+   */
+  it("R3: serves only real, project-owned Source ids as provenance", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+
+    const sources = await orm.Source.where((row) => row.projectId.eq(project.id)).all();
+    const sourceIds = new Set(sources.map((row) => row.id));
+    expect(sourceIds.size).toBeGreaterThan(0);
+
+    const intelligenceEntities = new Set<string>();
+    for (const opportunity of generated) {
+      expect(opportunity.evidence.sourceIds.length).toBeGreaterThan(0);
+      for (const id of opportunity.evidence.sourceIds) {
+        expect(sourceIds.has(id)).toBe(true);
+        intelligenceEntities.add(id);
+      }
+      // The subject is an entity id and must not be passed off as a document.
+      if (opportunity.subjectId) {
+        expect(opportunity.evidence.sourceIds).not.toContain(opportunity.subjectId);
+      }
+    }
+    expect(intelligenceEntities.size).toBeGreaterThan(0);
+  });
+
+  /**
+   * R4 — a selected recommendation is linked to a real intent.
+   *
+   * `selectedIntentId` was a bare text column with no constraint, so it could
+   * name an intent that did not exist, or one belonging to a different project.
+   * The foreign key makes a dangling link impossible and deletes safely.
+   */
+  it("R4: links selection to a real intent and clears it when the intent goes", async () => {
+    const { owner, project } = await recommendationProject();
+
+    const generated = await services.contentRecommendationService.generate(
+      project.id,
+      owner.user.id,
+    );
+    const target = generated[0];
+
+    const outcome = await services.contentRecommendationService.select(
+      project.id,
+      owner.user.id,
+      target.id,
+    );
+
+    expect(outcome.recommendation.status).toBe("SELECTED");
+    expect(outcome.recommendation.selectedIntentId).toBe(outcome.intentId);
+
+    const intents = await orm.ContentIntent.where((row) =>
+      row.id.eq(outcome.intentId),
+    ).all();
+    expect(intents).toHaveLength(1);
+    expect(intents[0].projectId).toBe(project.id);
+
+    // ON DELETE SET NULL: the user's decision record survives, the link does not
+    // become a dangling pointer.
+    await orm.ContentIntent.where({ id: outcome.intentId }).delete();
+
+    const rows = await orm.ContentRecommendation.where((row) =>
+      row.id.eq(target.id),
+    ).all();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].selectedIntentId).toBeNull();
+    expect(rows[0].status).toBe("SELECTED");
+  });
+
 });

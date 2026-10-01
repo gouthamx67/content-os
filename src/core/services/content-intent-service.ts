@@ -51,7 +51,24 @@ export type ResolveContentIntentInput = {
   projectId: string;
   userId: string;
   request: string;
+  /**
+   * Ids of real Source documents this intent is grounded in. Server-derived by
+   * whichever checkpoint already resolved them, never accepted from a request
+   * body: a caller able to name its own sources could make content appear to rest
+   * on material the project never ingested.
+   */
   sourceIds?: string[];
+  /**
+   * Intelligence entities the intent is definitively about, for the case where a
+   * caller already knows them exactly — CP12 selecting a recommendation knows the
+   * subject because the recommendation recorded it.
+   *
+   * This is a service-internal channel and deliberately not part of any API
+   * route's accepted body. Subjects named by a user are instead resolved by
+   * `linkSubjects` below, which only records a mention when it matches a real
+   * entity in the project.
+   */
+  subjects?: IntentSubject[];
 };
 
 export type ContentIntentView = {
@@ -143,6 +160,7 @@ export class ContentIntentService {
       input.projectId,
       parsed,
       input.sourceIds ?? [],
+      input.subjects ?? [],
     );
 
     const intent = this.resolver.resolve(
@@ -297,6 +315,7 @@ export class ContentIntentService {
     projectId: string,
     parsed: ParsedIntent,
     sourceIds: string[],
+    knownSubjects: readonly IntentSubject[],
   ): Promise<IntentResolutionContext> {
     const context: IntentResolutionContext = {
       projectId,
@@ -330,7 +349,12 @@ export class ContentIntentService {
       }
 
       if (parsed.subjectMentions.length > 0) {
-        context.subjects = await this.linkSubjects(projectId, parsed);
+        context.subjects = mergeSubjects(
+          knownSubjects,
+          await this.linkSubjects(projectId, parsed),
+        );
+      } else {
+        context.subjects = mergeSubjects(knownSubjects, []);
       }
     }
 
@@ -601,4 +625,28 @@ function needsInterpretation(parsed: ParsedIntent): boolean {
   if (!parsed.contentTypeId) return true;
   if (parsed.contentTypeOrigin === "INFERRED") return true;
   return false;
+}
+
+/**
+ * Combines subjects a caller already resolved with subjects linked from the
+ * request text, keeping the first occurrence of each entity. The request is still
+ * offered to `linkSubjects` regardless of what the caller passed, so a known
+ * subject is added to rather than used to suppress linking.
+ */
+function mergeSubjects(
+  known: readonly IntentSubject[],
+  linked: readonly IntentSubject[],
+): IntentSubject[] {
+  const seen = new Set<string>();
+  const subjects: IntentSubject[] = [];
+
+  for (const subject of [...known, ...linked]) {
+    if (!subject.id) continue;
+    const key = `${subject.type}:${subject.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    subjects.push({ type: subject.type, id: subject.id });
+  }
+
+  return subjects;
 }

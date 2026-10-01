@@ -50,6 +50,30 @@ export function requestedDurationMsFor(intent: ContentIntent): number | null {
   return null;
 }
 
+/**
+ * The evidence that proves a feature, if any.
+ *
+ * The graph holds no feature-to-claim edge, so the mapping is by name: a piece
+ * of evidence proves a feature when one of its claims mentions that feature. It
+ * is the same rule the per-feature list below uses, extracted so a workflow and
+ * a feature cannot disagree about what counts as proof.
+ */
+function evidenceProvingFeature(
+  context: CreativeContext,
+  featureName: string,
+): string[] {
+  return context.evidence
+    .filter((item) =>
+      item.claimIds.some((claimId) => {
+        const claim = context.product.claims.find((entry) => entry.id === claimId);
+        return claim
+          ? claim.text.toLowerCase().includes(featureName.toLowerCase())
+          : false;
+      }),
+    )
+    .map((item) => item.id);
+}
+
 function toWorkflows(context: CreativeContext): StoryboardContextWorkflow[] {
   return context.product.workflows.map((workflow) => {
     const featureIds = workflow.steps
@@ -59,6 +83,16 @@ function toWorkflows(context: CreativeContext): StoryboardContextWorkflow[] {
         )?.id,
       )
       .filter((id): id is string => id !== undefined);
+
+    // A workflow inherits the evidence of the features it exercises: that is what
+    // makes it demonstrable rather than asserted. The union of those features'
+    // own evidence, not every claim-backed snippet in the project — the earlier
+    // reading attached all of them to every workflow, which made a workflow that
+    // touches nothing provable look just as well evidenced as the main one.
+    const evidenceIds = context.product.features
+      .filter((feature) => featureIds.includes(feature.id))
+      .flatMap((feature) => evidenceProvingFeature(context, feature.name))
+      .filter((id, index, all) => all.indexOf(id) === index);
 
     return {
       id: workflow.id,
@@ -72,16 +106,7 @@ function toWorkflows(context: CreativeContext): StoryboardContextWorkflow[] {
         featureIds,
       })),
       featureIds,
-      // A workflow inherits the evidence of the features it exercises: that is
-      // what makes it demonstrable rather than asserted.
-      evidenceIds: context.product.features
-        .filter((feature) => featureIds.includes(feature.id))
-        .flatMap((feature) =>
-          context.evidence
-            .filter((item) => item.claimIds.length > 0)
-            .map((item) => item.id),
-        )
-        .filter((id, index, all) => all.indexOf(id) === index),
+      evidenceIds,
     };
   });
 }
@@ -169,20 +194,7 @@ export function buildStoryboardContext(
         id: feature.id,
         name: feature.name,
         description: feature.description,
-        // A feature is provable through the claims that mention it; the mapping
-        // is by name because the graph holds no feature-to-claim edge.
-        evidenceIds: context.evidence
-          .filter((item) =>
-            item.claimIds.some((claimId) => {
-              const claim = context.product.claims.find(
-                (entry) => entry.id === claimId,
-              );
-              return claim
-                ? claim.text.toLowerCase().includes(feature.name.toLowerCase())
-                : false;
-            }),
-          )
-          .map((item) => item.id),
+        evidenceIds: evidenceProvingFeature(context, feature.name),
       })),
       workflows: toWorkflows(context),
       problems: context.product.problems,

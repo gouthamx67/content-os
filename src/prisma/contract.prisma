@@ -826,6 +826,24 @@ enum IntentStatus {
   BLOCKED = "BLOCKED"
 }
 
+enum OpportunityStatus {
+  @@type("pg/text@1")
+
+  ACTIVE = "ACTIVE"
+  DISMISSED = "DISMISSED"
+  SELECTED = "SELECTED"
+}
+
+enum OpportunityChannel {
+  @@type("pg/text@1")
+
+  VIDEO = "VIDEO"
+  IMAGE = "IMAGE"
+  TEXT = "TEXT"
+  AUDIO = "AUDIO"
+  CAMPAIGN = "CAMPAIGN"
+}
+
 enum IntentConfidence {
   @@type("pg/text@1")
 
@@ -981,34 +999,34 @@ model Storyboard {
 /// One scene on the timeline. Order is dense from zero and the spans are
 /// contiguous, so the sequence of rows is the sequence of time.
 model StoryboardScene {
-  id                String                     @id @default(cuid(2))
-  storyboardId      String
-  order             Int
-  type              StoryboardSceneType
-  name              String
+  id             String                     @id @default(cuid(2))
+  storyboardId   String
+  order          Int
+  type           StoryboardSceneType
+  name           String
   /// Why this scene is in the piece, in one line.
-  purpose           String
-  startMs           Int
-  endMs             Int
-  durationMs        Int
-  shots             String
-  textOverlays      String
-  voiceoverPlan     String?
-  musicDirection    String?
-  sfxCues           String
-  transitionIn      String?
-  transitionOut     String?
+  purpose        String
+  startMs        Int
+  endMs          Int
+  durationMs     Int
+  shots          String
+  textOverlays   String
+  voiceoverPlan  String?
+  musicDirection String?
+  sfxCues        String
+  transitionIn   String?
+  transitionOut  String?
   /// Ids of the CP06 material this scene rests on. Ids only: a scene that spelled
   /// out a benefit in its own words would be a claim nothing checks.
-  featureIds        String[]
-  workflowIds       String[]
-  claimIds          String[]
-  evidenceIds       String[]
-  notes             String
-  createdAt         TimestamptzString          @default(now())
-  updatedAt         temporal.updatedAtString()
+  featureIds     String[]
+  workflowIds    String[]
+  claimIds       String[]
+  evidenceIds    String[]
+  notes          String
+  createdAt      TimestamptzString          @default(now())
+  updatedAt      temporal.updatedAtString()
 
-  storyboard        Storyboard                 @relation(fields:[storyboardId], references:[id], onDelete: Cascade)
+  storyboard     Storyboard                 @relation(fields:[storyboardId], references:[id], onDelete: Cascade)
 
   @@unique([storyboardId, order], map: "storyboard_scene_order")
   @@index([storyboardId], map: "storyboard_scene_storyboard_idx")
@@ -1392,9 +1410,65 @@ model ContentIntent {
 
   creativeDirections  CreativeDirection[]
   storyboards         Storyboard[]
+  /// Recommendations a user took up as this intent. Reverse side of
+  /// ContentRecommendation.selectedIntentId, which is SetNull so deleting the
+  /// intent leaves the recommendation standing with no selection.
+  recommendations     ContentRecommendation[]
 
   @@index([projectId], map: "content_intent_project_idx")
   @@index([projectId, createdAt], map: "content_intent_project_created_idx")
   @@index([projectId, status], map: "content_intent_project_status_idx")
   @@map("content_intent")
+}
+
+model ContentRecommendation {
+  id               String                     @id @default(cuid(2))
+  projectId        String
+  templateId       String
+  /// Stable, refresh-surviving identity of the recommended thing. Canonical
+  /// values (content type, subject type, platform) are stored verbatim; the
+  /// subject segment carries its own id or a slug of its label. Scoped to the
+  /// project rather than unique on its own: the key says what is recommended,
+  /// and two projects may well recommend the same thing.
+  key              String
+  contentTypeId    String
+  channel          OpportunityChannel
+  platform         String
+  subjectType      String
+  subjectId        String?
+  subjectLabel     String
+  title            String
+  rationale        String
+  /// Reasons are advisory text, never the score. The score is persisted so a
+  /// refresh re-ranks deterministically, but it is dropped before anything is
+  /// serialized to a client.
+  reasons          String[]
+  missingInputs    String[]
+  priorityScore    Float
+  /// Real Source document ids the subject was grounded in, resolved from CP06
+  /// provenance. Never an intelligence entity id: selecting the recommendation
+  /// copies these into a CP09 intent, which validates them against Source rows.
+  sourceIds        String[]
+  /// CP06 evidence ids backing the subject's entities.
+  evidenceIds      String[]
+  /// Related intelligence entity ids, e.g. the features a workflow steps through.
+  /// Kept apart from sourceIds so an entity id can never enter intent provenance.
+  /// Defaults to empty because rows written before this split never recorded
+  /// related entities, and "none known" is the honest value for them.
+  entityIds        String[]                   @default([])
+  status           OpportunityStatus          @default(ACTIVE)
+  selectedIntentId String?
+  dismissedAt      TimestamptzString?
+  generatedAt      TimestamptzString
+  createdAt        TimestamptzString          @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project                    @relation(fields:[projectId], references:[id], onDelete: Cascade)
+  selectedIntent   ContentIntent?             @relation(fields:[selectedIntentId], references:[id], onDelete: SetNull)
+
+  @@index([projectId], map: "content_recommendation_project_idx")
+  @@index([projectId, status], map: "content_recommendation_project_status_idx")
+  @@index([subjectType, subjectId], map: "content_recommendation_subject_idx")
+  @@unique([projectId, key], map: "content_recommendation_project_key_key")
+  @@map("content_recommendation")
 }

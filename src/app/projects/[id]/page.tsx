@@ -7,6 +7,7 @@ import {
   brandService,
   browserService,
   contentIntentService,
+  contentRecommendationService,
   creativeDirectorService,
   inputService,
   intelligenceService,
@@ -48,6 +49,11 @@ import {
   creativeRegistry,
   serializeCreativeDirection,
 } from "../../../lib/creative-direction-api";
+import {
+  recommendationRegistry,
+  serializeOpportunity,
+} from "../../../lib/recommendation-api";
+import { RecommendationsPanel } from "../../../components/recommendations/RecommendationsPanel";
 
 type ProjectDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -95,6 +101,7 @@ export default async function ProjectDetailPage({
     intents,
     directions,
     storyboards,
+    recommendations,
   ] =
     await Promise.all([
     inputService.getBundle(id, user.id),
@@ -109,6 +116,7 @@ export default async function ProjectDetailPage({
     contentIntentService.list(id, user.id),
     creativeDirectorService.list(id, user.id),
     storyboardService.list(id, user.id),
+    contentRecommendationService.list(id, user.id),
   ]);
 
   return (
@@ -180,6 +188,19 @@ export default async function ProjectDetailPage({
             direction={selectedDirection(directions)}
             initialStoryboards={storyboards.map(serializeStoryboard)}
             initialRegistry={storyboardRegistry()}
+          />
+        </div>
+
+        {/*
+          Suggestions sit after the panels that can change what the project knows.
+          Putting them first would show a list that is about to be invalidated by
+          the analysis the user has not run yet.
+        */}
+        <div className="mt-8">
+          <RecommendationsPanel
+            projectId={project.id}
+            initialRecommendations={recommendations.map(serializeOpportunity)}
+            initialRegistry={recommendationRegistry()}
           />
         </div>
 

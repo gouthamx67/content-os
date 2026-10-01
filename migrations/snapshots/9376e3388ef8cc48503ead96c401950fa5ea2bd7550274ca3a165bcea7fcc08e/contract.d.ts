@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'f5537d84fb0917df614370dde52172e76a7de4e5a46372d43da01593b3d0b0da'>;
+  StorageHashBase<'9376e3388ef8cc48503ead96c401950fa5ea2bd7550274ca3a165bcea7fcc08e'>;
 export type ExecutionHash =
   ExecutionHashBase<'43812959c06b63ae07113d16d0d6fab5d2ae4cc426c5a5741de32e666b5e2432'>;
 export type ProfileHash =
@@ -556,7 +556,7 @@ export type FieldOutputTypes = {
       readonly priorityScore: CodecTypes['pg/float8@1']['output'];
       readonly sourceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
       readonly evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-      readonly entityIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
+      readonly isProgress: CodecTypes['pg/bool@1']['output'];
       readonly status: 'ACTIVE' | 'DISMISSED' | 'SELECTED';
       readonly selectedIntentId: CodecTypes['pg/text@1']['output'] | null;
       readonly dismissedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
@@ -1335,7 +1335,7 @@ export type FieldInputTypes = {
       readonly priorityScore: CodecTypes['pg/float8@1']['input'];
       readonly sourceIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
       readonly evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
-      readonly entityIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
+      readonly isProgress: CodecTypes['pg/bool@1']['input'];
       readonly status: 'ACTIVE' | 'DISMISSED' | 'SELECTED';
       readonly selectedIntentId: CodecTypes['pg/text@1']['input'] | null;
       readonly dismissedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
@@ -2101,10 +2101,10 @@ export type StorageColumnTypes = {
       readonly contentTypeId: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly dismissedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
-      readonly entityIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
       readonly evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
       readonly generatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly id: CodecTypes['pg/text@1']['output'];
+      readonly isProgress: CodecTypes['pg/bool@1']['output'];
       readonly key: CodecTypes['pg/text@1']['output'];
       readonly missingInputs: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
       readonly platform: CodecTypes['pg/text@1']['output'];
@@ -2880,10 +2880,10 @@ export type StorageColumnInputTypes = {
       readonly contentTypeId: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly dismissedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
-      readonly entityIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
       readonly evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
       readonly generatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/text@1']['input'];
+      readonly isProgress: CodecTypes['pg/bool@1']['input'];
       readonly key: CodecTypes['pg/text@1']['input'];
       readonly missingInputs: ReadonlyArray<CodecTypes['pg/text@1']['input']>;
       readonly platform: CodecTypes['pg/text@1']['input'];
@@ -4283,9 +4283,8 @@ export namespace Models {
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     creativeDirections: public_CreativeDirection[];
     project: public_Project;
-    recommendations: public_ContentRecommendation[];
     storyboards: public_Storyboard[];
-    readonly [RelationKeys]?: 'creativeDirections' | 'project' | 'recommendations' | 'storyboards';
+    readonly [RelationKeys]?: 'creativeDirections' | 'project' | 'storyboards';
   };
   export type public_ContentRecommendation = {
     id: CodecTypes['pg/text@1']['output'];
@@ -4305,7 +4304,7 @@ export namespace Models {
     priorityScore: CodecTypes['pg/float8@1']['output'];
     sourceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
     evidenceIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
-    entityIds: ReadonlyArray<CodecTypes['pg/text@1']['output']>;
+    isProgress: CodecTypes['pg/bool@1']['output'];
     status: 'ACTIVE' | 'DISMISSED' | 'SELECTED';
     selectedIntentId: CodecTypes['pg/text@1']['output'] | null;
     dismissedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
@@ -4313,8 +4312,7 @@ export namespace Models {
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     project: public_Project;
-    selectedIntent: public_ContentIntent | null;
-    readonly [RelationKeys]?: 'project' | 'selectedIntent';
+    readonly [RelationKeys]?: 'project';
   };
 }
 
@@ -6201,13 +6199,13 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
-                readonly entityIds: {
-                  readonly nativeType: 'text';
-                  readonly codecId: 'pg/text@1';
+                readonly isProgress: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
                   readonly nullable: false;
                   readonly default: {
                     readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/text@1', readonly []>;
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
                   };
                 };
                 readonly status: {
@@ -6269,12 +6267,6 @@ type ContractBase = Omit<
                   readonly columns: readonly ['subjectType', 'subjectId'];
                   readonly unique: false;
                 },
-                {
-                  readonly name: 'content_recommendation_selectedIntentId_idx_678d8fdb';
-                  readonly prefix: 'content_recommendation_selectedIntentId_idx';
-                  readonly columns: readonly ['selectedIntentId'];
-                  readonly unique: false;
-                },
               ];
               foreignKeys: readonly [
                 {
@@ -6286,18 +6278,6 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'project';
-                    readonly columns: readonly ['id'];
-                  };
-                },
-                {
-                  readonly source: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'content_recommendation';
-                    readonly columns: readonly ['selectedIntentId'];
-                  };
-                  readonly target: {
-                    readonly namespaceId: 'public' & NamespaceId;
-                    readonly tableName: 'content_intent';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -11072,17 +11052,6 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['id'];
                 };
               };
-              readonly recommendations: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'ContentRecommendation';
-                };
-                readonly cardinality: '1:N';
-                readonly on: {
-                  readonly localFields: readonly ['id'];
-                  readonly targetFields: readonly ['selectedIntentId'];
-                };
-              };
               readonly storyboards: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -11203,10 +11172,9 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
                 readonly many: true;
               };
-              readonly entityIds: {
+              readonly isProgress: {
                 readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
-                readonly many: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
               };
               readonly status: {
                 readonly nullable: false;
@@ -11258,18 +11226,6 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['id'];
                 };
               };
-              readonly selectedIntent: {
-                readonly to: {
-                  readonly namespace: 'public' & NamespaceId;
-                  readonly model: 'ContentIntent';
-                };
-                readonly cardinality: 'N:1';
-                readonly nullable: true;
-                readonly on: {
-                  readonly localFields: readonly ['selectedIntentId'];
-                  readonly targetFields: readonly ['id'];
-                };
-              };
             };
             readonly storage: {
               readonly table: 'content_recommendation';
@@ -11292,7 +11248,7 @@ type ContractBase = Omit<
                 readonly priorityScore: { readonly column: 'priorityScore' };
                 readonly sourceIds: { readonly column: 'sourceIds' };
                 readonly evidenceIds: { readonly column: 'evidenceIds' };
-                readonly entityIds: { readonly column: 'entityIds' };
+                readonly isProgress: { readonly column: 'isProgress' };
                 readonly status: { readonly column: 'status' };
                 readonly selectedIntentId: { readonly column: 'selectedIntentId' };
                 readonly dismissedAt: { readonly column: 'dismissedAt' };

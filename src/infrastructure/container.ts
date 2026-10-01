@@ -16,6 +16,7 @@ import { PostgresBrandRepository } from "./repositories/postgres-brand-repositor
 import { PostgresContentIntentRepository } from "./repositories/postgres-content-intent-repository";
 import { PostgresCreativeDirectionRepository } from "./repositories/postgres-creative-direction-repository";
 import { PostgresStoryboardRepository } from "./repositories/postgres-storyboard-repository";
+import { PostgresContentRecommendationRepository } from "./repositories/postgres-content-recommendation-repository";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
 import { WorkspaceService } from "../core/services/workspace-service";
@@ -60,6 +61,11 @@ import { CreativeDirectorService } from "../core/services/creative-director-serv
 import { DeterministicCreativeDirector } from "../core/services/deterministic-creative-director";
 import { StoryboardService } from "../core/services/storyboard-service";
 import { AiStoryboardPlanner } from "./ai/storyboard-planner";
+import { ContentRecommendationService } from "../core/services/content-recommendation-service";
+import { RecommendationContextBuilder } from "../core/services/recommendation-context-builder";
+import { ContentRecommendationValidator } from "../core/services/content-recommendation-validator";
+import { DeterministicContentRecommenderProvider } from "./recommendations/deterministic-content-recommender-provider";
+import { AiContentRecommendationRefiner } from "./ai/content-recommendation-interpreter";
 
 const orm = db.orm.public;
 
@@ -76,6 +82,7 @@ const repositories = {
   contentIntents: new PostgresContentIntentRepository(orm),
   creativeDirections: new PostgresCreativeDirectionRepository(orm),
   storyboards: new PostgresStoryboardRepository(orm),
+  recommendations: new PostgresContentRecommendationRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -328,6 +335,34 @@ const storyboardService = new StoryboardService({
     : [],
 });
 
+/**
+ * Recommendations are deterministic first, refined second — the same shape as the
+ * directors and the planners above. The deterministic recommender is always
+ * wired, so a project gets suggestions with no model configured; the refiner is
+ * gated and, when it is on, may only reword or reorder the same items. It cannot
+ * introduce a new opportunity, because an introduced one would have to invent its
+ * own grounding.
+ */
+const contentRecommendationService = new ContentRecommendationService({
+  projectService,
+  repository: repositories.recommendations,
+  contextBuilder: new RecommendationContextBuilder({
+    intelligenceRepository: repositories.intelligence,
+    brandRepository: repositories.brand,
+    assetRepository: repositories.assets,
+    intentRepository: repositories.contentIntents,
+    storyboardRepository: repositories.storyboards,
+  }),
+  validator: new ContentRecommendationValidator(),
+  providers: [
+    new DeterministicContentRecommenderProvider(),
+    ...(process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+      ? [new AiContentRecommendationRefiner(providers.ai)]
+      : []),
+  ],
+  contentIntentService,
+});
+
 export const container = {
   repositories,
   providers,
@@ -345,5 +380,6 @@ export const container = {
     contentIntent: contentIntentService,
     creativeDirections: creativeDirectorService,
     storyboards: storyboardService,
+    recommendations: contentRecommendationService,
   },
 };

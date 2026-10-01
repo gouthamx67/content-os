@@ -195,17 +195,6 @@ const PURPOSE_RULES: ReadonlyArray<readonly [RegExp, string]> = [
   [/\blaunch(?:ing|es|ed)?\b/i, "launch"],
 ];
 
-const SUBJECT_RULES: ReadonlyArray<
-  readonly [RegExp, IntentSubjectType]
-> = [
-  [/\b([\w'-]+(?:\s+[\w'-]+)?)\s+(?:features?)\b/i, "FEATURE"],
-  [/\b([\w'-]+(?:\s+[\w'-]+)?)\s+(?:workflows?|flows?|pipelines?)\b/i, "WORKFLOW"],
-  [/\b([\w'-]+(?:\s+[\w'-]+)?)\s+(?:problems?|challenges?|pain\s+points?)\b/i, "PROBLEM"],
-  [/\b([\w'-]+(?:\s+[\w'-]+)?)\s+(?:benefits?|advantages?)\b/i, "BENEFIT"],
-  [/\b([\w'-]+(?:\s+[\w'-]+)?)\s+(?:claims?)\b/i, "CLAIM"],
-  [/\b(?:the\s+)?(product|app|platform|tool|saas|service)\b/i, "PRODUCT"],
-];
-
 type ContentTypeRule = {
   id: string;
   origin: "EXPLICIT" | "INFERRED";
@@ -609,13 +598,6 @@ function detectAudience(text: string): string | undefined {
  * "the analytics feature" is a mention of analytics, so the article that
  * introduces a name is dropped before the label is looked up.
  */
-function stripArticles(value: string): string {
-  return value
-    .replace(/^(?:the|a|an|our|its|this|that)\s+/i, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function cleanAudience(raw: string): string | null {
   const tokens = raw
     .toLowerCase()
@@ -683,19 +665,96 @@ function detectPurpose(text: string): string | undefined {
   return undefined;
 }
 
+/**
+ * Mentions are read from fragments, and the fragment is anchored to the last
+ * occurrence of the noun marker in the request, then the up-to-two tokens
+ * immediately before it. Anchoring to the *last* marker matters: in "a demo
+ * about the Launch Workflow workflow", the entity name ends in the noun it is
+ * announced by, so a leftmost parse grabs "the Launch" and reads it as the word
+ * "launch" — which then gets discarded as an output noun. The last marker is
+ * the one the label actually sits before, whichever noun it matches.
+ *
+ * The label then has leading stop tokens trimmed ("about the analytics" reads
+ * as "analytics") but never down to zero tokens, so a single-word label is
+ * never lost.
+ */
+const SUBJECT_NOUN_RULES: ReadonlyArray<
+  readonly [RegExp, IntentSubjectType]
+> = [
+  [/(?:features?)/i, "FEATURE"],
+  [/(?:workflows?|flows?|pipelines?)/i, "WORKFLOW"],
+  [/problems?|challenges?|pain\s+points?/i, "PROBLEM"],
+  [/(?:benefits?|advantages?)/i, "BENEFIT"],
+  [/(?:claims?)/i, "CLAIM"],
+];
+
+/** The product is the only subject addressed by type, not by a noun marker. */
+const PRODUCT_MENTION_RULE: Readonly<
+  readonly [RegExp, IntentSubjectType]
+> = [/\b(?:the\s+)?(product|app|platform|tool|saas|service)\b/i, "PRODUCT"];
+
+const LEADING_MENTION_STOP = new Set([
+  "the",
+  "a",
+  "an",
+  "of",
+  "about",
+  "for",
+  "on",
+  "at",
+  "in",
+  "to",
+  "with",
+  "using",
+  "that",
+  "which",
+  "who",
+  "and",
+  "or",
+  "but",
+  "as",
+]);
+
+function trimLeadingMentionTokens(value: string): string {
+  const tokens = value.split(/\s+/).filter((token) => token.length > 0);
+  let start = 0;
+  while (start < tokens.length - 1 && LEADING_MENTION_STOP.has(tokens[start])) {
+    start += 1;
+  }
+  return tokens.slice(start).join(" ");
+}
+
+function labelFromCapture(captured: string): string {
+  const tokens = captured.split(/\s+/).filter((token) => token.length > 0);
+  const nearestToNoun = tokens.slice(-2).join(" ");
+  return trimLeadingMentionTokens(nearestToNoun);
+}
+
 function detectSubjectMentions(text: string): SubjectMention[] {
   const mentions: SubjectMention[] = [];
 
-  for (const [pattern, type] of SUBJECT_RULES) {
-    const match = pattern.exec(text);
-    if (!match) continue;
-    const label = stripArticles(match[1]?.trim().toLowerCase() ?? "");
+  for (const [nounPattern, type] of SUBJECT_NOUN_RULES) {
+    const marker = new RegExp(`\\b(?:${nounPattern.source})\\b`, "gi");
+    const matches = [...text.matchAll(marker)];
+    if (matches.length === 0) continue;
+
+    const last = matches[matches.length - 1];
+    if (last.index === undefined) continue;
+
+    const before = text.slice(0, last.index).trim().toLowerCase();
+    const label = labelFromCapture(before);
     if (!label) continue;
     if (OUTPUT_NOUNS.has(label) || STOP_TOKENS.has(label)) continue;
-    if (type === "PRODUCT" && mentions.some((item) => item.type === "PRODUCT")) {
-      continue;
-    }
+
     mentions.push({ type, label });
+  }
+
+  const productMatch = PRODUCT_MENTION_RULE[0].exec(text);
+  if (productMatch) {
+    const label = labelFromCapture(productMatch[1].trim().toLowerCase());
+    if (label && !mentions.some((item) => item.type === "PRODUCT")) {
+      mentions.push({ type: "PRODUCT", label });
+    }
   }
 
   return mentions;

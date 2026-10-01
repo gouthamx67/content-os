@@ -25,3 +25,5 @@ export const contentIntentService = container.services.contentIntent;
 export const creativeDirectorService = container.services.creativeDirections;
 
 export const storyboardService = container.services.storyboards;
+
+export const contentRecommendationService = container.services.recommendations;

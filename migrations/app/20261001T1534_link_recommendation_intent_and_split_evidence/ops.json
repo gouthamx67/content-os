@@ -1,0 +1,209 @@
+[
+  {
+    "id": "dropColumn.content_recommendation.isProgress",
+    "label": "Drop column \"isProgress\" from \"content_recommendation\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "isProgress",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"isProgress\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "content_recommendation",
+          "isProgress"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"isProgress\"",
+        "sql": "ALTER TABLE \"public\".\"content_recommendation\" DROP COLUMN \"isProgress\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"isProgress\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "content_recommendation",
+          "isProgress"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.content_recommendation.entityIds",
+    "label": "Add column \"entityIds\" to \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "entityIds",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"entityIds\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "content_recommendation",
+          "entityIds"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"entityIds\"",
+        "sql": "ALTER TABLE \"public\".\"content_recommendation\" ADD COLUMN \"entityIds\" text[] DEFAULT '{}' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"entityIds\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "content_recommendation",
+          "entityIds"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.content_recommendation.content_recommendation_entityIds_elem_not_null_78520e6f",
+    "label": "Add check constraint \"content_recommendation_entityIds_elem_not_null_78520e6f\" on \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "content_recommendation_entityIds_elem_not_null_78520e6f",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"content_recommendation_entityIds_elem_not_null_78520e6f\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_recommendation_entityIds_elem_not_null_78520e6f",
+          "public",
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"content_recommendation_entityIds_elem_not_null_78520e6f\"",
+        "sql": "ALTER TABLE \"public\".\"content_recommendation\" ADD CONSTRAINT \"content_recommendation_entityIds_elem_not_null_78520e6f\" CHECK (array_position(\"entityIds\", NULL) IS NULL)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"content_recommendation_entityIds_elem_not_null_78520e6f\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_recommendation_entityIds_elem_not_null_78520e6f",
+          "public",
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.content_recommendation.content_recommendation_selectedIntentId_idx_678d8fdb",
+    "label": "Create index \"content_recommendation_selectedIntentId_idx_678d8fdb\" on \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "content_recommendation_selectedIntentId_idx_678d8fdb",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"content_recommendation_selectedIntentId_idx_678d8fdb\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation_selectedIntentId_idx_678d8fdb\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"content_recommendation_selectedIntentId_idx_678d8fdb\"",
+        "sql": "CREATE INDEX \"content_recommendation_selectedIntentId_idx_678d8fdb\" ON \"public\".\"content_recommendation\" (\"selectedIntentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"content_recommendation_selectedIntentId_idx_678d8fdb\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation_selectedIntentId_idx_678d8fdb\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.content_recommendation.content_recommendation_selectedIntentId_fkey",
+    "label": "Add foreign key \"content_recommendation_selectedIntentId_fkey\" on \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "content_recommendation_selectedIntentId_fkey",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"content_recommendation_selectedIntentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_recommendation_selectedIntentId_fkey",
+          "public",
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"content_recommendation_selectedIntentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"content_recommendation\"\nADD CONSTRAINT \"content_recommendation_selectedIntentId_fkey\"\nFOREIGN KEY (\"selectedIntentId\")\nREFERENCES \"public\".\"content_intent\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"content_recommendation_selectedIntentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_recommendation_selectedIntentId_fkey",
+          "public",
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,242 @@
+[
+  {
+    "id": "table.content_recommendation",
+    "label": "Create table \"content_recommendation\"",
+    "summary": "Creates table \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"content_recommendation\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"content_recommendation\"",
+        "sql": "CREATE TABLE \"public\".\"content_recommendation\" (\n  \"channel\" text NOT NULL,\n  \"contentTypeId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"dismissedAt\" timestamptz,\n  \"evidenceIds\" text[] NOT NULL,\n  \"generatedAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"isProgress\" bool DEFAULT false NOT NULL,\n  \"key\" text NOT NULL,\n  \"missingInputs\" text[] NOT NULL,\n  \"platform\" text NOT NULL,\n  \"priorityScore\" float8 NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"rationale\" text NOT NULL,\n  \"reasons\" text[] NOT NULL,\n  \"selectedIntentId\" text,\n  \"sourceIds\" text[] NOT NULL,\n  \"status\" text DEFAULT 'ACTIVE' NOT NULL,\n  \"subjectId\" text,\n  \"subjectLabel\" text NOT NULL,\n  \"subjectType\" text NOT NULL,\n  \"templateId\" text NOT NULL,\n  \"title\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"content_recommendation_channel_check_1c241ad4\" CHECK (\"channel\" IN ('VIDEO', 'IMAGE', 'TEXT', 'AUDIO', 'CAMPAIGN')),\n  CONSTRAINT \"content_recommendation_evidenceIds_elem_not_null_4d0cb530\" CHECK (array_position(\"evidenceIds\", NULL) IS NULL),\n  CONSTRAINT \"content_recommendation_missingInputs_elem_not_null_066d9444\" CHECK (array_position(\"missingInputs\", NULL) IS NULL),\n  CONSTRAINT \"content_recommendation_reasons_elem_not_null_3036d3dd\" CHECK (array_position(\"reasons\", NULL) IS NULL),\n  CONSTRAINT \"content_recommendation_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL),\n  CONSTRAINT \"content_recommendation_status_check_c43b5441\" CHECK (\"status\" IN ('ACTIVE', 'DISMISSED', 'SELECTED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"content_recommendation\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.content_recommendation.content_recommendation_project_key_key",
+    "label": "Add unique constraint on \"content_recommendation\" (projectId, key)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "content_recommendation_project_key_key",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"content_recommendation_project_key_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_recommendation_project_key_key",
+          "public",
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"content_recommendation_project_key_key\"",
+        "sql": "ALTER TABLE \"public\".\"content_recommendation\" ADD CONSTRAINT \"content_recommendation_project_key_key\" UNIQUE (\"projectId\", \"key\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"content_recommendation_project_key_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_recommendation_project_key_key",
+          "public",
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.content_recommendation.content_recommendation_project_idx",
+    "label": "Create index \"content_recommendation_project_idx\" on \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "content_recommendation_project_idx",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"content_recommendation_project_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation_project_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"content_recommendation_project_idx\"",
+        "sql": "CREATE INDEX \"content_recommendation_project_idx\" ON \"public\".\"content_recommendation\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"content_recommendation_project_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation_project_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.content_recommendation.content_recommendation_project_status_idx",
+    "label": "Create index \"content_recommendation_project_status_idx\" on \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "content_recommendation_project_status_idx",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"content_recommendation_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"content_recommendation_project_status_idx\"",
+        "sql": "CREATE INDEX \"content_recommendation_project_status_idx\" ON \"public\".\"content_recommendation\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"content_recommendation_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.content_recommendation.content_recommendation_subject_idx",
+    "label": "Create index \"content_recommendation_subject_idx\" on \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "content_recommendation_subject_idx",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"content_recommendation_subject_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation_subject_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"content_recommendation_subject_idx\"",
+        "sql": "CREATE INDEX \"content_recommendation_subject_idx\" ON \"public\".\"content_recommendation\" (\"subjectType\", \"subjectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"content_recommendation_subject_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"content_recommendation_subject_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.content_recommendation.content_recommendation_projectId_fkey",
+    "label": "Add foreign key \"content_recommendation_projectId_fkey\" on \"content_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "content_recommendation_projectId_fkey",
+        "table": "content_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"content_recommendation_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_recommendation_projectId_fkey",
+          "public",
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"content_recommendation_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"content_recommendation\"\nADD CONSTRAINT \"content_recommendation_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"content_recommendation_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "content_recommendation_projectId_fkey",
+          "public",
+          "\"public\".\"content_recommendation\""
+        ]
+      }
+    ]
+  }
+]
