@@ -18,7 +18,10 @@ import { PostgresCreativeDirectionRepository } from "./repositories/postgres-cre
 import { PostgresStoryboardRepository } from "./repositories/postgres-storyboard-repository";
 import { PostgresContentRecommendationRepository } from "./repositories/postgres-content-recommendation-repository";
 import { PostgresCaptureRepository } from "./repositories/postgres-capture-repository";
+import { PostgresVisualRepository } from "./repositories/postgres-visual-repository";
 import { CaptureService } from "../modules/capture-engine/capture-service";
+import { VisualCompositionService } from "../modules/visual-motion-engine/composition-service";
+import { VisualLayerService } from "../modules/visual-motion-engine/layer-service";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
 import { WorkspaceService } from "../core/services/workspace-service";
@@ -86,6 +89,7 @@ const repositories = {
   storyboards: new PostgresStoryboardRepository(orm),
   recommendations: new PostgresContentRecommendationRepository(orm),
   captures: new PostgresCaptureRepository(orm),
+  visual: new PostgresVisualRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -380,6 +384,26 @@ const captureService = new CaptureService({
   },
 });
 
+/**
+ * CP14 visual / motion engine.
+ *
+ * Same membership delegation as capture: the engine composes what a project
+ * already contains and has no opinion about who may open the project.
+ */
+const authorizeVisualProject = async (projectId: string, userId: string) => {
+  await projectService.getAuthorized(projectId, userId);
+};
+
+const visualCompositionService = new VisualCompositionService({
+  repository: repositories.visual,
+  authorizeProject: authorizeVisualProject,
+});
+
+const visualLayerService = new VisualLayerService({
+  repository: repositories.visual,
+  authorizeProject: authorizeVisualProject,
+});
+
 export const container = {
   repositories,
   providers,
@@ -399,5 +423,7 @@ export const container = {
     storyboards: storyboardService,
     recommendations: contentRecommendationService,
     capture: captureService,
+    visualCompositions: visualCompositionService,
+    visualLayers: visualLayerService,
   },
 };

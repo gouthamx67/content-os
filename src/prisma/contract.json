@@ -132,6 +132,10 @@
       "model": "IntelligenceWorkflowStep",
       "namespace": "public"
     },
+    "motion_keyframe": {
+      "model": "MotionKeyframe",
+      "namespace": "public"
+    },
     "project": {
       "model": "Project",
       "namespace": "public"
@@ -154,6 +158,18 @@
     },
     "user": {
       "model": "User",
+      "namespace": "public"
+    },
+    "visual_composition": {
+      "model": "VisualComposition",
+      "namespace": "public"
+    },
+    "visual_effect": {
+      "model": "VisualEffect",
+      "namespace": "public"
+    },
+    "visual_layer": {
+      "model": "VisualLayer",
       "namespace": "public"
     },
     "workspace": {
@@ -1206,6 +1222,52 @@
               }
             ]
           },
+          "MotionEasing": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "LINEAR",
+                "value": "LINEAR"
+              },
+              {
+                "name": "EASE_IN",
+                "value": "EASE_IN"
+              },
+              {
+                "name": "EASE_OUT",
+                "value": "EASE_OUT"
+              },
+              {
+                "name": "EASE_IN_OUT",
+                "value": "EASE_IN_OUT"
+              }
+            ]
+          },
+          "MotionProperty": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "X",
+                "value": "X"
+              },
+              {
+                "name": "Y",
+                "value": "Y"
+              },
+              {
+                "name": "SCALE",
+                "value": "SCALE"
+              },
+              {
+                "name": "ROTATION",
+                "value": "ROTATION"
+              },
+              {
+                "name": "OPACITY",
+                "value": "OPACITY"
+              }
+            ]
+          },
           "OpportunityChannel": {
             "codecId": "pg/text@1",
             "members": [
@@ -1418,6 +1480,86 @@
               {
                 "name": "ARCHIVED",
                 "value": "ARCHIVED"
+              }
+            ]
+          },
+          "VisualCompositionStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "DRAFT",
+                "value": "DRAFT"
+              },
+              {
+                "name": "READY",
+                "value": "READY"
+              },
+              {
+                "name": "ARCHIVED",
+                "value": "ARCHIVED"
+              }
+            ]
+          },
+          "VisualEffectType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "BLUR",
+                "value": "BLUR"
+              },
+              {
+                "name": "BRIGHTNESS",
+                "value": "BRIGHTNESS"
+              },
+              {
+                "name": "CONTRAST",
+                "value": "CONTRAST"
+              },
+              {
+                "name": "SATURATION",
+                "value": "SATURATION"
+              },
+              {
+                "name": "GRAYSCALE",
+                "value": "GRAYSCALE"
+              }
+            ]
+          },
+          "VisualFitMode": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "CONTAIN",
+                "value": "CONTAIN"
+              },
+              {
+                "name": "COVER",
+                "value": "COVER"
+              },
+              {
+                "name": "STRETCH",
+                "value": "STRETCH"
+              }
+            ]
+          },
+          "VisualLayerType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "MEDIA",
+                "value": "MEDIA"
+              },
+              {
+                "name": "TEXT",
+                "value": "TEXT"
+              },
+              {
+                "name": "SHAPE",
+                "value": "SHAPE"
+              },
+              {
+                "name": "GROUP",
+                "value": "GROUP"
               }
             ]
           },
@@ -8061,6 +8203,126 @@
               "table": "intelligence_workflow_step"
             }
           },
+          "MotionKeyframe": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "easing": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "MotionEasing",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "fromValue": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "layerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "property": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "MotionProperty",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "timeMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "toValue": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "layer": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "layerId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "VisualLayer",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "easing": {
+                  "column": "easing"
+                },
+                "fromValue": {
+                  "column": "fromValue"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "layerId": {
+                  "column": "layerId"
+                },
+                "property": {
+                  "column": "property"
+                },
+                "timeMs": {
+                  "column": "timeMs"
+                },
+                "toValue": {
+                  "column": "toValue"
+                }
+              },
+              "namespaceId": "public",
+              "table": "motion_keyframe"
+            }
+          },
           "Project": {
             "fields": {
               "createdAt": {
@@ -8547,6 +8809,21 @@
                 },
                 "to": {
                   "model": "Storyboard",
+                  "namespace": "public"
+                }
+              },
+              "visualCompositions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "VisualComposition",
                   "namespace": "public"
                 }
               },
@@ -9535,6 +9812,559 @@
               },
               "namespaceId": "public",
               "table": "user"
+            }
+          },
+          "VisualComposition": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "durationMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "frameRate": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "height": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "shotId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "VisualCompositionStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "width": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "layers": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "compositionId"
+                  ]
+                },
+                "to": {
+                  "model": "VisualLayer",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdById": {
+                  "column": "createdById"
+                },
+                "durationMs": {
+                  "column": "durationMs"
+                },
+                "frameRate": {
+                  "column": "frameRate"
+                },
+                "height": {
+                  "column": "height"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "shotId": {
+                  "column": "shotId"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "width": {
+                  "column": "width"
+                }
+              },
+              "namespaceId": "public",
+              "table": "visual_composition"
+            }
+          },
+          "VisualEffect": {
+            "fields": {
+              "amount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "enabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "layerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "VisualEffectType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "layer": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "layerId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "VisualLayer",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "amount": {
+                  "column": "amount"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "enabled": {
+                  "column": "enabled"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "layerId": {
+                  "column": "layerId"
+                },
+                "type": {
+                  "column": "type"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "visual_effect"
+            }
+          },
+          "VisualLayer": {
+            "fields": {
+              "assetRef": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "compositionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "cropHeight": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "cropWidth": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "cropX": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "cropY": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "fit": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "VisualFitMode",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "height": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "opacity": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "rotation": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "textContent": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "type": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "VisualLayerType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "visible": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "width": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "x": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "y": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "zIndex": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "composition": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "compositionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "VisualComposition",
+                  "namespace": "public"
+                }
+              },
+              "effects": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "layerId"
+                  ]
+                },
+                "to": {
+                  "model": "VisualEffect",
+                  "namespace": "public"
+                }
+              },
+              "keyframes": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "layerId"
+                  ]
+                },
+                "to": {
+                  "model": "MotionKeyframe",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "assetRef": {
+                  "column": "assetRef"
+                },
+                "compositionId": {
+                  "column": "compositionId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "cropHeight": {
+                  "column": "cropHeight"
+                },
+                "cropWidth": {
+                  "column": "cropWidth"
+                },
+                "cropX": {
+                  "column": "cropX"
+                },
+                "cropY": {
+                  "column": "cropY"
+                },
+                "fit": {
+                  "column": "fit"
+                },
+                "height": {
+                  "column": "height"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "opacity": {
+                  "column": "opacity"
+                },
+                "rotation": {
+                  "column": "rotation"
+                },
+                "textContent": {
+                  "column": "textContent"
+                },
+                "type": {
+                  "column": "type"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "visible": {
+                  "column": "visible"
+                },
+                "width": {
+                  "column": "width"
+                },
+                "x": {
+                  "column": "x"
+                },
+                "y": {
+                  "column": "y"
+                },
+                "zIndex": {
+                  "column": "zIndex"
+                }
+              },
+              "namespaceId": "public",
+              "table": "visual_layer"
             }
           },
           "Workspace": {
@@ -15806,6 +16636,134 @@
                 }
               ]
             },
+            "motion_keyframe": {
+              "checks": [
+                {
+                  "expression": "\"easing\" IN ('LINEAR', 'EASE_IN', 'EASE_OUT', 'EASE_IN_OUT')",
+                  "name": "motion_keyframe_easing_check_9364cc02",
+                  "prefix": "motion_keyframe_easing_check"
+                },
+                {
+                  "expression": "\"property\" IN ('X', 'Y', 'SCALE', 'ROTATION', 'OPACITY')",
+                  "name": "motion_keyframe_property_check_93640a69",
+                  "prefix": "motion_keyframe_property_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "easing": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LINEAR"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "MotionEasing",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "fromValue": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "layerId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "property": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "MotionProperty",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "timeMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "toValue": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "layerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "motion_keyframe"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "visual_layer"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "layerId"
+                  ],
+                  "name": "motion_keyframe_layerId_idx_d4e47757",
+                  "prefix": "motion_keyframe_layerId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "layerId",
+                    "timeMs"
+                  ],
+                  "name": "motion_keyframe_layer_time_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "layerId",
+                    "property",
+                    "timeMs"
+                  ],
+                  "name": "motion_keyframe_layer_property_time_key"
+                }
+              ]
+            },
             "project": {
               "checks": [
                 {
@@ -16617,6 +17575,466 @@
                 }
               ]
             },
+            "visual_composition": {
+              "checks": [
+                {
+                  "expression": "\"status\" IN ('DRAFT', 'READY', 'ARCHIVED')",
+                  "name": "visual_composition_status_check_1d0cbbdd",
+                  "prefix": "visual_composition_status_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "durationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "frameRate": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "height": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "shotId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "DRAFT"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "VisualCompositionStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "width": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "visual_composition"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "visual_composition_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "visual_composition_project_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "shotId"
+                  ],
+                  "name": "visual_composition_project_shot_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status"
+                  ],
+                  "name": "visual_composition_project_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "visual_effect": {
+              "checks": [
+                {
+                  "expression": "\"type\" IN ('BLUR', 'BRIGHTNESS', 'CONTRAST', 'SATURATION', 'GRAYSCALE')",
+                  "name": "visual_effect_type_check_f98ea148",
+                  "prefix": "visual_effect_type_check"
+                }
+              ],
+              "columns": {
+                "amount": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "enabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "layerId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "VisualEffectType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "layerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "visual_effect"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "visual_layer"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "layerId"
+                  ],
+                  "name": "visual_effect_layer_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "layerId",
+                    "type"
+                  ],
+                  "name": "visual_effect_layer_type_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "visual_layer": {
+              "checks": [
+                {
+                  "expression": "\"fit\" IN ('CONTAIN', 'COVER', 'STRETCH')",
+                  "name": "visual_layer_fit_check_70c6746e",
+                  "prefix": "visual_layer_fit_check"
+                },
+                {
+                  "expression": "\"type\" IN ('MEDIA', 'TEXT', 'SHAPE', 'GROUP')",
+                  "name": "visual_layer_type_check_832b20e8",
+                  "prefix": "visual_layer_type_check"
+                }
+              ],
+              "columns": {
+                "assetRef": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "compositionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "cropHeight": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": true
+                },
+                "cropWidth": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": true
+                },
+                "cropX": {
+                  "codecId": "pg/float8@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "cropY": {
+                  "codecId": "pg/float8@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "fit": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "CONTAIN"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "VisualFitMode",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "height": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "opacity": {
+                  "codecId": "pg/float8@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "rotation": {
+                  "codecId": "pg/float8@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "textContent": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "type": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "VisualLayerType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "visible": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "width": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "x": {
+                  "codecId": "pg/float8@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "y": {
+                  "codecId": "pg/float8@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "zIndex": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "compositionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "visual_layer"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "visual_composition"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "compositionId"
+                  ],
+                  "name": "visual_layer_composition_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "compositionId",
+                    "zIndex"
+                  ],
+                  "name": "visual_layer_composition_z_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "workspace": {
               "columns": {
                 "createdAt": {
@@ -17166,6 +18584,25 @@
                 "BLOCKED"
               ]
             },
+            "MotionEasing": {
+              "kind": "valueSet",
+              "values": [
+                "LINEAR",
+                "EASE_IN",
+                "EASE_OUT",
+                "EASE_IN_OUT"
+              ]
+            },
+            "MotionProperty": {
+              "kind": "valueSet",
+              "values": [
+                "X",
+                "Y",
+                "SCALE",
+                "ROTATION",
+                "OPACITY"
+              ]
+            },
             "OpportunityChannel": {
               "kind": "valueSet",
               "values": [
@@ -17246,6 +18683,41 @@
                 "ARCHIVED"
               ]
             },
+            "VisualCompositionStatus": {
+              "kind": "valueSet",
+              "values": [
+                "DRAFT",
+                "READY",
+                "ARCHIVED"
+              ]
+            },
+            "VisualEffectType": {
+              "kind": "valueSet",
+              "values": [
+                "BLUR",
+                "BRIGHTNESS",
+                "CONTRAST",
+                "SATURATION",
+                "GRAYSCALE"
+              ]
+            },
+            "VisualFitMode": {
+              "kind": "valueSet",
+              "values": [
+                "CONTAIN",
+                "COVER",
+                "STRETCH"
+              ]
+            },
+            "VisualLayerType": {
+              "kind": "valueSet",
+              "values": [
+                "MEDIA",
+                "TEXT",
+                "SHAPE",
+                "GROUP"
+              ]
+            },
             "WorkspaceRole": {
               "kind": "valueSet",
               "values": [
@@ -17260,10 +18732,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "17230d27cc3d7a50b70c13fe442443af177ae4fb207fc6ebc4ebad35bc992438"
+    "storageHash": "98425fda0ad4d4e5ef6813efa622e8b5dc65d50103d1f5c22f47cbc55825b115"
   },
   "execution": {
-    "executionHash": "0c8bf18d2b6e27248df18e0eadd7787baece922e7cf1ca5a27d65f442671703c",
+    "executionHash": "fc718bf7aea8283b9ffd8587df22892bf701cead82b9771bb1414d9777703bf3",
     "mutations": {
       "defaults": [
         {
@@ -18001,6 +19473,17 @@
           "ref": {
             "column": "id",
             "namespace": "public",
+            "table": "motion_keyframe"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
             "table": "project"
           }
         },
@@ -18132,6 +19615,84 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "user"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "visual_composition"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "visual_composition"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "visual_effect"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "visual_effect"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "visual_layer"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "visual_layer"
           }
         },
         {

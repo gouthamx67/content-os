@@ -1,0 +1,758 @@
+[
+  {
+    "id": "table.motion_keyframe",
+    "label": "Create table \"motion_keyframe\"",
+    "summary": "Creates table \"motion_keyframe\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "motion_keyframe"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"motion_keyframe\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"motion_keyframe\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"motion_keyframe\"",
+        "sql": "CREATE TABLE \"public\".\"motion_keyframe\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"easing\" text DEFAULT 'LINEAR' NOT NULL,\n  \"fromValue\" float8 NOT NULL,\n  \"id\" text NOT NULL,\n  \"layerId\" text NOT NULL,\n  \"property\" text NOT NULL,\n  \"timeMs\" int4 NOT NULL,\n  \"toValue\" float8 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"motion_keyframe_easing_check_9364cc02\" CHECK (\"easing\" IN ('LINEAR', 'EASE_IN', 'EASE_OUT', 'EASE_IN_OUT')),\n  CONSTRAINT \"motion_keyframe_property_check_93640a69\" CHECK (\"property\" IN ('X', 'Y', 'SCALE', 'ROTATION', 'OPACITY'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"motion_keyframe\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"motion_keyframe\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.visual_composition",
+    "label": "Create table \"visual_composition\"",
+    "summary": "Creates table \"visual_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "visual_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"visual_composition\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"visual_composition\"",
+        "sql": "CREATE TABLE \"public\".\"visual_composition\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"durationMs\" int4 NOT NULL,\n  \"frameRate\" float8 NOT NULL,\n  \"height\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"shotId\" text,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"width\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"visual_composition_status_check_1d0cbbdd\" CHECK (\"status\" IN ('DRAFT', 'READY', 'ARCHIVED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"visual_composition\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.visual_effect",
+    "label": "Create table \"visual_effect\"",
+    "summary": "Creates table \"visual_effect\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "visual_effect"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"visual_effect\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_effect\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"visual_effect\"",
+        "sql": "CREATE TABLE \"public\".\"visual_effect\" (\n  \"amount\" float8 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"enabled\" bool DEFAULT true NOT NULL,\n  \"id\" text NOT NULL,\n  \"layerId\" text NOT NULL,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"visual_effect_type_check_f98ea148\" CHECK (\"type\" IN ('BLUR', 'BRIGHTNESS', 'CONTRAST', 'SATURATION', 'GRAYSCALE'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"visual_effect\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_effect\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.visual_layer",
+    "label": "Create table \"visual_layer\"",
+    "summary": "Creates table \"visual_layer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "visual_layer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"visual_layer\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_layer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"visual_layer\"",
+        "sql": "CREATE TABLE \"public\".\"visual_layer\" (\n  \"assetRef\" text,\n  \"compositionId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"cropHeight\" float8,\n  \"cropWidth\" float8,\n  \"cropX\" float8 DEFAULT 0 NOT NULL,\n  \"cropY\" float8 DEFAULT 0 NOT NULL,\n  \"fit\" text DEFAULT 'CONTAIN' NOT NULL,\n  \"height\" float8 NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"opacity\" float8 DEFAULT 1 NOT NULL,\n  \"rotation\" float8 DEFAULT 0 NOT NULL,\n  \"textContent\" text,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"visible\" bool DEFAULT true NOT NULL,\n  \"width\" float8 NOT NULL,\n  \"x\" float8 DEFAULT 0 NOT NULL,\n  \"y\" float8 DEFAULT 0 NOT NULL,\n  \"zIndex\" int4 DEFAULT 0 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"visual_layer_fit_check_70c6746e\" CHECK (\"fit\" IN ('CONTAIN', 'COVER', 'STRETCH')),\n  CONSTRAINT \"visual_layer_type_check_832b20e8\" CHECK (\"type\" IN ('MEDIA', 'TEXT', 'SHAPE', 'GROUP'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"visual_layer\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_layer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.motion_keyframe.motion_keyframe_layer_property_time_key",
+    "label": "Add unique constraint on \"motion_keyframe\" (layerId, property, timeMs)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "motion_keyframe_layer_property_time_key",
+        "table": "motion_keyframe"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"motion_keyframe_layer_property_time_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "motion_keyframe_layer_property_time_key",
+          "public",
+          "\"public\".\"motion_keyframe\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"motion_keyframe_layer_property_time_key\"",
+        "sql": "ALTER TABLE \"public\".\"motion_keyframe\" ADD CONSTRAINT \"motion_keyframe_layer_property_time_key\" UNIQUE (\"layerId\", \"property\", \"timeMs\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"motion_keyframe_layer_property_time_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "motion_keyframe_layer_property_time_key",
+          "public",
+          "\"public\".\"motion_keyframe\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.motion_keyframe.motion_keyframe_layerId_idx_d4e47757",
+    "label": "Create index \"motion_keyframe_layerId_idx_d4e47757\" on \"motion_keyframe\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "motion_keyframe_layerId_idx_d4e47757",
+        "table": "motion_keyframe"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"motion_keyframe_layerId_idx_d4e47757\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"motion_keyframe_layerId_idx_d4e47757\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"motion_keyframe_layerId_idx_d4e47757\"",
+        "sql": "CREATE INDEX \"motion_keyframe_layerId_idx_d4e47757\" ON \"public\".\"motion_keyframe\" (\"layerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"motion_keyframe_layerId_idx_d4e47757\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"motion_keyframe_layerId_idx_d4e47757\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.motion_keyframe.motion_keyframe_layer_time_idx",
+    "label": "Create index \"motion_keyframe_layer_time_idx\" on \"motion_keyframe\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "motion_keyframe_layer_time_idx",
+        "table": "motion_keyframe"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"motion_keyframe_layer_time_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"motion_keyframe_layer_time_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"motion_keyframe_layer_time_idx\"",
+        "sql": "CREATE INDEX \"motion_keyframe_layer_time_idx\" ON \"public\".\"motion_keyframe\" (\"layerId\", \"timeMs\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"motion_keyframe_layer_time_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"motion_keyframe_layer_time_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.visual_composition.visual_composition_project_created_idx",
+    "label": "Create index \"visual_composition_project_created_idx\" on \"visual_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "visual_composition_project_created_idx",
+        "table": "visual_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"visual_composition_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"visual_composition_project_created_idx\"",
+        "sql": "CREATE INDEX \"visual_composition_project_created_idx\" ON \"public\".\"visual_composition\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"visual_composition_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.visual_composition.visual_composition_project_idx",
+    "label": "Create index \"visual_composition_project_idx\" on \"visual_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "visual_composition_project_idx",
+        "table": "visual_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"visual_composition_project_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition_project_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"visual_composition_project_idx\"",
+        "sql": "CREATE INDEX \"visual_composition_project_idx\" ON \"public\".\"visual_composition\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"visual_composition_project_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition_project_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.visual_composition.visual_composition_project_shot_idx",
+    "label": "Create index \"visual_composition_project_shot_idx\" on \"visual_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "visual_composition_project_shot_idx",
+        "table": "visual_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"visual_composition_project_shot_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition_project_shot_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"visual_composition_project_shot_idx\"",
+        "sql": "CREATE INDEX \"visual_composition_project_shot_idx\" ON \"public\".\"visual_composition\" (\"projectId\", \"shotId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"visual_composition_project_shot_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition_project_shot_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.visual_composition.visual_composition_project_status_idx",
+    "label": "Create index \"visual_composition_project_status_idx\" on \"visual_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "visual_composition_project_status_idx",
+        "table": "visual_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"visual_composition_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"visual_composition_project_status_idx\"",
+        "sql": "CREATE INDEX \"visual_composition_project_status_idx\" ON \"public\".\"visual_composition\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"visual_composition_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_composition_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.visual_effect.visual_effect_layer_idx",
+    "label": "Create index \"visual_effect_layer_idx\" on \"visual_effect\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "visual_effect_layer_idx",
+        "table": "visual_effect"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"visual_effect_layer_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_effect_layer_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"visual_effect_layer_idx\"",
+        "sql": "CREATE INDEX \"visual_effect_layer_idx\" ON \"public\".\"visual_effect\" (\"layerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"visual_effect_layer_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_effect_layer_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.visual_effect.visual_effect_layer_type_idx",
+    "label": "Create index \"visual_effect_layer_type_idx\" on \"visual_effect\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "visual_effect_layer_type_idx",
+        "table": "visual_effect"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"visual_effect_layer_type_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_effect_layer_type_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"visual_effect_layer_type_idx\"",
+        "sql": "CREATE INDEX \"visual_effect_layer_type_idx\" ON \"public\".\"visual_effect\" (\"layerId\", \"type\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"visual_effect_layer_type_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_effect_layer_type_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.visual_layer.visual_layer_composition_idx",
+    "label": "Create index \"visual_layer_composition_idx\" on \"visual_layer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "visual_layer_composition_idx",
+        "table": "visual_layer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"visual_layer_composition_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_layer_composition_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"visual_layer_composition_idx\"",
+        "sql": "CREATE INDEX \"visual_layer_composition_idx\" ON \"public\".\"visual_layer\" (\"compositionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"visual_layer_composition_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_layer_composition_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.visual_layer.visual_layer_composition_z_idx",
+    "label": "Create index \"visual_layer_composition_z_idx\" on \"visual_layer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "visual_layer_composition_z_idx",
+        "table": "visual_layer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"visual_layer_composition_z_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_layer_composition_z_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"visual_layer_composition_z_idx\"",
+        "sql": "CREATE INDEX \"visual_layer_composition_z_idx\" ON \"public\".\"visual_layer\" (\"compositionId\", \"zIndex\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"visual_layer_composition_z_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"visual_layer_composition_z_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.motion_keyframe.motion_keyframe_layerId_fkey",
+    "label": "Add foreign key \"motion_keyframe_layerId_fkey\" on \"motion_keyframe\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "motion_keyframe_layerId_fkey",
+        "table": "motion_keyframe"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"motion_keyframe_layerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "motion_keyframe_layerId_fkey",
+          "public",
+          "\"public\".\"motion_keyframe\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"motion_keyframe_layerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"motion_keyframe\"\nADD CONSTRAINT \"motion_keyframe_layerId_fkey\"\nFOREIGN KEY (\"layerId\")\nREFERENCES \"public\".\"visual_layer\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"motion_keyframe_layerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "motion_keyframe_layerId_fkey",
+          "public",
+          "\"public\".\"motion_keyframe\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.visual_composition.visual_composition_projectId_fkey",
+    "label": "Add foreign key \"visual_composition_projectId_fkey\" on \"visual_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "visual_composition_projectId_fkey",
+        "table": "visual_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"visual_composition_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "visual_composition_projectId_fkey",
+          "public",
+          "\"public\".\"visual_composition\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"visual_composition_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"visual_composition\"\nADD CONSTRAINT \"visual_composition_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"visual_composition_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "visual_composition_projectId_fkey",
+          "public",
+          "\"public\".\"visual_composition\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.visual_effect.visual_effect_layerId_fkey",
+    "label": "Add foreign key \"visual_effect_layerId_fkey\" on \"visual_effect\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "visual_effect_layerId_fkey",
+        "table": "visual_effect"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"visual_effect_layerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "visual_effect_layerId_fkey",
+          "public",
+          "\"public\".\"visual_effect\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"visual_effect_layerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"visual_effect\"\nADD CONSTRAINT \"visual_effect_layerId_fkey\"\nFOREIGN KEY (\"layerId\")\nREFERENCES \"public\".\"visual_layer\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"visual_effect_layerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "visual_effect_layerId_fkey",
+          "public",
+          "\"public\".\"visual_effect\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.visual_layer.visual_layer_compositionId_fkey",
+    "label": "Add foreign key \"visual_layer_compositionId_fkey\" on \"visual_layer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "visual_layer_compositionId_fkey",
+        "table": "visual_layer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"visual_layer_compositionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "visual_layer_compositionId_fkey",
+          "public",
+          "\"public\".\"visual_layer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"visual_layer_compositionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"visual_layer\"\nADD CONSTRAINT \"visual_layer_compositionId_fkey\"\nFOREIGN KEY (\"compositionId\")\nREFERENCES \"public\".\"visual_composition\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"visual_layer_compositionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "visual_layer_compositionId_fkey",
+          "public",
+          "\"public\".\"visual_layer\""
+        ]
+      }
+    ]
+  }
+]

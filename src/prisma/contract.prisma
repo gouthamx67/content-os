@@ -152,6 +152,8 @@ model Project {
 
   captureSessions CaptureSession[]
 
+  visualCompositions VisualComposition[]
+
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@map("project")
@@ -1553,4 +1555,147 @@ model CaptureTake {
   @@index([projectId, shotId], map: "capture_take_project_shot_idx")
   @@index([sessionId, status], map: "capture_take_session_status_idx")
   @@map("capture_take")
+}
+
+enum VisualCompositionStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  READY = "READY"
+  ARCHIVED = "ARCHIVED"
+}
+
+enum VisualLayerType {
+  @@type("pg/text@1")
+
+  MEDIA = "MEDIA"
+  TEXT = "TEXT"
+  SHAPE = "SHAPE"
+  GROUP = "GROUP"
+}
+
+enum VisualFitMode {
+  @@type("pg/text@1")
+
+  CONTAIN = "CONTAIN"
+  COVER = "COVER"
+  STRETCH = "STRETCH"
+}
+
+enum VisualEffectType {
+  @@type("pg/text@1")
+
+  BLUR = "BLUR"
+  BRIGHTNESS = "BRIGHTNESS"
+  CONTRAST = "CONTRAST"
+  SATURATION = "SATURATION"
+  GRAYSCALE = "GRAYSCALE"
+}
+
+enum MotionProperty {
+  @@type("pg/text@1")
+
+  X = "X"
+  Y = "Y"
+  SCALE = "SCALE"
+  ROTATION = "ROTATION"
+  OPACITY = "OPACITY"
+}
+
+enum MotionEasing {
+  @@type("pg/text@1")
+
+  LINEAR = "LINEAR"
+  EASE_IN = "EASE_IN"
+  EASE_OUT = "EASE_OUT"
+  EASE_IN_OUT = "EASE_IN_OUT"
+}
+
+model VisualComposition {
+  id          String                 @id @default(cuid(2))
+  projectId   String
+  shotId      String?
+  name        String
+  width       Int
+  height      Int
+  frameRate   Float
+  durationMs  Int
+  status      VisualCompositionStatus @default(DRAFT)
+  createdById String
+  createdAt   TimestamptzString      @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project     Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  layers      VisualLayer[]
+
+  @@index([projectId], map: "visual_composition_project_idx")
+  @@index([projectId, createdAt], map: "visual_composition_project_created_idx")
+  @@index([projectId, shotId], map: "visual_composition_project_shot_idx")
+  @@index([projectId, status], map: "visual_composition_project_status_idx")
+  @@map("visual_composition")
+}
+
+model VisualLayer {
+  id            String           @id @default(cuid(2))
+  compositionId String
+  name          String
+  type          VisualLayerType
+  assetRef      String?
+  textContent   String?
+  x             Float            @default(0)
+  y             Float            @default(0)
+  width         Float
+  height        Float
+  rotation      Float            @default(0)
+  opacity       Float            @default(1)
+  fit           VisualFitMode    @default(CONTAIN)
+  cropX         Float            @default(0)
+  cropY         Float            @default(0)
+  cropWidth     Float?
+  cropHeight    Float?
+  zIndex        Int              @default(0)
+  visible       Boolean          @default(true)
+  createdAt     TimestamptzString @default(now())
+  updatedAt     temporal.updatedAtString()
+
+  composition   VisualComposition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  keyframes     MotionKeyframe[]
+  effects       VisualEffect[]
+
+  @@index([compositionId], map: "visual_layer_composition_idx")
+  @@index([compositionId, zIndex], map: "visual_layer_composition_z_idx")
+  @@map("visual_layer")
+}
+
+model MotionKeyframe {
+  id        String       @id @default(cuid(2))
+  layerId   String
+  property  MotionProperty
+  timeMs    Int
+  fromValue Float
+  toValue   Float
+  easing    MotionEasing  @default(LINEAR)
+  createdAt TimestamptzString @default(now())
+
+  layer     VisualLayer  @relation(fields: [layerId], references: [id], onDelete: Cascade)
+
+  @@unique([layerId, property, timeMs], map: "motion_keyframe_layer_property_time_key")
+  @@index([layerId, timeMs], map: "motion_keyframe_layer_time_idx")
+  @@map("motion_keyframe")
+}
+
+model VisualEffect {
+  id        String           @id @default(cuid(2))
+  layerId   String
+  type      VisualEffectType
+  amount    Float
+  enabled   Boolean          @default(true)
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  layer     VisualLayer      @relation(fields: [layerId], references: [id], onDelete: Cascade)
+
+  @@index([layerId], map: "visual_effect_layer_idx")
+  @@index([layerId, type], map: "visual_effect_layer_type_idx")
+  @@map("visual_effect")
 }
