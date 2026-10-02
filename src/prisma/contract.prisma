@@ -150,6 +150,8 @@ model Project {
   creativeDirections          CreativeDirection[]
   storyboards                 Storyboard[]
 
+  captureSessions CaptureSession[]
+
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@map("project")
@@ -1471,4 +1473,84 @@ model ContentRecommendation {
   @@index([subjectType, subjectId], map: "content_recommendation_subject_idx")
   @@unique([projectId, key], map: "content_recommendation_project_key_key")
   @@map("content_recommendation")
+}
+
+enum CaptureSessionStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  ACTIVE = "ACTIVE"
+  REVIEW = "REVIEW"
+  COMPLETED = "COMPLETED"
+  CANCELLED = "CANCELLED"
+}
+
+enum CaptureMode {
+  @@type("pg/text@1")
+
+  CAMERA = "CAMERA"
+  MICROPHONE = "MICROPHONE"
+  SCREEN = "SCREEN"
+  FILE = "FILE"
+}
+
+enum CaptureTakeStatus {
+  @@type("pg/text@1")
+
+  READY = "READY"
+  ACCEPTED = "ACCEPTED"
+  REJECTED = "REJECTED"
+  DELETED = "DELETED"
+}
+
+model CaptureSession {
+  id             String               @id @default(cuid(2))
+  projectId      String
+  createdById    String
+  storyboardId   String?
+  status         CaptureSessionStatus @default(DRAFT)
+  createdAt      TimestamptzString    @default(now())
+  updatedAt      temporal.updatedAtString()
+  startedAt      TimestamptzString?
+  completedAt    TimestamptzString?
+
+  project        Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  takes          CaptureTake[]
+
+  @@index([projectId, createdAt], map: "capture_session_project_created_idx")
+  @@index([projectId, status], map: "capture_session_project_status_idx")
+  @@map("capture_session")
+}
+
+model CaptureTake {
+  id              String            @id @default(cuid(2))
+  sessionId       String
+  projectId       String
+  shotId          String?
+  mode            CaptureMode
+  status          CaptureTakeStatus @default(READY)
+
+  storageKey      String
+  originalName    String?
+  mimeType        String
+  byteSize        Int
+  checksumSha256  String
+
+  width           Int?
+  height          Int?
+  durationMs      Int?
+  frameRate       Float?
+
+  metadata        String?
+  createdAt       TimestamptzString @default(now())
+  acceptedAt      TimestamptzString?
+  rejectedAt      TimestamptzString?
+  deletedAt       TimestamptzString?
+
+  session         CaptureSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sessionId, createdAt], map: "capture_take_project_session_created_idx")
+  @@index([projectId, shotId], map: "capture_take_project_shot_idx")
+  @@index([sessionId, status], map: "capture_take_session_status_idx")
+  @@map("capture_take")
 }

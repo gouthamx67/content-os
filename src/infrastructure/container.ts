@@ -17,6 +17,8 @@ import { PostgresContentIntentRepository } from "./repositories/postgres-content
 import { PostgresCreativeDirectionRepository } from "./repositories/postgres-creative-direction-repository";
 import { PostgresStoryboardRepository } from "./repositories/postgres-storyboard-repository";
 import { PostgresContentRecommendationRepository } from "./repositories/postgres-content-recommendation-repository";
+import { PostgresCaptureRepository } from "./repositories/postgres-capture-repository";
+import { CaptureService } from "../modules/capture-engine/capture-service";
 import { postgresDatabase } from "./repositories/postgres-database";
 import { AuthService } from "../core/services/auth-service";
 import { WorkspaceService } from "../core/services/workspace-service";
@@ -83,6 +85,7 @@ const repositories = {
   creativeDirections: new PostgresCreativeDirectionRepository(orm),
   storyboards: new PostgresStoryboardRepository(orm),
   recommendations: new PostgresContentRecommendationRepository(orm),
+  captures: new PostgresCaptureRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -363,6 +366,20 @@ const contentRecommendationService = new ContentRecommendationService({
   contentIntentService,
 });
 
+/**
+ * CP13 capture engine.
+ *
+ * Membership is delegated to the CP04 project guard rather than reimplemented:
+ * the capture engine has no opinion about who may open a project, and a second
+ * authorization path would be a second thing to get wrong.
+ */
+const captureService = new CaptureService({
+  repository: repositories.captures,
+  authorizeProject: async (projectId, userId) => {
+    await projectService.getAuthorized(projectId, userId);
+  },
+});
+
 export const container = {
   repositories,
   providers,
@@ -381,5 +398,6 @@ export const container = {
     creativeDirections: creativeDirectorService,
     storyboards: storyboardService,
     recommendations: contentRecommendationService,
+    capture: captureService,
   },
 };

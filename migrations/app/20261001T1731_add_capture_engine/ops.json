@@ -1,0 +1,437 @@
+[
+  {
+    "id": "table.capture_session",
+    "label": "Create table \"capture_session\"",
+    "summary": "Creates table \"capture_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "capture_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"capture_session\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_session\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"capture_session\"",
+        "sql": "CREATE TABLE \"public\".\"capture_session\" (\n  \"completedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"storyboardId\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"capture_session_status_check_5c483c16\" CHECK (\"status\" IN ('DRAFT', 'ACTIVE', 'REVIEW', 'COMPLETED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"capture_session\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_session\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.capture_take",
+    "label": "Create table \"capture_take\"",
+    "summary": "Creates table \"capture_take\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "capture_take"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"capture_take\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"capture_take\"",
+        "sql": "CREATE TABLE \"public\".\"capture_take\" (\n  \"acceptedAt\" timestamptz,\n  \"byteSize\" int4 NOT NULL,\n  \"checksumSha256\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"deletedAt\" timestamptz,\n  \"durationMs\" int4,\n  \"frameRate\" float8,\n  \"height\" int4,\n  \"id\" text NOT NULL,\n  \"metadata\" text,\n  \"mimeType\" text NOT NULL,\n  \"mode\" text NOT NULL,\n  \"originalName\" text,\n  \"projectId\" text NOT NULL,\n  \"rejectedAt\" timestamptz,\n  \"sessionId\" text NOT NULL,\n  \"shotId\" text,\n  \"status\" text DEFAULT 'READY' NOT NULL,\n  \"storageKey\" text NOT NULL,\n  \"width\" int4,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"capture_take_mode_check_529dc74a\" CHECK (\"mode\" IN ('CAMERA', 'MICROPHONE', 'SCREEN', 'FILE')),\n  CONSTRAINT \"capture_take_status_check_4b2e0566\" CHECK (\"status\" IN ('READY', 'ACCEPTED', 'REJECTED', 'DELETED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"capture_take\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.capture_session.capture_session_projectId_idx_a96e4d92",
+    "label": "Create index \"capture_session_projectId_idx_a96e4d92\" on \"capture_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "capture_session_projectId_idx_a96e4d92",
+        "table": "capture_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"capture_session_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_session_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"capture_session_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"capture_session_projectId_idx_a96e4d92\" ON \"public\".\"capture_session\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"capture_session_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_session_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.capture_session.capture_session_project_created_idx",
+    "label": "Create index \"capture_session_project_created_idx\" on \"capture_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "capture_session_project_created_idx",
+        "table": "capture_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"capture_session_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_session_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"capture_session_project_created_idx\"",
+        "sql": "CREATE INDEX \"capture_session_project_created_idx\" ON \"public\".\"capture_session\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"capture_session_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_session_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.capture_session.capture_session_project_status_idx",
+    "label": "Create index \"capture_session_project_status_idx\" on \"capture_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "capture_session_project_status_idx",
+        "table": "capture_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"capture_session_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_session_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"capture_session_project_status_idx\"",
+        "sql": "CREATE INDEX \"capture_session_project_status_idx\" ON \"public\".\"capture_session\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"capture_session_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_session_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.capture_take.capture_take_project_session_created_idx",
+    "label": "Create index \"capture_take_project_session_created_idx\" on \"capture_take\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "capture_take_project_session_created_idx",
+        "table": "capture_take"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"capture_take_project_session_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take_project_session_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"capture_take_project_session_created_idx\"",
+        "sql": "CREATE INDEX \"capture_take_project_session_created_idx\" ON \"public\".\"capture_take\" (\"projectId\", \"sessionId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"capture_take_project_session_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take_project_session_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.capture_take.capture_take_project_shot_idx",
+    "label": "Create index \"capture_take_project_shot_idx\" on \"capture_take\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "capture_take_project_shot_idx",
+        "table": "capture_take"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"capture_take_project_shot_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take_project_shot_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"capture_take_project_shot_idx\"",
+        "sql": "CREATE INDEX \"capture_take_project_shot_idx\" ON \"public\".\"capture_take\" (\"projectId\", \"shotId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"capture_take_project_shot_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take_project_shot_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.capture_take.capture_take_sessionId_idx_29f415d4",
+    "label": "Create index \"capture_take_sessionId_idx_29f415d4\" on \"capture_take\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "capture_take_sessionId_idx_29f415d4",
+        "table": "capture_take"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"capture_take_sessionId_idx_29f415d4\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take_sessionId_idx_29f415d4\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"capture_take_sessionId_idx_29f415d4\"",
+        "sql": "CREATE INDEX \"capture_take_sessionId_idx_29f415d4\" ON \"public\".\"capture_take\" (\"sessionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"capture_take_sessionId_idx_29f415d4\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take_sessionId_idx_29f415d4\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.capture_take.capture_take_session_status_idx",
+    "label": "Create index \"capture_take_session_status_idx\" on \"capture_take\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "capture_take_session_status_idx",
+        "table": "capture_take"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"capture_take_session_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take_session_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"capture_take_session_status_idx\"",
+        "sql": "CREATE INDEX \"capture_take_session_status_idx\" ON \"public\".\"capture_take\" (\"sessionId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"capture_take_session_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"capture_take_session_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.capture_session.capture_session_projectId_fkey",
+    "label": "Add foreign key \"capture_session_projectId_fkey\" on \"capture_session\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "capture_session_projectId_fkey",
+        "table": "capture_session"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"capture_session_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "capture_session_projectId_fkey",
+          "public",
+          "\"public\".\"capture_session\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"capture_session_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"capture_session\"\nADD CONSTRAINT \"capture_session_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"capture_session_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "capture_session_projectId_fkey",
+          "public",
+          "\"public\".\"capture_session\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.capture_take.capture_take_sessionId_fkey",
+    "label": "Add foreign key \"capture_take_sessionId_fkey\" on \"capture_take\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "capture_take_sessionId_fkey",
+        "table": "capture_take"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"capture_take_sessionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "capture_take_sessionId_fkey",
+          "public",
+          "\"public\".\"capture_take\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"capture_take_sessionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"capture_take\"\nADD CONSTRAINT \"capture_take_sessionId_fkey\"\nFOREIGN KEY (\"sessionId\")\nREFERENCES \"public\".\"capture_session\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"capture_take_sessionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "capture_take_sessionId_fkey",
+          "public",
+          "\"public\".\"capture_take\""
+        ]
+      }
+    ]
+  }
+]

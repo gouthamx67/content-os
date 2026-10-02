@@ -56,6 +56,14 @@
       "model": "BrowserStep",
       "namespace": "public"
     },
+    "capture_session": {
+      "model": "CaptureSession",
+      "namespace": "public"
+    },
+    "capture_take": {
+      "model": "CaptureTake",
+      "namespace": "public"
+    },
     "content_intent": {
       "model": "ContentIntent",
       "namespace": "public"
@@ -602,6 +610,73 @@
               {
                 "name": "CONTROLLED_LOCAL",
                 "value": "CONTROLLED_LOCAL"
+              }
+            ]
+          },
+          "CaptureMode": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "CAMERA",
+                "value": "CAMERA"
+              },
+              {
+                "name": "MICROPHONE",
+                "value": "MICROPHONE"
+              },
+              {
+                "name": "SCREEN",
+                "value": "SCREEN"
+              },
+              {
+                "name": "FILE",
+                "value": "FILE"
+              }
+            ]
+          },
+          "CaptureSessionStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "DRAFT",
+                "value": "DRAFT"
+              },
+              {
+                "name": "ACTIVE",
+                "value": "ACTIVE"
+              },
+              {
+                "name": "REVIEW",
+                "value": "REVIEW"
+              },
+              {
+                "name": "COMPLETED",
+                "value": "COMPLETED"
+              },
+              {
+                "name": "CANCELLED",
+                "value": "CANCELLED"
+              }
+            ]
+          },
+          "CaptureTakeStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "READY",
+                "value": "READY"
+              },
+              {
+                "name": "ACCEPTED",
+                "value": "ACCEPTED"
+              },
+              {
+                "name": "REJECTED",
+                "value": "REJECTED"
+              },
+              {
+                "name": "DELETED",
+                "value": "DELETED"
               }
             ]
           },
@@ -3916,6 +3991,385 @@
               },
               "namespaceId": "public",
               "table": "browser_step"
+            }
+          },
+          "CaptureSession": {
+            "fields": {
+              "completedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "CaptureSessionStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "storyboardId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "takes": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "sessionId"
+                  ]
+                },
+                "to": {
+                  "model": "CaptureTake",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "completedAt": {
+                  "column": "completedAt"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdById": {
+                  "column": "createdById"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "startedAt": {
+                  "column": "startedAt"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "storyboardId": {
+                  "column": "storyboardId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "capture_session"
+            }
+          },
+          "CaptureTake": {
+            "fields": {
+              "acceptedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "byteSize": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "checksumSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "deletedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "durationMs": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "frameRate": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "height": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "metadata": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mimeType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mode": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "CaptureMode",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "originalName": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "rejectedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "sessionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "shotId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "CaptureTakeStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "storageKey": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "width": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "session": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "sessionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "CaptureSession",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "acceptedAt": {
+                  "column": "acceptedAt"
+                },
+                "byteSize": {
+                  "column": "byteSize"
+                },
+                "checksumSha256": {
+                  "column": "checksumSha256"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "deletedAt": {
+                  "column": "deletedAt"
+                },
+                "durationMs": {
+                  "column": "durationMs"
+                },
+                "frameRate": {
+                  "column": "frameRate"
+                },
+                "height": {
+                  "column": "height"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "metadata": {
+                  "column": "metadata"
+                },
+                "mimeType": {
+                  "column": "mimeType"
+                },
+                "mode": {
+                  "column": "mode"
+                },
+                "originalName": {
+                  "column": "originalName"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "rejectedAt": {
+                  "column": "rejectedAt"
+                },
+                "sessionId": {
+                  "column": "sessionId"
+                },
+                "shotId": {
+                  "column": "shotId"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "storageKey": {
+                  "column": "storageKey"
+                },
+                "width": {
+                  "column": "width"
+                }
+              },
+              "namespaceId": "public",
+              "table": "capture_take"
             }
           },
           "ContentIntent": {
@@ -7825,6 +8279,21 @@
                   "namespace": "public"
                 }
               },
+              "captureSessions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "CaptureSession",
+                  "namespace": "public"
+                }
+              },
               "contentIntents": {
                 "cardinality": "1:N",
                 "on": {
@@ -11528,6 +11997,323 @@
                   "name": "browser_step_order"
                 }
               ]
+            },
+            "capture_session": {
+              "checks": [
+                {
+                  "expression": "\"status\" IN ('DRAFT', 'ACTIVE', 'REVIEW', 'COMPLETED', 'CANCELLED')",
+                  "name": "capture_session_status_check_5c483c16",
+                  "prefix": "capture_session_status_check"
+                }
+              ],
+              "columns": {
+                "completedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "DRAFT"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "CaptureSessionStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "storyboardId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "capture_session"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "capture_session_projectId_idx_a96e4d92",
+                  "prefix": "capture_session_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "capture_session_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status"
+                  ],
+                  "name": "capture_session_project_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "capture_take": {
+              "checks": [
+                {
+                  "expression": "\"mode\" IN ('CAMERA', 'MICROPHONE', 'SCREEN', 'FILE')",
+                  "name": "capture_take_mode_check_529dc74a",
+                  "prefix": "capture_take_mode_check"
+                },
+                {
+                  "expression": "\"status\" IN ('READY', 'ACCEPTED', 'REJECTED', 'DELETED')",
+                  "name": "capture_take_status_check_4b2e0566",
+                  "prefix": "capture_take_status_check"
+                }
+              ],
+              "columns": {
+                "acceptedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "byteSize": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "checksumSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "deletedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "durationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "frameRate": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": true
+                },
+                "height": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "metadata": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "mimeType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "mode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "CaptureMode",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "originalName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "rejectedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "sessionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "shotId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "READY"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "CaptureTakeStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "storageKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "width": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "sessionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "capture_take"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "capture_session"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId",
+                    "sessionId",
+                    "createdAt"
+                  ],
+                  "name": "capture_take_project_session_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "shotId"
+                  ],
+                  "name": "capture_take_project_shot_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sessionId"
+                  ],
+                  "name": "capture_take_sessionId_idx_29f415d4",
+                  "prefix": "capture_take_sessionId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sessionId",
+                    "status"
+                  ],
+                  "name": "capture_take_session_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             },
             "content_intent": {
               "checks": [
@@ -16153,6 +16939,34 @@
                 "CONTROLLED_LOCAL"
               ]
             },
+            "CaptureMode": {
+              "kind": "valueSet",
+              "values": [
+                "CAMERA",
+                "MICROPHONE",
+                "SCREEN",
+                "FILE"
+              ]
+            },
+            "CaptureSessionStatus": {
+              "kind": "valueSet",
+              "values": [
+                "DRAFT",
+                "ACTIVE",
+                "REVIEW",
+                "COMPLETED",
+                "CANCELLED"
+              ]
+            },
+            "CaptureTakeStatus": {
+              "kind": "valueSet",
+              "values": [
+                "READY",
+                "ACCEPTED",
+                "REJECTED",
+                "DELETED"
+              ]
+            },
             "ClaimType": {
               "kind": "valueSet",
               "values": [
@@ -16446,10 +17260,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "f5537d84fb0917df614370dde52172e76a7de4e5a46372d43da01593b3d0b0da"
+    "storageHash": "17230d27cc3d7a50b70c13fe442443af177ae4fb207fc6ebc4ebad35bc992438"
   },
   "execution": {
-    "executionHash": "43812959c06b63ae07113d16d0d6fab5d2ae4cc426c5a5741de32e666b5e2432",
+    "executionHash": "0c8bf18d2b6e27248df18e0eadd7787baece922e7cf1ca5a27d65f442671703c",
     "mutations": {
       "defaults": [
         {
@@ -16758,6 +17572,43 @@
             "column": "id",
             "namespace": "public",
             "table": "browser_step"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "capture_session"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "capture_session"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "capture_take"
           }
         },
         {
