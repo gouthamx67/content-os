@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "render:worker": "tsx src/scripts/render-worker.ts",
+    "audio:worker": "tsx src/scripts/audio-worker.ts",
     "postinstall": "prisma skills sync || exit 0",
     "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
@@ -37,6 +39,7 @@
     "playwright-core": "^1.56.0",
     "prisma": "^8.0.0-rc.15",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^2.1.9",
     "yazl": "^3.3.1"

@@ -33,3 +33,13 @@ export const captureService = container.services.capture;
 export const visualCompositionService = container.services.visualCompositions;
 
 export const visualLayerService = container.services.visualLayers;
+
+export const renderJobService = container.services.renders;
+
+export const audioCompositionService = container.services.audio.service;
+
+export const audioRenderJobService = container.services.audio.render;
+
+export const audioService = container.services.audio;
+
+export const audioSourceResolver = container.services.audio.sources;

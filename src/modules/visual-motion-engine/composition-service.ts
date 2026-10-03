@@ -11,7 +11,9 @@ import { brandVisualDefaults, type BrandVisualDefaults } from "./integrations/br
 import { evaluateScene } from "./motion/evaluate-scene";
 import type { ResolvedFrame } from "./motion/resolve-frame";
 import {
+  buildRendererContract,
   buildRendererScene,
+  type RendererContract,
   type RendererScene,
 } from "./export/renderer-contract";
 import { buildSceneGraph, type SceneGraph } from "./serialization/scene-graph";
@@ -216,6 +218,15 @@ export class VisualCompositionService {
   }): Promise<RendererScene> {
     const composition = await this.getComposition(args);
     return buildRendererScene(composition, args.timeMs);
+  }
+
+  async rendererContract(args: {
+    projectId: string;
+    compositionId: string;
+    userId: string;
+  }): Promise<RendererContract> {
+    const composition = await this.getComposition(args);
+    return buildRendererContract(composition);
   }
 
   async visualDefaults(args: {

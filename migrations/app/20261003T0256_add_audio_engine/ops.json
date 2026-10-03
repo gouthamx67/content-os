@@ -1,0 +1,1202 @@
+[
+  {
+    "id": "table.audio_artifact",
+    "label": "Create table \"audio_artifact\"",
+    "summary": "Creates table \"audio_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "audio_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"audio_artifact\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"audio_artifact\"",
+        "sql": "CREATE TABLE \"public\".\"audio_artifact\" (\n  \"audioRenderJobId\" text NOT NULL,\n  \"byteSize\" int4 NOT NULL,\n  \"checksumSha256\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"mimeType\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"storageKey\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"audio_artifact\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_artifact\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.audio_automation_point",
+    "label": "Create table \"audio_automation_point\"",
+    "summary": "Creates table \"audio_automation_point\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "audio_automation_point"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"audio_automation_point\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_automation_point\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"audio_automation_point\"",
+        "sql": "CREATE TABLE \"public\".\"audio_automation_point\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"easing\" text DEFAULT 'LINEAR' NOT NULL,\n  \"id\" text NOT NULL,\n  \"property\" text NOT NULL,\n  \"timeMs\" int4 NOT NULL,\n  \"trackId\" text NOT NULL,\n  \"value\" float8 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"audio_automation_point_easing_check_9364cc02\" CHECK (\"easing\" IN ('LINEAR', 'EASE_IN', 'EASE_OUT', 'EASE_IN_OUT')),\n  CONSTRAINT \"audio_automation_point_property_check_644a0ba3\" CHECK (\"property\" IN ('VOLUME_DB'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"audio_automation_point\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_automation_point\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.audio_composition",
+    "label": "Create table \"audio_composition\"",
+    "summary": "Creates table \"audio_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "audio_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"audio_composition\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_composition\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"audio_composition\"",
+        "sql": "CREATE TABLE \"public\".\"audio_composition\" (\n  \"channels\" int4 DEFAULT 2 NOT NULL,\n  \"compositionId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"durationMs\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sampleRate\" int4 DEFAULT 48000 NOT NULL,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"audio_composition_status_check_1d0cbbdd\" CHECK (\"status\" IN ('DRAFT', 'READY', 'ARCHIVED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"audio_composition\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_composition\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.audio_render_job",
+    "label": "Create table \"audio_render_job\"",
+    "summary": "Creates table \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"audio_render_job\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"audio_render_job\"",
+        "sql": "CREATE TABLE \"public\".\"audio_render_job\" (\n  \"audioCompositionId\" text NOT NULL,\n  \"audioGraph\" text NOT NULL,\n  \"audioSha256\" text NOT NULL,\n  \"channels\" int4 NOT NULL,\n  \"contractVersion\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"durationMs\" int4 NOT NULL,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"ffmpegVersion\" text,\n  \"finishedAt\" timestamptz,\n  \"id\" text NOT NULL,\n  \"outputFormat\" text NOT NULL,\n  \"progressPct\" int4 DEFAULT 0 NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"requestedById\" text NOT NULL,\n  \"sampleRate\" int4 NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'QUEUED' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"videoRenderJobId\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"audio_render_job_outputFormat_check_60ea69e0\" CHECK (\"outputFormat\" IN ('WAV', 'MP4')),\n  CONSTRAINT \"audio_render_job_status_check_ba978c1e\" CHECK (\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"audio_render_job\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.audio_track",
+    "label": "Create table \"audio_track\"",
+    "summary": "Creates table \"audio_track\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "audio_track"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"audio_track\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_track\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"audio_track\"",
+        "sql": "CREATE TABLE \"public\".\"audio_track\" (\n  \"audioCompositionId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"duckVoiceoverDb\" float8,\n  \"durationMs\" int4 NOT NULL,\n  \"fadeInMs\" int4 DEFAULT 0 NOT NULL,\n  \"fadeOutMs\" int4 DEFAULT 0 NOT NULL,\n  \"gainDb\" float8 DEFAULT 0 NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"mute\" bool DEFAULT false NOT NULL,\n  \"name\" text NOT NULL,\n  \"pan\" float8 DEFAULT 0 NOT NULL,\n  \"solo\" bool DEFAULT false NOT NULL,\n  \"sourceOffsetMs\" int4 DEFAULT 0 NOT NULL,\n  \"sourceRef\" text NOT NULL,\n  \"startMs\" int4 DEFAULT 0 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"audio_track_kind_check_796d0837\" CHECK (\"kind\" IN ('VOICEOVER', 'MUSIC', 'SFX', 'AMBIENCE'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"audio_track\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_track\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.muxed_video_artifact",
+    "label": "Create table \"muxed_video_artifact\"",
+    "summary": "Creates table \"muxed_video_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "muxed_video_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"muxed_video_artifact\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"muxed_video_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"muxed_video_artifact\"",
+        "sql": "CREATE TABLE \"public\".\"muxed_video_artifact\" (\n  \"audioRenderJobId\" text NOT NULL,\n  \"byteSize\" int4 NOT NULL,\n  \"checksumSha256\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"mimeType\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"storageKey\" text NOT NULL,\n  \"videoRenderJobId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"muxed_video_artifact\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"muxed_video_artifact\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.audio_artifact.audio_artifact_audioRenderJobId_key",
+    "label": "Add unique constraint on \"audio_artifact\" (audioRenderJobId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "audio_artifact_audioRenderJobId_key",
+        "table": "audio_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"audio_artifact_audioRenderJobId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_artifact_audioRenderJobId_key",
+          "public",
+          "\"public\".\"audio_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"audio_artifact_audioRenderJobId_key\"",
+        "sql": "ALTER TABLE \"public\".\"audio_artifact\" ADD CONSTRAINT \"audio_artifact_audioRenderJobId_key\" UNIQUE (\"audioRenderJobId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"audio_artifact_audioRenderJobId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_artifact_audioRenderJobId_key",
+          "public",
+          "\"public\".\"audio_artifact\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.audio_automation_point.audio_automation_track_property_time_key",
+    "label": "Add unique constraint on \"audio_automation_point\" (trackId, property, timeMs)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "audio_automation_track_property_time_key",
+        "table": "audio_automation_point"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"audio_automation_track_property_time_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_automation_track_property_time_key",
+          "public",
+          "\"public\".\"audio_automation_point\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"audio_automation_track_property_time_key\"",
+        "sql": "ALTER TABLE \"public\".\"audio_automation_point\" ADD CONSTRAINT \"audio_automation_track_property_time_key\" UNIQUE (\"trackId\", \"property\", \"timeMs\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"audio_automation_track_property_time_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_automation_track_property_time_key",
+          "public",
+          "\"public\".\"audio_automation_point\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.audio_composition.audio_composition_compositionId_key",
+    "label": "Add unique constraint on \"audio_composition\" (compositionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "audio_composition_compositionId_key",
+        "table": "audio_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"audio_composition_compositionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_composition_compositionId_key",
+          "public",
+          "\"public\".\"audio_composition\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"audio_composition_compositionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"audio_composition\" ADD CONSTRAINT \"audio_composition_compositionId_key\" UNIQUE (\"compositionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"audio_composition_compositionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_composition_compositionId_key",
+          "public",
+          "\"public\".\"audio_composition\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.muxed_video_artifact.muxed_video_artifact_audioRenderJobId_key",
+    "label": "Add unique constraint on \"muxed_video_artifact\" (audioRenderJobId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "muxed_video_artifact_audioRenderJobId_key",
+        "table": "muxed_video_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"muxed_video_artifact_audioRenderJobId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "muxed_video_artifact_audioRenderJobId_key",
+          "public",
+          "\"public\".\"muxed_video_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"muxed_video_artifact_audioRenderJobId_key\"",
+        "sql": "ALTER TABLE \"public\".\"muxed_video_artifact\" ADD CONSTRAINT \"muxed_video_artifact_audioRenderJobId_key\" UNIQUE (\"audioRenderJobId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"muxed_video_artifact_audioRenderJobId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "muxed_video_artifact_audioRenderJobId_key",
+          "public",
+          "\"public\".\"muxed_video_artifact\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_artifact.audio_artifact_project_created_idx",
+    "label": "Create index \"audio_artifact_project_created_idx\" on \"audio_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_artifact_project_created_idx",
+        "table": "audio_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_artifact_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_artifact_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_artifact_project_created_idx\"",
+        "sql": "CREATE INDEX \"audio_artifact_project_created_idx\" ON \"public\".\"audio_artifact\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_artifact_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_artifact_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_automation_point.audio_automation_point_trackId_idx_8b560769",
+    "label": "Create index \"audio_automation_point_trackId_idx_8b560769\" on \"audio_automation_point\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_automation_point_trackId_idx_8b560769",
+        "table": "audio_automation_point"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_automation_point_trackId_idx_8b560769\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_automation_point_trackId_idx_8b560769\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_automation_point_trackId_idx_8b560769\"",
+        "sql": "CREATE INDEX \"audio_automation_point_trackId_idx_8b560769\" ON \"public\".\"audio_automation_point\" (\"trackId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_automation_point_trackId_idx_8b560769\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_automation_point_trackId_idx_8b560769\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_automation_point.audio_automation_track_property_time_idx",
+    "label": "Create index \"audio_automation_track_property_time_idx\" on \"audio_automation_point\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_automation_track_property_time_idx",
+        "table": "audio_automation_point"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_automation_track_property_time_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_automation_track_property_time_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_automation_track_property_time_idx\"",
+        "sql": "CREATE INDEX \"audio_automation_track_property_time_idx\" ON \"public\".\"audio_automation_point\" (\"trackId\", \"property\", \"timeMs\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_automation_track_property_time_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_automation_track_property_time_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_composition.audio_composition_project_created_idx",
+    "label": "Create index \"audio_composition_project_created_idx\" on \"audio_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_composition_project_created_idx",
+        "table": "audio_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_composition_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_composition_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_composition_project_created_idx\"",
+        "sql": "CREATE INDEX \"audio_composition_project_created_idx\" ON \"public\".\"audio_composition\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_composition_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_composition_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_composition.audio_composition_project_status_idx",
+    "label": "Create index \"audio_composition_project_status_idx\" on \"audio_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_composition_project_status_idx",
+        "table": "audio_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_composition_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_composition_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_composition_project_status_idx\"",
+        "sql": "CREATE INDEX \"audio_composition_project_status_idx\" ON \"public\".\"audio_composition\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_composition_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_composition_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_render_job.audio_render_job_audioCompositionId_idx_6598b581",
+    "label": "Create index \"audio_render_job_audioCompositionId_idx_6598b581\" on \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_render_job_audioCompositionId_idx_6598b581",
+        "table": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_render_job_audioCompositionId_idx_6598b581\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_audioCompositionId_idx_6598b581\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_render_job_audioCompositionId_idx_6598b581\"",
+        "sql": "CREATE INDEX \"audio_render_job_audioCompositionId_idx_6598b581\" ON \"public\".\"audio_render_job\" (\"audioCompositionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_render_job_audioCompositionId_idx_6598b581\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_audioCompositionId_idx_6598b581\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_render_job.audio_render_job_composition_created_idx",
+    "label": "Create index \"audio_render_job_composition_created_idx\" on \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_render_job_composition_created_idx",
+        "table": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_render_job_composition_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_composition_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_render_job_composition_created_idx\"",
+        "sql": "CREATE INDEX \"audio_render_job_composition_created_idx\" ON \"public\".\"audio_render_job\" (\"audioCompositionId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_render_job_composition_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_composition_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_render_job.audio_render_job_project_created_idx",
+    "label": "Create index \"audio_render_job_project_created_idx\" on \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_render_job_project_created_idx",
+        "table": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_render_job_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_render_job_project_created_idx\"",
+        "sql": "CREATE INDEX \"audio_render_job_project_created_idx\" ON \"public\".\"audio_render_job\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_render_job_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_render_job.audio_render_job_project_status_created_idx",
+    "label": "Create index \"audio_render_job_project_status_created_idx\" on \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_render_job_project_status_created_idx",
+        "table": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_render_job_project_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_project_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_render_job_project_status_created_idx\"",
+        "sql": "CREATE INDEX \"audio_render_job_project_status_created_idx\" ON \"public\".\"audio_render_job\" (\"projectId\", \"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_render_job_project_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_project_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_track.audio_track_audioCompositionId_idx_6598b581",
+    "label": "Create index \"audio_track_audioCompositionId_idx_6598b581\" on \"audio_track\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_track_audioCompositionId_idx_6598b581",
+        "table": "audio_track"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_track_audioCompositionId_idx_6598b581\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_track_audioCompositionId_idx_6598b581\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_track_audioCompositionId_idx_6598b581\"",
+        "sql": "CREATE INDEX \"audio_track_audioCompositionId_idx_6598b581\" ON \"public\".\"audio_track\" (\"audioCompositionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_track_audioCompositionId_idx_6598b581\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_track_audioCompositionId_idx_6598b581\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_track.audio_track_composition_kind_idx",
+    "label": "Create index \"audio_track_composition_kind_idx\" on \"audio_track\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_track_composition_kind_idx",
+        "table": "audio_track"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_track_composition_kind_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_track_composition_kind_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_track_composition_kind_idx\"",
+        "sql": "CREATE INDEX \"audio_track_composition_kind_idx\" ON \"public\".\"audio_track\" (\"audioCompositionId\", \"kind\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_track_composition_kind_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_track_composition_kind_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_track.audio_track_composition_start_idx",
+    "label": "Create index \"audio_track_composition_start_idx\" on \"audio_track\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_track_composition_start_idx",
+        "table": "audio_track"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_track_composition_start_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_track_composition_start_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_track_composition_start_idx\"",
+        "sql": "CREATE INDEX \"audio_track_composition_start_idx\" ON \"public\".\"audio_track\" (\"audioCompositionId\", \"startMs\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_track_composition_start_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_track_composition_start_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.muxed_video_artifact.muxed_video_artifact_project_created_idx",
+    "label": "Create index \"muxed_video_artifact_project_created_idx\" on \"muxed_video_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "muxed_video_artifact_project_created_idx",
+        "table": "muxed_video_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"muxed_video_artifact_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"muxed_video_artifact_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"muxed_video_artifact_project_created_idx\"",
+        "sql": "CREATE INDEX \"muxed_video_artifact_project_created_idx\" ON \"public\".\"muxed_video_artifact\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"muxed_video_artifact_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"muxed_video_artifact_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.muxed_video_artifact.muxed_video_artifact_project_video_idx",
+    "label": "Create index \"muxed_video_artifact_project_video_idx\" on \"muxed_video_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "muxed_video_artifact_project_video_idx",
+        "table": "muxed_video_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"muxed_video_artifact_project_video_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"muxed_video_artifact_project_video_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"muxed_video_artifact_project_video_idx\"",
+        "sql": "CREATE INDEX \"muxed_video_artifact_project_video_idx\" ON \"public\".\"muxed_video_artifact\" (\"projectId\", \"videoRenderJobId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"muxed_video_artifact_project_video_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"muxed_video_artifact_project_video_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.audio_artifact.audio_artifact_audioRenderJobId_fkey",
+    "label": "Add foreign key \"audio_artifact_audioRenderJobId_fkey\" on \"audio_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "audio_artifact_audioRenderJobId_fkey",
+        "table": "audio_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"audio_artifact_audioRenderJobId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_artifact_audioRenderJobId_fkey",
+          "public",
+          "\"public\".\"audio_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"audio_artifact_audioRenderJobId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"audio_artifact\"\nADD CONSTRAINT \"audio_artifact_audioRenderJobId_fkey\"\nFOREIGN KEY (\"audioRenderJobId\")\nREFERENCES \"public\".\"audio_render_job\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"audio_artifact_audioRenderJobId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_artifact_audioRenderJobId_fkey",
+          "public",
+          "\"public\".\"audio_artifact\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.audio_automation_point.audio_automation_point_trackId_fkey",
+    "label": "Add foreign key \"audio_automation_point_trackId_fkey\" on \"audio_automation_point\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "audio_automation_point_trackId_fkey",
+        "table": "audio_automation_point"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"audio_automation_point_trackId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_automation_point_trackId_fkey",
+          "public",
+          "\"public\".\"audio_automation_point\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"audio_automation_point_trackId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"audio_automation_point\"\nADD CONSTRAINT \"audio_automation_point_trackId_fkey\"\nFOREIGN KEY (\"trackId\")\nREFERENCES \"public\".\"audio_track\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"audio_automation_point_trackId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_automation_point_trackId_fkey",
+          "public",
+          "\"public\".\"audio_automation_point\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.audio_composition.audio_composition_compositionId_fkey",
+    "label": "Add foreign key \"audio_composition_compositionId_fkey\" on \"audio_composition\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "audio_composition_compositionId_fkey",
+        "table": "audio_composition"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"audio_composition_compositionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_composition_compositionId_fkey",
+          "public",
+          "\"public\".\"audio_composition\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"audio_composition_compositionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"audio_composition\"\nADD CONSTRAINT \"audio_composition_compositionId_fkey\"\nFOREIGN KEY (\"compositionId\")\nREFERENCES \"public\".\"visual_composition\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"audio_composition_compositionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_composition_compositionId_fkey",
+          "public",
+          "\"public\".\"audio_composition\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.audio_render_job.audio_render_job_audioCompositionId_fkey",
+    "label": "Add foreign key \"audio_render_job_audioCompositionId_fkey\" on \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "audio_render_job_audioCompositionId_fkey",
+        "table": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"audio_render_job_audioCompositionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_render_job_audioCompositionId_fkey",
+          "public",
+          "\"public\".\"audio_render_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"audio_render_job_audioCompositionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"audio_render_job\"\nADD CONSTRAINT \"audio_render_job_audioCompositionId_fkey\"\nFOREIGN KEY (\"audioCompositionId\")\nREFERENCES \"public\".\"audio_composition\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"audio_render_job_audioCompositionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_render_job_audioCompositionId_fkey",
+          "public",
+          "\"public\".\"audio_render_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.audio_track.audio_track_audioCompositionId_fkey",
+    "label": "Add foreign key \"audio_track_audioCompositionId_fkey\" on \"audio_track\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "audio_track_audioCompositionId_fkey",
+        "table": "audio_track"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"audio_track_audioCompositionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_track_audioCompositionId_fkey",
+          "public",
+          "\"public\".\"audio_track\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"audio_track_audioCompositionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"audio_track\"\nADD CONSTRAINT \"audio_track_audioCompositionId_fkey\"\nFOREIGN KEY (\"audioCompositionId\")\nREFERENCES \"public\".\"audio_composition\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"audio_track_audioCompositionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audio_track_audioCompositionId_fkey",
+          "public",
+          "\"public\".\"audio_track\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.muxed_video_artifact.muxed_video_artifact_audioRenderJobId_fkey",
+    "label": "Add foreign key \"muxed_video_artifact_audioRenderJobId_fkey\" on \"muxed_video_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "muxed_video_artifact_audioRenderJobId_fkey",
+        "table": "muxed_video_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"muxed_video_artifact_audioRenderJobId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "muxed_video_artifact_audioRenderJobId_fkey",
+          "public",
+          "\"public\".\"muxed_video_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"muxed_video_artifact_audioRenderJobId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"muxed_video_artifact\"\nADD CONSTRAINT \"muxed_video_artifact_audioRenderJobId_fkey\"\nFOREIGN KEY (\"audioRenderJobId\")\nREFERENCES \"public\".\"audio_render_job\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"muxed_video_artifact_audioRenderJobId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "muxed_video_artifact_audioRenderJobId_fkey",
+          "public",
+          "\"public\".\"muxed_video_artifact\""
+        ]
+      }
+    ]
+  }
+]

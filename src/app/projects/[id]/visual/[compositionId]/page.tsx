@@ -3,10 +3,12 @@ import { redirect, notFound } from "next/navigation";
 import { ArrowLeft, Layers } from "lucide-react";
 import { getCurrentUser } from "../../../../../infrastructure/auth/current-user";
 import {
+  audioService,
   projectService,
   visualCompositionService,
 } from "../../../../../infrastructure/services";
 import { HttpError } from "../../../../../lib/http";
+import { audioCompositionView } from "../../../../../lib/audio-http";
 import { AppShell } from "../../../../../components/layout/AppShell";
 import { buildSceneGraph } from "../../../../../modules/visual-motion-engine/serialization/scene-graph";
 import { VisualWorkspace } from "./VisualWorkspace";
@@ -60,6 +62,12 @@ export default async function VisualCompositionPage({
 
   const scene = buildSceneGraph(composition);
 
+  const audio = await audioService.ensure({
+    projectId,
+    compositionId,
+    userId: user.id,
+  });
+
   return (
     <AppShell>
       <div className="p-5 sm:p-8">
@@ -91,6 +99,7 @@ export default async function VisualCompositionPage({
           <VisualWorkspace
             projectId={projectId}
             initialComposition={scene}
+            initialAudioComposition={audioCompositionView(audio)}
             brandDefaultColor={defaults.backgroundColor}
           />
         </div>

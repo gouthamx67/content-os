@@ -1627,6 +1627,8 @@ model VisualComposition {
 
   project     Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
   layers      VisualLayer[]
+  renderJobs  RenderJob[]
+  audioComposition AudioComposition?
 
   @@index([projectId], map: "visual_composition_project_idx")
   @@index([projectId, createdAt], map: "visual_composition_project_created_idx")
@@ -1698,4 +1700,272 @@ model VisualEffect {
   @@index([layerId], map: "visual_effect_layer_idx")
   @@index([layerId, type], map: "visual_effect_layer_type_idx")
   @@map("visual_effect")
+}
+
+enum RenderJobStatus {
+  @@type("pg/text@1")
+
+  QUEUED = "QUEUED"
+  RUNNING = "RUNNING"
+  SUCCEEDED = "SUCCEEDED"
+  FAILED = "FAILED"
+  CANCEL_REQUESTED = "CANCEL_REQUESTED"
+  CANCELLED = "CANCELLED"
+}
+
+enum RenderOutputFormat {
+  @@type("pg/text@1")
+
+  MP4 = "MP4"
+}
+
+model RenderJob {
+  id              String             @id @default(cuid(2))
+  projectId       String
+  compositionId   String
+  requestedById   String
+
+  status          RenderJobStatus    @default(QUEUED)
+  outputFormat    RenderOutputFormat @default(MP4)
+
+  contractVersion Int
+  // The exact CP14 renderer-contract snapshot used for this render, serialised
+  // as JSON text. A render must never reread the mutable composition.
+  sceneGraph      String
+  sceneSha256     String
+
+  progressPct     Int                @default(0)
+
+  width           Int
+  height          Int
+  frameRate       Float
+  durationMs      Int
+
+  ffmpegVersion   String?
+  errorCode       String?
+  errorMessage    String?
+
+  createdAt       TimestamptzString  @default(now())
+  startedAt       TimestamptzString?
+  finishedAt      TimestamptzString?
+  updatedAt       temporal.updatedAtString()
+
+  composition     VisualComposition  @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  artifact        RenderArtifact?
+
+  @@index([projectId, createdAt], map: "render_job_project_created_idx")
+  @@index([projectId, status, createdAt], map: "render_job_project_status_created_idx")
+  @@index([compositionId, createdAt], map: "render_job_composition_created_idx")
+  @@map("render_job")
+}
+
+model RenderArtifact {
+  id             String             @id @default(cuid(2))
+  renderJobId    String             @unique
+  projectId      String
+
+  storageKey     String
+  mimeType       String
+  byteSize       Int
+  checksumSha256 String
+
+  createdAt      TimestamptzString  @default(now())
+
+  renderJob      RenderJob          @relation(fields: [renderJobId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt], map: "render_artifact_project_created_idx")
+  @@map("render_artifact")
+}
+
+// ---------------------------------------------------------------------------
+// CP16 — Audio Engine
+// ---------------------------------------------------------------------------
+
+enum AudioCompositionStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  READY = "READY"
+  ARCHIVED = "ARCHIVED"
+}
+
+enum AudioTrackKind {
+  @@type("pg/text@1")
+
+  VOICEOVER = "VOICEOVER"
+  MUSIC = "MUSIC"
+  SFX = "SFX"
+  AMBIENCE = "AMBIENCE"
+}
+
+enum AudioAutomationProperty {
+  @@type("pg/text@1")
+
+  VOLUME_DB = "VOLUME_DB"
+}
+
+enum AudioEasing {
+  @@type("pg/text@1")
+
+  LINEAR = "LINEAR"
+  EASE_IN = "EASE_IN"
+  EASE_OUT = "EASE_OUT"
+  EASE_IN_OUT = "EASE_IN_OUT"
+}
+
+enum AudioOutputFormat {
+  @@type("pg/text@1")
+
+  WAV = "WAV"
+  MP4 = "MP4"
+}
+
+/// The audio timeline for exactly one visual composition. The visual
+/// composition owns the duration: an audio track may not redefine the length of
+/// the finished piece.
+model AudioComposition {
+  id             String                 @id @default(cuid(2))
+  projectId      String
+  compositionId  String                 @unique
+  name           String
+  sampleRate     Int                    @default(48000)
+  channels       Int                    @default(2)
+  durationMs     Int
+  status         AudioCompositionStatus @default(DRAFT)
+  createdById    String
+  createdAt      TimestamptzString      @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  composition    VisualComposition      @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  tracks         AudioTrack[]
+  renderJobs     AudioRenderJob[]
+
+  @@index([projectId, createdAt], map: "audio_composition_project_created_idx")
+  @@index([projectId, status], map: "audio_composition_project_status_idx")
+  @@map("audio_composition")
+}
+
+model AudioTrack {
+  id                 String        @id @default(cuid(2))
+  audioCompositionId String
+  kind               AudioTrackKind
+  name               String
+
+  sourceRef          String
+  startMs            Int           @default(0)
+  sourceOffsetMs     Int           @default(0)
+  durationMs         Int
+
+  gainDb             Float         @default(0)
+  pan                Float         @default(0)
+  fadeInMs           Int           @default(0)
+  fadeOutMs          Int           @default(0)
+
+  mute               Boolean       @default(false)
+  solo               Boolean       @default(false)
+  duckVoiceoverDb    Float?
+
+  createdAt          TimestamptzString @default(now())
+  updatedAt          temporal.updatedAtString()
+
+  composition        AudioComposition @relation(fields: [audioCompositionId], references: [id], onDelete: Cascade)
+  automation         AudioAutomationPoint[]
+
+  @@index([audioCompositionId, startMs], map: "audio_track_composition_start_idx")
+  @@index([audioCompositionId, kind], map: "audio_track_composition_kind_idx")
+  @@map("audio_track")
+}
+
+model AudioAutomationPoint {
+  id        String                  @id @default(cuid(2))
+  trackId   String
+  property  AudioAutomationProperty
+  timeMs    Int
+  value     Float
+  easing    AudioEasing             @default(LINEAR)
+  createdAt TimestamptzString       @default(now())
+
+  track     AudioTrack              @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, property, timeMs], map: "audio_automation_track_property_time_key")
+  @@index([trackId, property, timeMs], map: "audio_automation_track_property_time_idx")
+  @@map("audio_automation_point")
+}
+
+model AudioRenderJob {
+  id                 String            @id @default(cuid(2))
+  projectId          String
+  audioCompositionId String
+  videoRenderJobId   String?
+  requestedById      String
+
+  status             RenderJobStatus   @default(QUEUED)
+  outputFormat       AudioOutputFormat
+
+  contractVersion    Int
+  // The exact AudioGraph snapshot used for this render, serialised as JSON text.
+  audioGraph         String
+  audioSha256        String
+
+  progressPct        Int               @default(0)
+
+  sampleRate         Int
+  channels           Int
+  durationMs         Int
+
+  ffmpegVersion      String?
+  errorCode          String?
+  errorMessage       String?
+
+  createdAt          TimestamptzString @default(now())
+  startedAt          TimestamptzString?
+  finishedAt         TimestamptzString?
+  updatedAt          temporal.updatedAtString()
+
+  audioComposition   AudioComposition  @relation(fields: [audioCompositionId], references: [id], onDelete: Cascade)
+  audioArtifact      AudioArtifact?
+  muxedArtifact      MuxedVideoArtifact?
+
+  @@index([projectId, createdAt], map: "audio_render_job_project_created_idx")
+  @@index([projectId, status, createdAt], map: "audio_render_job_project_status_created_idx")
+  @@index([audioCompositionId, createdAt], map: "audio_render_job_composition_created_idx")
+  @@map("audio_render_job")
+}
+
+model AudioArtifact {
+  id               String            @id @default(cuid(2))
+  audioRenderJobId String            @unique
+  projectId        String
+
+  storageKey       String
+  mimeType         String
+  byteSize         Int
+  checksumSha256   String
+
+  createdAt        TimestamptzString @default(now())
+
+  renderJob        AudioRenderJob    @relation(fields: [audioRenderJobId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt], map: "audio_artifact_project_created_idx")
+  @@map("audio_artifact")
+}
+
+model MuxedVideoArtifact {
+  id               String            @id @default(cuid(2))
+  audioRenderJobId String            @unique
+  projectId        String
+  videoRenderJobId String
+
+  storageKey       String
+  mimeType         String
+  byteSize         Int
+  checksumSha256   String
+
+  createdAt        TimestamptzString @default(now())
+
+  renderJob        AudioRenderJob    @relation(fields: [audioRenderJobId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt], map: "muxed_video_artifact_project_created_idx")
+  @@index([projectId, videoRenderJobId], map: "muxed_video_artifact_project_video_idx")
+  @@map("muxed_video_artifact")
 }

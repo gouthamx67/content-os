@@ -19,7 +19,10 @@ import { PostgresStoryboardRepository } from "./repositories/postgres-storyboard
 import { PostgresContentRecommendationRepository } from "./repositories/postgres-content-recommendation-repository";
 import { PostgresCaptureRepository } from "./repositories/postgres-capture-repository";
 import { PostgresVisualRepository } from "./repositories/postgres-visual-repository";
+import { PostgresRenderJobRepository } from "./repositories/postgres-render-job-repository";
+import { PostgresAudioRepository } from "./repositories/postgres-audio-repository";
 import { CaptureService } from "../modules/capture-engine/capture-service";
+import { captureStorage } from "../modules/capture-engine/storage/capture-storage";
 import { VisualCompositionService } from "../modules/visual-motion-engine/composition-service";
 import { VisualLayerService } from "../modules/visual-motion-engine/layer-service";
 import { postgresDatabase } from "./repositories/postgres-database";
@@ -71,6 +74,19 @@ import { RecommendationContextBuilder } from "../core/services/recommendation-co
 import { ContentRecommendationValidator } from "../core/services/content-recommendation-validator";
 import { DeterministicContentRecommenderProvider } from "./recommendations/deterministic-content-recommender-provider";
 import { AiContentRecommendationRefiner } from "./ai/content-recommendation-interpreter";
+import { RenderJobService } from "../modules/video-rendering/render-job-service";
+import { RenderAssetResolver } from "../modules/video-rendering/assets/render-asset-resolver";
+import { RenderWorker } from "../modules/video-rendering/render-worker";
+import { RenderWorkerHealth } from "../modules/video-rendering/worker-health";
+import { renderStorage } from "../modules/video-rendering/storage/render-storage";
+import { probeMedia } from "../modules/video-rendering/ffmpeg/ffprobe";
+import type { RenderJobStatus } from "../modules/video-rendering/domain/types";
+import { AudioCompositionService } from "../modules/audio-engine/audio-composition-service";
+import { AudioRenderJobService } from "../modules/audio-engine/render/audio-render-job-service";
+import { AudioRenderWorker } from "../modules/audio-engine/render/audio-render-worker";
+import { AudioSourceResolver } from "../modules/audio-engine/assets/audio-source-resolver";
+import { audioStorage } from "../modules/audio-engine/storage/audio-storage";
+import { ensureAudioComposition } from "../modules/audio-engine/integrations/from-visual-composition";
 
 const orm = db.orm.public;
 
@@ -90,6 +106,8 @@ const repositories = {
   recommendations: new PostgresContentRecommendationRepository(orm),
   captures: new PostgresCaptureRepository(orm),
   visual: new PostgresVisualRepository(orm),
+  renderJobs: new PostgresRenderJobRepository(orm),
+  audio: new PostgresAudioRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -404,6 +422,133 @@ const visualLayerService = new VisualLayerService({
   authorizeProject: authorizeVisualProject,
 });
 
+/**
+ * CP15 video rendering.
+ *
+ * Enqueueing reuses the CP14 composition service for the contract, so the
+ * snapshot is built by the same code the preview uses. The worker is a separate
+ * process; it is constructed here so both the script and tests share one wiring.
+ */
+const renderJobService = new RenderJobService({
+  repository: repositories.renderJobs,
+  authorizeProject: authorizeVisualProject,
+  contractFor: (args) => visualCompositionService.rendererContract(args),
+});
+
+const renderAssetResolver = new RenderAssetResolver({
+  captures: repositories.captures,
+  assets: repositories.assets,
+  captureStorage,
+  storage: providers.storage,
+  probe: probeMedia,
+});
+
+export const renderWorkerHealth = new RenderWorkerHealth();
+
+export function createRenderWorker(): RenderWorker {
+  return new RenderWorker({
+    repository: repositories.renderJobs,
+    storage: renderStorage,
+    assets: renderAssetResolver,
+    health: renderWorkerHealth,
+  });
+}
+
+/**
+ * CP16 audio engine.
+ *
+ * The audio source resolver reuses the CP13 capture repository and the shared
+ * asset storage, so an audio track can only reference media the same project
+ * already owns. Enqueueing validates the frozen graph and the video render it
+ * will be muxed against before anything is queued.
+ */
+const audioSourceResolver = new AudioSourceResolver({
+  captures: repositories.captures,
+  assets: repositories.assets,
+  captureStorage,
+  storage: providers.storage,
+});
+
+const audioCompositionService = new AudioCompositionService({
+  repository: repositories.audio,
+  authorizeProject: authorizeVisualProject,
+});
+
+const audioRenderJobService = new AudioRenderJobService({
+  repository: repositories.audio,
+  authorizeProject: authorizeVisualProject,
+  videoRenderFor: async (videoRenderJobId) => {
+    const row = (await orm.RenderJob.where({
+      id: videoRenderJobId,
+    }).first()) as
+      | { id: string; projectId: string; status: RenderJobStatus }
+      | null;
+
+    return row
+      ? { id: row.id, projectId: row.projectId, status: row.status }
+      : null;
+  },
+});
+
+const audioCompositions = {
+  service: audioCompositionService,
+  render: audioRenderJobService,
+  sources: audioSourceResolver,
+  ensure: (args: {
+    projectId: string;
+    compositionId: string;
+    userId: string;
+  }) =>
+    ensureAudioComposition(
+      {
+        repository: repositories.audio,
+        visualCompositionFor: async (forArgs) => {
+          const composition = await visualCompositionService.getComposition({
+            projectId: forArgs.projectId,
+            compositionId: forArgs.compositionId,
+            userId: forArgs.userId,
+          });
+
+          return {
+            id: composition.id,
+            projectId: composition.projectId,
+            name: composition.name,
+            durationMs: composition.durationMs,
+          };
+        },
+      },
+      args,
+    ),
+};
+
+export const audioWorkerHealth = new RenderWorkerHealth();
+
+export function createAudioWorker(): AudioRenderWorker {
+  return new AudioRenderWorker({
+    repository: repositories.audio,
+    storage: audioStorage,
+    sources: audioSourceResolver,
+    videoArtifactFor: async (videoRenderJobId) => {
+      const artifact = (await orm.RenderArtifact.where({
+        renderJobId: videoRenderJobId,
+      }).first()) as { storageKey: string } | null;
+      const job = (await orm.RenderJob.where({ id: videoRenderJobId }).first()) as
+        | { width: number; height: number }
+        | null;
+
+      if (!artifact || !job) return null;
+
+      return {
+        storageKey: artifact.storageKey,
+        width: job.width,
+        height: job.height,
+      };
+    },
+    videoStoragePath: (storageKey) => renderStorage.absolutePath(storageKey),
+    health: audioWorkerHealth,
+  });
+}
+
 export const container = {
   repositories,
   providers,
@@ -425,5 +570,7 @@ export const container = {
     capture: captureService,
     visualCompositions: visualCompositionService,
     visualLayers: visualLayerService,
+    renders: renderJobService,
+    audio: audioCompositions,
   },
 };

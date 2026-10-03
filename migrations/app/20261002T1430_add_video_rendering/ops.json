@@ -1,0 +1,401 @@
+[
+  {
+    "id": "table.render_artifact",
+    "label": "Create table \"render_artifact\"",
+    "summary": "Creates table \"render_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "render_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"render_artifact\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"render_artifact\"",
+        "sql": "CREATE TABLE \"public\".\"render_artifact\" (\n  \"byteSize\" int4 NOT NULL,\n  \"checksumSha256\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"mimeType\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"renderJobId\" text NOT NULL,\n  \"storageKey\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"render_artifact\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_artifact\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.render_job",
+    "label": "Create table \"render_job\"",
+    "summary": "Creates table \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"render_job\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"render_job\"",
+        "sql": "CREATE TABLE \"public\".\"render_job\" (\n  \"compositionId\" text NOT NULL,\n  \"contractVersion\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"durationMs\" int4 NOT NULL,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"ffmpegVersion\" text,\n  \"finishedAt\" timestamptz,\n  \"frameRate\" float8 NOT NULL,\n  \"height\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"outputFormat\" text DEFAULT 'MP4' NOT NULL,\n  \"progressPct\" int4 DEFAULT 0 NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"requestedById\" text NOT NULL,\n  \"sceneGraph\" text NOT NULL,\n  \"sceneSha256\" text NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'QUEUED' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"width\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"render_job_outputFormat_check_a3c3b920\" CHECK (\"outputFormat\" IN ('MP4')),\n  CONSTRAINT \"render_job_status_check_ba978c1e\" CHECK (\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"render_job\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.render_artifact.render_artifact_renderJobId_key",
+    "label": "Add unique constraint on \"render_artifact\" (renderJobId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "render_artifact_renderJobId_key",
+        "table": "render_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"render_artifact_renderJobId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "render_artifact_renderJobId_key",
+          "public",
+          "\"public\".\"render_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"render_artifact_renderJobId_key\"",
+        "sql": "ALTER TABLE \"public\".\"render_artifact\" ADD CONSTRAINT \"render_artifact_renderJobId_key\" UNIQUE (\"renderJobId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"render_artifact_renderJobId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "render_artifact_renderJobId_key",
+          "public",
+          "\"public\".\"render_artifact\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.render_artifact.render_artifact_project_created_idx",
+    "label": "Create index \"render_artifact_project_created_idx\" on \"render_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "render_artifact_project_created_idx",
+        "table": "render_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"render_artifact_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_artifact_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"render_artifact_project_created_idx\"",
+        "sql": "CREATE INDEX \"render_artifact_project_created_idx\" ON \"public\".\"render_artifact\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"render_artifact_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_artifact_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.render_job.render_job_compositionId_idx_b6aea72b",
+    "label": "Create index \"render_job_compositionId_idx_b6aea72b\" on \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "render_job_compositionId_idx_b6aea72b",
+        "table": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"render_job_compositionId_idx_b6aea72b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_compositionId_idx_b6aea72b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"render_job_compositionId_idx_b6aea72b\"",
+        "sql": "CREATE INDEX \"render_job_compositionId_idx_b6aea72b\" ON \"public\".\"render_job\" (\"compositionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"render_job_compositionId_idx_b6aea72b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_compositionId_idx_b6aea72b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.render_job.render_job_composition_created_idx",
+    "label": "Create index \"render_job_composition_created_idx\" on \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "render_job_composition_created_idx",
+        "table": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"render_job_composition_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_composition_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"render_job_composition_created_idx\"",
+        "sql": "CREATE INDEX \"render_job_composition_created_idx\" ON \"public\".\"render_job\" (\"compositionId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"render_job_composition_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_composition_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.render_job.render_job_project_created_idx",
+    "label": "Create index \"render_job_project_created_idx\" on \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "render_job_project_created_idx",
+        "table": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"render_job_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"render_job_project_created_idx\"",
+        "sql": "CREATE INDEX \"render_job_project_created_idx\" ON \"public\".\"render_job\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"render_job_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.render_job.render_job_project_status_created_idx",
+    "label": "Create index \"render_job_project_status_created_idx\" on \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "render_job_project_status_created_idx",
+        "table": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"render_job_project_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_project_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"render_job_project_status_created_idx\"",
+        "sql": "CREATE INDEX \"render_job_project_status_created_idx\" ON \"public\".\"render_job\" (\"projectId\", \"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"render_job_project_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_project_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.render_artifact.render_artifact_renderJobId_fkey",
+    "label": "Add foreign key \"render_artifact_renderJobId_fkey\" on \"render_artifact\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "render_artifact_renderJobId_fkey",
+        "table": "render_artifact"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"render_artifact_renderJobId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "render_artifact_renderJobId_fkey",
+          "public",
+          "\"public\".\"render_artifact\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"render_artifact_renderJobId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"render_artifact\"\nADD CONSTRAINT \"render_artifact_renderJobId_fkey\"\nFOREIGN KEY (\"renderJobId\")\nREFERENCES \"public\".\"render_job\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"render_artifact_renderJobId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "render_artifact_renderJobId_fkey",
+          "public",
+          "\"public\".\"render_artifact\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.render_job.render_job_compositionId_fkey",
+    "label": "Add foreign key \"render_job_compositionId_fkey\" on \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "render_job_compositionId_fkey",
+        "table": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"render_job_compositionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "render_job_compositionId_fkey",
+          "public",
+          "\"public\".\"render_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"render_job_compositionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"render_job\"\nADD CONSTRAINT \"render_job_compositionId_fkey\"\nFOREIGN KEY (\"compositionId\")\nREFERENCES \"public\".\"visual_composition\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"render_job_compositionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "render_job_compositionId_fkey",
+          "public",
+          "\"public\".\"render_job\""
+        ]
+      }
+    ]
+  }
+]

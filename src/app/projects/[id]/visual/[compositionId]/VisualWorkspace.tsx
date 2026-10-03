@@ -10,16 +10,21 @@ import type { VisualEffectType } from "../../../../../modules/visual-motion-engi
 import { CompositionPreview } from "./CompositionPreview";
 import { LayerInspector, type LayerTransform } from "./LayerInspector";
 import { MotionTimeline, type KeyframeInput } from "./MotionTimeline";
+import { RenderPanel } from "./RenderPanel";
+import { AudioWorkspace } from "../../../../../modules/audio-engine/ui/AudioWorkspace";
+import type { AudioCompositionView } from "../../../../../modules/audio-engine/ui/types";
 
 interface Props {
   projectId: string;
   initialComposition: SceneGraph;
+  initialAudioComposition: AudioCompositionView;
   brandDefaultColor: string | null;
 }
 
 export function VisualWorkspace({
   projectId,
   initialComposition,
+  initialAudioComposition,
   brandDefaultColor,
 }: Props) {
   const [composition, setComposition] = useState(initialComposition);
@@ -322,6 +327,17 @@ export function VisualWorkspace({
             onAddKeyframe={addKeyframe}
             onDeleteKeyframe={deleteKeyframe}
             onApplyPreset={applyPreset}
+          />
+
+          <RenderPanel
+            projectId={projectId}
+            compositionId={composition.id}
+          />
+
+          <AudioWorkspace
+            projectId={projectId}
+            compositionId={composition.id}
+            initialComposition={initialAudioComposition}
           />
         </div>
       </div>

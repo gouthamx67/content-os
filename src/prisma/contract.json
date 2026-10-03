@@ -8,6 +8,26 @@
       "model": "Asset",
       "namespace": "public"
     },
+    "audio_artifact": {
+      "model": "AudioArtifact",
+      "namespace": "public"
+    },
+    "audio_automation_point": {
+      "model": "AudioAutomationPoint",
+      "namespace": "public"
+    },
+    "audio_composition": {
+      "model": "AudioComposition",
+      "namespace": "public"
+    },
+    "audio_render_job": {
+      "model": "AudioRenderJob",
+      "namespace": "public"
+    },
+    "audio_track": {
+      "model": "AudioTrack",
+      "namespace": "public"
+    },
     "brand_asset": {
       "model": "BrandAsset",
       "namespace": "public"
@@ -136,8 +156,20 @@
       "model": "MotionKeyframe",
       "namespace": "public"
     },
+    "muxed_video_artifact": {
+      "model": "MuxedVideoArtifact",
+      "namespace": "public"
+    },
     "project": {
       "model": "Project",
+      "namespace": "public"
+    },
+    "render_artifact": {
+      "model": "RenderArtifact",
+      "namespace": "public"
+    },
+    "render_job": {
+      "model": "RenderJob",
       "namespace": "public"
     },
     "session": {
@@ -261,6 +293,87 @@
               {
                 "name": "CONTEXTUAL",
                 "value": "CONTEXTUAL"
+              }
+            ]
+          },
+          "AudioAutomationProperty": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "VOLUME_DB",
+                "value": "VOLUME_DB"
+              }
+            ]
+          },
+          "AudioCompositionStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "DRAFT",
+                "value": "DRAFT"
+              },
+              {
+                "name": "READY",
+                "value": "READY"
+              },
+              {
+                "name": "ARCHIVED",
+                "value": "ARCHIVED"
+              }
+            ]
+          },
+          "AudioEasing": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "LINEAR",
+                "value": "LINEAR"
+              },
+              {
+                "name": "EASE_IN",
+                "value": "EASE_IN"
+              },
+              {
+                "name": "EASE_OUT",
+                "value": "EASE_OUT"
+              },
+              {
+                "name": "EASE_IN_OUT",
+                "value": "EASE_IN_OUT"
+              }
+            ]
+          },
+          "AudioOutputFormat": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "WAV",
+                "value": "WAV"
+              },
+              {
+                "name": "MP4",
+                "value": "MP4"
+              }
+            ]
+          },
+          "AudioTrackKind": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "VOICEOVER",
+                "value": "VOICEOVER"
+              },
+              {
+                "name": "MUSIC",
+                "value": "MUSIC"
+              },
+              {
+                "name": "SFX",
+                "value": "SFX"
+              },
+              {
+                "name": "AMBIENCE",
+                "value": "AMBIENCE"
               }
             ]
           },
@@ -1323,6 +1436,44 @@
               }
             ]
           },
+          "RenderJobStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "QUEUED",
+                "value": "QUEUED"
+              },
+              {
+                "name": "RUNNING",
+                "value": "RUNNING"
+              },
+              {
+                "name": "SUCCEEDED",
+                "value": "SUCCEEDED"
+              },
+              {
+                "name": "FAILED",
+                "value": "FAILED"
+              },
+              {
+                "name": "CANCEL_REQUESTED",
+                "value": "CANCEL_REQUESTED"
+              },
+              {
+                "name": "CANCELLED",
+                "value": "CANCELLED"
+              }
+            ]
+          },
+          "RenderOutputFormat": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "MP4",
+                "value": "MP4"
+              }
+            ]
+          },
           "SourceStatus": {
             "codecId": "pg/text@1",
             "members": [
@@ -1709,6 +1860,899 @@
               },
               "namespaceId": "public",
               "table": "asset"
+            }
+          },
+          "AudioArtifact": {
+            "fields": {
+              "audioRenderJobId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "byteSize": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "checksumSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mimeType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "storageKey": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "renderJob": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "audioRenderJobId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "AudioRenderJob",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "audioRenderJobId": {
+                  "column": "audioRenderJobId"
+                },
+                "byteSize": {
+                  "column": "byteSize"
+                },
+                "checksumSha256": {
+                  "column": "checksumSha256"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "mimeType": {
+                  "column": "mimeType"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "storageKey": {
+                  "column": "storageKey"
+                }
+              },
+              "namespaceId": "public",
+              "table": "audio_artifact"
+            }
+          },
+          "AudioAutomationPoint": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "easing": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AudioEasing",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "property": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AudioAutomationProperty",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "timeMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "trackId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "value": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "track": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "trackId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "AudioTrack",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "easing": {
+                  "column": "easing"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "property": {
+                  "column": "property"
+                },
+                "timeMs": {
+                  "column": "timeMs"
+                },
+                "trackId": {
+                  "column": "trackId"
+                },
+                "value": {
+                  "column": "value"
+                }
+              },
+              "namespaceId": "public",
+              "table": "audio_automation_point"
+            }
+          },
+          "AudioComposition": {
+            "fields": {
+              "channels": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "compositionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "durationMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sampleRate": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AudioCompositionStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "composition": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "compositionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "VisualComposition",
+                  "namespace": "public"
+                }
+              },
+              "renderJobs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "audioCompositionId"
+                  ]
+                },
+                "to": {
+                  "model": "AudioRenderJob",
+                  "namespace": "public"
+                }
+              },
+              "tracks": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "audioCompositionId"
+                  ]
+                },
+                "to": {
+                  "model": "AudioTrack",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "channels": {
+                  "column": "channels"
+                },
+                "compositionId": {
+                  "column": "compositionId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdById": {
+                  "column": "createdById"
+                },
+                "durationMs": {
+                  "column": "durationMs"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "sampleRate": {
+                  "column": "sampleRate"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "audio_composition"
+            }
+          },
+          "AudioRenderJob": {
+            "fields": {
+              "audioCompositionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "audioGraph": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "audioSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "channels": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "contractVersion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "durationMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorCode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorMessage": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "ffmpegVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "finishedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputFormat": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AudioOutputFormat",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "progressPct": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "requestedById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sampleRate": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "RenderJobStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "videoRenderJobId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "audioArtifact": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "audioRenderJobId"
+                  ]
+                },
+                "to": {
+                  "model": "AudioArtifact",
+                  "namespace": "public"
+                }
+              },
+              "audioComposition": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "audioCompositionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "AudioComposition",
+                  "namespace": "public"
+                }
+              },
+              "muxedArtifact": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "audioRenderJobId"
+                  ]
+                },
+                "to": {
+                  "model": "MuxedVideoArtifact",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "audioCompositionId": {
+                  "column": "audioCompositionId"
+                },
+                "audioGraph": {
+                  "column": "audioGraph"
+                },
+                "audioSha256": {
+                  "column": "audioSha256"
+                },
+                "channels": {
+                  "column": "channels"
+                },
+                "contractVersion": {
+                  "column": "contractVersion"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "durationMs": {
+                  "column": "durationMs"
+                },
+                "errorCode": {
+                  "column": "errorCode"
+                },
+                "errorMessage": {
+                  "column": "errorMessage"
+                },
+                "ffmpegVersion": {
+                  "column": "ffmpegVersion"
+                },
+                "finishedAt": {
+                  "column": "finishedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "outputFormat": {
+                  "column": "outputFormat"
+                },
+                "progressPct": {
+                  "column": "progressPct"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "requestedById": {
+                  "column": "requestedById"
+                },
+                "sampleRate": {
+                  "column": "sampleRate"
+                },
+                "startedAt": {
+                  "column": "startedAt"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "videoRenderJobId": {
+                  "column": "videoRenderJobId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "audio_render_job"
+            }
+          },
+          "AudioTrack": {
+            "fields": {
+              "audioCompositionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "duckVoiceoverDb": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "durationMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "fadeInMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "fadeOutMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "gainDb": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "kind": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AudioTrackKind",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "mute": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "pan": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "solo": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceOffsetMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceRef": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "startMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "automation": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "trackId"
+                  ]
+                },
+                "to": {
+                  "model": "AudioAutomationPoint",
+                  "namespace": "public"
+                }
+              },
+              "composition": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "audioCompositionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "AudioComposition",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "audioCompositionId": {
+                  "column": "audioCompositionId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "duckVoiceoverDb": {
+                  "column": "duckVoiceoverDb"
+                },
+                "durationMs": {
+                  "column": "durationMs"
+                },
+                "fadeInMs": {
+                  "column": "fadeInMs"
+                },
+                "fadeOutMs": {
+                  "column": "fadeOutMs"
+                },
+                "gainDb": {
+                  "column": "gainDb"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "kind": {
+                  "column": "kind"
+                },
+                "mute": {
+                  "column": "mute"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "pan": {
+                  "column": "pan"
+                },
+                "solo": {
+                  "column": "solo"
+                },
+                "sourceOffsetMs": {
+                  "column": "sourceOffsetMs"
+                },
+                "sourceRef": {
+                  "column": "sourceRef"
+                },
+                "startMs": {
+                  "column": "startMs"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "audio_track"
             }
           },
           "BrandAsset": {
@@ -8323,6 +9367,124 @@
               "table": "motion_keyframe"
             }
           },
+          "MuxedVideoArtifact": {
+            "fields": {
+              "audioRenderJobId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "byteSize": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "checksumSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mimeType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "storageKey": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "videoRenderJobId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "renderJob": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "audioRenderJobId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "AudioRenderJob",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "audioRenderJobId": {
+                  "column": "audioRenderJobId"
+                },
+                "byteSize": {
+                  "column": "byteSize"
+                },
+                "checksumSha256": {
+                  "column": "checksumSha256"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "mimeType": {
+                  "column": "mimeType"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "storageKey": {
+                  "column": "storageKey"
+                },
+                "videoRenderJobId": {
+                  "column": "videoRenderJobId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "muxed_video_artifact"
+            }
+          },
           "Project": {
             "fields": {
               "createdAt": {
@@ -8867,6 +10029,380 @@
               },
               "namespaceId": "public",
               "table": "project"
+            }
+          },
+          "RenderArtifact": {
+            "fields": {
+              "byteSize": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "checksumSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mimeType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "renderJobId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "storageKey": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "renderJob": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "renderJobId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "RenderJob",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "byteSize": {
+                  "column": "byteSize"
+                },
+                "checksumSha256": {
+                  "column": "checksumSha256"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "mimeType": {
+                  "column": "mimeType"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "renderJobId": {
+                  "column": "renderJobId"
+                },
+                "storageKey": {
+                  "column": "storageKey"
+                }
+              },
+              "namespaceId": "public",
+              "table": "render_artifact"
+            }
+          },
+          "RenderJob": {
+            "fields": {
+              "compositionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "contractVersion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "durationMs": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorCode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorMessage": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "ffmpegVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "finishedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "frameRate": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "height": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputFormat": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "RenderOutputFormat",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "progressPct": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "requestedById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sceneGraph": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sceneSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "RenderJobStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "width": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "artifact": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "renderJobId"
+                  ]
+                },
+                "to": {
+                  "model": "RenderArtifact",
+                  "namespace": "public"
+                }
+              },
+              "composition": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "compositionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "VisualComposition",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "compositionId": {
+                  "column": "compositionId"
+                },
+                "contractVersion": {
+                  "column": "contractVersion"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "durationMs": {
+                  "column": "durationMs"
+                },
+                "errorCode": {
+                  "column": "errorCode"
+                },
+                "errorMessage": {
+                  "column": "errorMessage"
+                },
+                "ffmpegVersion": {
+                  "column": "ffmpegVersion"
+                },
+                "finishedAt": {
+                  "column": "finishedAt"
+                },
+                "frameRate": {
+                  "column": "frameRate"
+                },
+                "height": {
+                  "column": "height"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "outputFormat": {
+                  "column": "outputFormat"
+                },
+                "progressPct": {
+                  "column": "progressPct"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "requestedById": {
+                  "column": "requestedById"
+                },
+                "sceneGraph": {
+                  "column": "sceneGraph"
+                },
+                "sceneSha256": {
+                  "column": "sceneSha256"
+                },
+                "startedAt": {
+                  "column": "startedAt"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "width": {
+                  "column": "width"
+                }
+              },
+              "namespaceId": "public",
+              "table": "render_job"
             }
           },
           "Session": {
@@ -9908,6 +11444,22 @@
               }
             },
             "relations": {
+              "audioComposition": {
+                "cardinality": "1:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "compositionId"
+                  ]
+                },
+                "to": {
+                  "model": "AudioComposition",
+                  "namespace": "public"
+                }
+              },
               "layers": {
                 "cardinality": "1:N",
                 "on": {
@@ -9936,6 +11488,21 @@
                 },
                 "to": {
                   "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "renderJobs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "compositionId"
+                  ]
+                },
+                "to": {
+                  "model": "RenderJob",
                   "namespace": "public"
                 }
               }
@@ -10644,6 +12211,750 @@
                   ],
                   "name": "asset_projectId_idx_a96e4d92",
                   "prefix": "asset_projectId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "audio_artifact": {
+              "columns": {
+                "audioRenderJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "byteSize": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "checksumSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "mimeType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "storageKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "audioRenderJobId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_artifact"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_render_job"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "audio_artifact_project_created_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "audioRenderJobId"
+                  ]
+                }
+              ]
+            },
+            "audio_automation_point": {
+              "checks": [
+                {
+                  "expression": "\"easing\" IN ('LINEAR', 'EASE_IN', 'EASE_OUT', 'EASE_IN_OUT')",
+                  "name": "audio_automation_point_easing_check_9364cc02",
+                  "prefix": "audio_automation_point_easing_check"
+                },
+                {
+                  "expression": "\"property\" IN ('VOLUME_DB')",
+                  "name": "audio_automation_point_property_check_644a0ba3",
+                  "prefix": "audio_automation_point_property_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "easing": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "LINEAR"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AudioEasing",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "property": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AudioAutomationProperty",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "timeMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "trackId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "value": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "trackId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_automation_point"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_track"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "trackId"
+                  ],
+                  "name": "audio_automation_point_trackId_idx_8b560769",
+                  "prefix": "audio_automation_point_trackId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "trackId",
+                    "property",
+                    "timeMs"
+                  ],
+                  "name": "audio_automation_track_property_time_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "trackId",
+                    "property",
+                    "timeMs"
+                  ],
+                  "name": "audio_automation_track_property_time_key"
+                }
+              ]
+            },
+            "audio_composition": {
+              "checks": [
+                {
+                  "expression": "\"status\" IN ('DRAFT', 'READY', 'ARCHIVED')",
+                  "name": "audio_composition_status_check_1d0cbbdd",
+                  "prefix": "audio_composition_status_check"
+                }
+              ],
+              "columns": {
+                "channels": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 2
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "compositionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "durationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sampleRate": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 48000
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "DRAFT"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AudioCompositionStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "compositionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_composition"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "visual_composition"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "audio_composition_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status"
+                  ],
+                  "name": "audio_composition_project_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "compositionId"
+                  ]
+                }
+              ]
+            },
+            "audio_render_job": {
+              "checks": [
+                {
+                  "expression": "\"outputFormat\" IN ('WAV', 'MP4')",
+                  "name": "audio_render_job_outputFormat_check_60ea69e0",
+                  "prefix": "audio_render_job_outputFormat_check"
+                },
+                {
+                  "expression": "\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED')",
+                  "name": "audio_render_job_status_check_ba978c1e",
+                  "prefix": "audio_render_job_status_check"
+                }
+              ],
+              "columns": {
+                "audioCompositionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "audioGraph": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "audioSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "channels": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "contractVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "durationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "errorCode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "errorMessage": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "ffmpegVersion": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "finishedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "outputFormat": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AudioOutputFormat",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "progressPct": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "requestedById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sampleRate": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "QUEUED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "RenderJobStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "videoRenderJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "audioCompositionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_render_job"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_composition"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "audioCompositionId"
+                  ],
+                  "name": "audio_render_job_audioCompositionId_idx_6598b581",
+                  "prefix": "audio_render_job_audioCompositionId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "audioCompositionId",
+                    "createdAt"
+                  ],
+                  "name": "audio_render_job_composition_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "audio_render_job_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "audio_render_job_project_status_created_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "audio_track": {
+              "checks": [
+                {
+                  "expression": "\"kind\" IN ('VOICEOVER', 'MUSIC', 'SFX', 'AMBIENCE')",
+                  "name": "audio_track_kind_check_796d0837",
+                  "prefix": "audio_track_kind_check"
+                }
+              ],
+              "columns": {
+                "audioCompositionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "duckVoiceoverDb": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": true
+                },
+                "durationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "fadeInMs": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "fadeOutMs": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "gainDb": {
+                  "codecId": "pg/float8@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "kind": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AudioTrackKind",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "mute": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "pan": {
+                  "codecId": "pg/float8@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "solo": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "sourceOffsetMs": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "sourceRef": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "startMs": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "audioCompositionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_track"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_composition"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "audioCompositionId"
+                  ],
+                  "name": "audio_track_audioCompositionId_idx_6598b581",
+                  "prefix": "audio_track_audioCompositionId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "audioCompositionId",
+                    "kind"
+                  ],
+                  "name": "audio_track_composition_kind_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "audioCompositionId",
+                    "startMs"
+                  ],
+                  "name": "audio_track_composition_start_idx",
                   "unique": false
                 }
               ],
@@ -16764,6 +19075,108 @@
                 }
               ]
             },
+            "muxed_video_artifact": {
+              "columns": {
+                "audioRenderJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "byteSize": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "checksumSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "mimeType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "storageKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "videoRenderJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "audioRenderJobId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "muxed_video_artifact"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "audio_render_job"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "muxed_video_artifact_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "videoRenderJobId"
+                  ],
+                  "name": "muxed_video_artifact_project_video_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "audioRenderJobId"
+                  ]
+                }
+              ]
+            },
             "project": {
               "checks": [
                 {
@@ -16853,6 +19266,304 @@
                   ],
                   "name": "project_workspaceId_status_idx_76d68132",
                   "prefix": "project_workspaceId_status_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "render_artifact": {
+              "columns": {
+                "byteSize": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "checksumSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "mimeType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "renderJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "storageKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "renderJobId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "render_artifact"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "render_job"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "render_artifact_project_created_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "renderJobId"
+                  ]
+                }
+              ]
+            },
+            "render_job": {
+              "checks": [
+                {
+                  "expression": "\"outputFormat\" IN ('MP4')",
+                  "name": "render_job_outputFormat_check_a3c3b920",
+                  "prefix": "render_job_outputFormat_check"
+                },
+                {
+                  "expression": "\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED')",
+                  "name": "render_job_status_check_ba978c1e",
+                  "prefix": "render_job_status_check"
+                }
+              ],
+              "columns": {
+                "compositionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "contractVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "durationMs": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "errorCode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "errorMessage": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "ffmpegVersion": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "finishedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "frameRate": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "height": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "outputFormat": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "MP4"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "RenderOutputFormat",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "progressPct": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "requestedById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sceneGraph": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sceneSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "QUEUED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "RenderJobStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "width": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "compositionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "render_job"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "visual_composition"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "compositionId"
+                  ],
+                  "name": "render_job_compositionId_idx_b6aea72b",
+                  "prefix": "render_job_compositionId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "compositionId",
+                    "createdAt"
+                  ],
+                  "name": "render_job_composition_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "render_job_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "render_job_project_status_created_idx",
                   "unique": false
                 }
               ],
@@ -18217,6 +20928,45 @@
                 "CONTEXTUAL"
               ]
             },
+            "AudioAutomationProperty": {
+              "kind": "valueSet",
+              "values": [
+                "VOLUME_DB"
+              ]
+            },
+            "AudioCompositionStatus": {
+              "kind": "valueSet",
+              "values": [
+                "DRAFT",
+                "READY",
+                "ARCHIVED"
+              ]
+            },
+            "AudioEasing": {
+              "kind": "valueSet",
+              "values": [
+                "LINEAR",
+                "EASE_IN",
+                "EASE_OUT",
+                "EASE_IN_OUT"
+              ]
+            },
+            "AudioOutputFormat": {
+              "kind": "valueSet",
+              "values": [
+                "WAV",
+                "MP4"
+              ]
+            },
+            "AudioTrackKind": {
+              "kind": "valueSet",
+              "values": [
+                "VOICEOVER",
+                "MUSIC",
+                "SFX",
+                "AMBIENCE"
+              ]
+            },
             "BrandAssetRole": {
               "kind": "valueSet",
               "values": [
@@ -18628,6 +21378,23 @@
                 "ARCHIVED"
               ]
             },
+            "RenderJobStatus": {
+              "kind": "valueSet",
+              "values": [
+                "QUEUED",
+                "RUNNING",
+                "SUCCEEDED",
+                "FAILED",
+                "CANCEL_REQUESTED",
+                "CANCELLED"
+              ]
+            },
+            "RenderOutputFormat": {
+              "kind": "valueSet",
+              "values": [
+                "MP4"
+              ]
+            },
             "SourceStatus": {
               "kind": "valueSet",
               "values": [
@@ -18732,10 +21499,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "98425fda0ad4d4e5ef6813efa622e8b5dc65d50103d1f5c22f47cbc55825b115"
+    "storageHash": "9bb58cae2e25d49890ce74030507a07e2fef44b028f7cfe7830165e74d4b3bd1"
   },
   "execution": {
-    "executionHash": "fc718bf7aea8283b9ffd8587df22892bf701cead82b9771bb1414d9777703bf3",
+    "executionHash": "0772790da1ac521a8f645e45131ec8da244f8107264e2164eb6a36258ed310c2",
     "mutations": {
       "defaults": [
         {
@@ -18762,6 +21529,106 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "asset"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "audio_artifact"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "audio_automation_point"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "audio_composition"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "audio_composition"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "audio_render_job"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "audio_render_job"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "audio_track"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "audio_track"
           }
         },
         {
@@ -19484,6 +22351,17 @@
           "ref": {
             "column": "id",
             "namespace": "public",
+            "table": "muxed_video_artifact"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
             "table": "project"
           }
         },
@@ -19500,6 +22378,43 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "project"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "render_artifact"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "render_job"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "render_job"
           }
         },
         {
