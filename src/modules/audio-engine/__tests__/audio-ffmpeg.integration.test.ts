@@ -11,6 +11,7 @@ import { AudioRenderWorker } from "../render/audio-render-worker";
 import { RenderWorker } from "../../video-rendering/render-worker";
 import { RenderAssetResolver } from "../../video-rendering/assets/render-asset-resolver";
 import { captureStorage } from "../../capture-engine/storage/capture-storage";
+import { imageStorage } from "../../image-generation/storage/image-storage";
 import { probeAudio } from "../ffmpeg/probe-audio";
 import { probeMuxedVideo } from "../ffmpeg/probe-muxed-video";
 
@@ -267,7 +268,9 @@ describe("real audio rendering", () => {
       assets: new RenderAssetResolver({
         captures: container.container.repositories.captures,
         assets: container.container.repositories.assets,
+        images: container.container.repositories.images,
         captureStorage,
+        imageStorage,
         storage: container.container.providers.storage,
       }),
       workDirRoot: workRoot,

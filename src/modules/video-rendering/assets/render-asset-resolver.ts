@@ -5,15 +5,19 @@ import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { CaptureRepository } from "../../../core/ports/capture-repository";
 import type { AssetRepository } from "../../../core/ports/asset-repository";
+import type { ImageGenerationRepository } from "../../../core/ports/image-generation-repository";
 import type { StorageProvider } from "../../../core/ports/storage-provider";
 import type { CaptureStorage } from "../../capture-engine/storage/capture-storage";
+import type { ImageStorage } from "../../image-generation/storage/image-storage";
 import { RenderFeatureError } from "../errors";
 import type { CompilerAsset } from "../ffmpeg/compile-scene";
 
 export type RenderAssetDependencies = {
   captures: CaptureRepository;
   assets: AssetRepository;
+  images: ImageGenerationRepository;
   captureStorage: CaptureStorage;
+  imageStorage: ImageStorage;
   storage: StorageProvider;
   probe?: (filePath: string) => Promise<{ width: number | null; height: number | null }>;
 };
@@ -49,10 +53,42 @@ export class RenderAssetResolver {
       return this.resolveAsset(projectId, id, workDir, index);
     }
 
+    if (kind === "generated") {
+      return this.resolveGenerated(projectId, id, workDir, index);
+    }
+
     throw new RenderFeatureError(
       "UNSUPPORTED_ASSET_REF",
       `Unsupported asset reference: ${assetRef}`,
     );
+  }
+
+  private async resolveGenerated(
+    projectId: string,
+    assetId: string,
+    workDir: string,
+    index: number,
+  ): Promise<CompilerAsset> {
+    const asset = await this.deps.images.getAsset(projectId, assetId);
+
+    if (!asset) {
+      throw new RenderFeatureError(
+        "ASSET_NOT_FOUND",
+        `Generated image ${assetId} is not available to this project`,
+      );
+    }
+
+    const kind = mediaKindFor(asset.mimeType);
+    const filePath = path.join(
+      workDir,
+      `asset-${index}-${safeName(assetId)}${extensionFor(kind)}`,
+    );
+
+    await mkdir(workDir, { recursive: true });
+    await writeStreamToFile(this.deps.imageStorage.read(asset.storageKey), filePath);
+
+    const probed = await this.probe(filePath);
+    return { path: filePath, kind, ...probed };
   }
 
   private async resolveCapture(

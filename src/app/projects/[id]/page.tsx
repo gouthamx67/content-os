@@ -54,6 +54,7 @@ import {
   serializeOpportunity,
 } from "../../../lib/recommendation-api";
 import { RecommendationsPanel } from "../../../components/recommendations/RecommendationsPanel";
+import { ImageGenerationWorkspace } from "../../../modules/image-generation/ui/ImageGenerationWorkspace";
 
 type ProjectDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -223,6 +224,10 @@ export default async function ProjectDetailPage({
               uri: source.uri,
             }))}
           />
+        </div>
+
+        <div className="mt-8">
+          <ImageGenerationWorkspace projectId={project.id} />
         </div>
 
         <div className="mt-8">

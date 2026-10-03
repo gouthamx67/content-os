@@ -42,7 +42,7 @@ export const LAYER_LIMITS = {
   maxZIndex: 1000,
 } as const;
 
-const ASSET_REF_PATTERN = /^(capture|asset):[A-Za-z0-9_-]+$/;
+const ASSET_REF_PATTERN = /^(capture|asset|generated):[A-Za-z0-9_-]+$/;
 
 const FORBIDDEN_REF_FRAGMENTS = [
   "..",
@@ -131,14 +131,14 @@ export function normalizeAssetRef(value: unknown): string {
   for (const fragment of FORBIDDEN_REF_FRAGMENTS) {
     if (lowered.includes(fragment)) {
       throw new VisualValidationError(
-        "assetRef must be a capture: or asset: reference, not a path or URL",
+        "assetRef must be a capture:, asset: or generated: reference, not a path or URL",
       );
     }
   }
 
   if (!ASSET_REF_PATTERN.test(trimmed)) {
     throw new VisualValidationError(
-      "assetRef must be a capture: or asset: reference",
+      "assetRef must be a capture:, asset: or generated: reference",
     );
   }
 

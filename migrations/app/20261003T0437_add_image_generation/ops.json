@@ -1,0 +1,917 @@
+[
+  {
+    "id": "table.generated_image_asset",
+    "label": "Create table \"generated_image_asset\"",
+    "summary": "Creates table \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"generated_image_asset\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"generated_image_asset\"",
+        "sql": "CREATE TABLE \"public\".\"generated_image_asset\" (\n  \"byteSize\" int4 NOT NULL,\n  \"checksumSha256\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"deletedAt\" timestamptz,\n  \"generationJobId\" text,\n  \"graphicDocumentId\" text,\n  \"height\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"metadata\" text,\n  \"mimeType\" text NOT NULL,\n  \"outputFormat\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"storageKey\" text NOT NULL,\n  \"transparent\" bool DEFAULT false NOT NULL,\n  \"width\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"generated_image_asset_outputFormat_check_85875664\" CHECK (\"outputFormat\" IN ('PNG', 'JPEG'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"generated_image_asset\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.graphic_document",
+    "label": "Create table \"graphic_document\"",
+    "summary": "Creates table \"graphic_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "graphic_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"graphic_document\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"graphic_document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"graphic_document\"",
+        "sql": "CREATE TABLE \"public\".\"graphic_document\" (\n  \"contractVersion\" int4 DEFAULT 1 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"deletedAt\" timestamptz,\n  \"designGraph\" text NOT NULL,\n  \"designGraphHash\" text NOT NULL,\n  \"height\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"outputFormat\" text DEFAULT 'PNG' NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"templateType\" text NOT NULL,\n  \"transparent\" bool DEFAULT false NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"width\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"graphic_document_outputFormat_check_85875664\" CHECK (\"outputFormat\" IN ('PNG', 'JPEG')),\n  CONSTRAINT \"graphic_document_templateType_check_769a6e6c\" CHECK (\"templateType\" IN ('PRODUCT_HERO', 'FEATURE_CALLOUT', 'QUOTE_CARD', 'SOCIAL_POST', 'PROMO_CARD'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"graphic_document\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"graphic_document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.image_generation_job",
+    "label": "Create table \"image_generation_job\"",
+    "summary": "Creates table \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"image_generation_job\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"image_generation_job\"",
+        "sql": "CREATE TABLE \"public\".\"image_generation_job\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"finishedAt\" timestamptz,\n  \"generationRecipe\" text NOT NULL,\n  \"graphicDocumentId\" text,\n  \"height\" int4 NOT NULL,\n  \"id\" text NOT NULL,\n  \"outputFormat\" text NOT NULL,\n  \"progressPct\" int4 DEFAULT 0 NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"prompt\" text NOT NULL,\n  \"provider\" text NOT NULL,\n  \"providerJobId\" text,\n  \"providerModel\" text,\n  \"providerVersion\" text,\n  \"recipeSha256\" text NOT NULL,\n  \"requestedById\" text NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'QUEUED' NOT NULL,\n  \"transparent\" bool DEFAULT false NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"width\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"image_generation_job_outputFormat_check_85875664\" CHECK (\"outputFormat\" IN ('PNG', 'JPEG')),\n  CONSTRAINT \"image_generation_job_provider_check_dfff8216\" CHECK (\"provider\" IN ('LOCAL_GRAPHIC', 'REMOTE_IMAGE')),\n  CONSTRAINT \"image_generation_job_status_check_ba978c1e\" CHECK (\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"image_generation_job\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.generated_image_asset.generated_image_asset_generationJobId_idx_486d342e",
+    "label": "Create index \"generated_image_asset_generationJobId_idx_486d342e\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "generated_image_asset_generationJobId_idx_486d342e",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"generated_image_asset_generationJobId_idx_486d342e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_generationJobId_idx_486d342e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"generated_image_asset_generationJobId_idx_486d342e\"",
+        "sql": "CREATE INDEX \"generated_image_asset_generationJobId_idx_486d342e\" ON \"public\".\"generated_image_asset\" (\"generationJobId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"generated_image_asset_generationJobId_idx_486d342e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_generationJobId_idx_486d342e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.generated_image_asset.generated_image_asset_graphicDocumentId_idx_b2981756",
+    "label": "Create index \"generated_image_asset_graphicDocumentId_idx_b2981756\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "generated_image_asset_graphicDocumentId_idx_b2981756",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"generated_image_asset_graphicDocumentId_idx_b2981756\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_graphicDocumentId_idx_b2981756\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"generated_image_asset_graphicDocumentId_idx_b2981756\"",
+        "sql": "CREATE INDEX \"generated_image_asset_graphicDocumentId_idx_b2981756\" ON \"public\".\"generated_image_asset\" (\"graphicDocumentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"generated_image_asset_graphicDocumentId_idx_b2981756\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_graphicDocumentId_idx_b2981756\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.generated_image_asset.generated_image_asset_projectId_idx_a96e4d92",
+    "label": "Create index \"generated_image_asset_projectId_idx_a96e4d92\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "generated_image_asset_projectId_idx_a96e4d92",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"generated_image_asset_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"generated_image_asset_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"generated_image_asset_projectId_idx_a96e4d92\" ON \"public\".\"generated_image_asset\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"generated_image_asset_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.generated_image_asset.generated_image_asset_project_created_idx",
+    "label": "Create index \"generated_image_asset_project_created_idx\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "generated_image_asset_project_created_idx",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"generated_image_asset_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"generated_image_asset_project_created_idx\"",
+        "sql": "CREATE INDEX \"generated_image_asset_project_created_idx\" ON \"public\".\"generated_image_asset\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"generated_image_asset_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.generated_image_asset.generated_image_asset_project_document_idx",
+    "label": "Create index \"generated_image_asset_project_document_idx\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "generated_image_asset_project_document_idx",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"generated_image_asset_project_document_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_project_document_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"generated_image_asset_project_document_idx\"",
+        "sql": "CREATE INDEX \"generated_image_asset_project_document_idx\" ON \"public\".\"generated_image_asset\" (\"projectId\", \"graphicDocumentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"generated_image_asset_project_document_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_project_document_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.generated_image_asset.generated_image_asset_project_job_idx",
+    "label": "Create index \"generated_image_asset_project_job_idx\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "generated_image_asset_project_job_idx",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"generated_image_asset_project_job_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_project_job_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"generated_image_asset_project_job_idx\"",
+        "sql": "CREATE INDEX \"generated_image_asset_project_job_idx\" ON \"public\".\"generated_image_asset\" (\"projectId\", \"generationJobId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"generated_image_asset_project_job_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"generated_image_asset_project_job_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.graphic_document.graphic_document_projectId_idx_a96e4d92",
+    "label": "Create index \"graphic_document_projectId_idx_a96e4d92\" on \"graphic_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "graphic_document_projectId_idx_a96e4d92",
+        "table": "graphic_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"graphic_document_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"graphic_document_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"graphic_document_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"graphic_document_projectId_idx_a96e4d92\" ON \"public\".\"graphic_document\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"graphic_document_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"graphic_document_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.graphic_document.graphic_document_project_created_idx",
+    "label": "Create index \"graphic_document_project_created_idx\" on \"graphic_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "graphic_document_project_created_idx",
+        "table": "graphic_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"graphic_document_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"graphic_document_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"graphic_document_project_created_idx\"",
+        "sql": "CREATE INDEX \"graphic_document_project_created_idx\" ON \"public\".\"graphic_document\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"graphic_document_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"graphic_document_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.graphic_document.graphic_document_project_template_idx",
+    "label": "Create index \"graphic_document_project_template_idx\" on \"graphic_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "graphic_document_project_template_idx",
+        "table": "graphic_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"graphic_document_project_template_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"graphic_document_project_template_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"graphic_document_project_template_idx\"",
+        "sql": "CREATE INDEX \"graphic_document_project_template_idx\" ON \"public\".\"graphic_document\" (\"projectId\", \"templateType\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"graphic_document_project_template_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"graphic_document_project_template_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.image_generation_job.image_generation_job_document_created_idx",
+    "label": "Create index \"image_generation_job_document_created_idx\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "image_generation_job_document_created_idx",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"image_generation_job_document_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_document_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"image_generation_job_document_created_idx\"",
+        "sql": "CREATE INDEX \"image_generation_job_document_created_idx\" ON \"public\".\"image_generation_job\" (\"graphicDocumentId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"image_generation_job_document_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_document_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.image_generation_job.image_generation_job_graphicDocumentId_idx_b2981756",
+    "label": "Create index \"image_generation_job_graphicDocumentId_idx_b2981756\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "image_generation_job_graphicDocumentId_idx_b2981756",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"image_generation_job_graphicDocumentId_idx_b2981756\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_graphicDocumentId_idx_b2981756\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"image_generation_job_graphicDocumentId_idx_b2981756\"",
+        "sql": "CREATE INDEX \"image_generation_job_graphicDocumentId_idx_b2981756\" ON \"public\".\"image_generation_job\" (\"graphicDocumentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"image_generation_job_graphicDocumentId_idx_b2981756\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_graphicDocumentId_idx_b2981756\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.image_generation_job.image_generation_job_projectId_idx_a96e4d92",
+    "label": "Create index \"image_generation_job_projectId_idx_a96e4d92\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "image_generation_job_projectId_idx_a96e4d92",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"image_generation_job_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"image_generation_job_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"image_generation_job_projectId_idx_a96e4d92\" ON \"public\".\"image_generation_job\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"image_generation_job_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.image_generation_job.image_generation_job_project_created_idx",
+    "label": "Create index \"image_generation_job_project_created_idx\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "image_generation_job_project_created_idx",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"image_generation_job_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"image_generation_job_project_created_idx\"",
+        "sql": "CREATE INDEX \"image_generation_job_project_created_idx\" ON \"public\".\"image_generation_job\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"image_generation_job_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.image_generation_job.image_generation_job_project_status_created_idx",
+    "label": "Create index \"image_generation_job_project_status_created_idx\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "image_generation_job_project_status_created_idx",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"image_generation_job_project_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_project_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"image_generation_job_project_status_created_idx\"",
+        "sql": "CREATE INDEX \"image_generation_job_project_status_created_idx\" ON \"public\".\"image_generation_job\" (\"projectId\", \"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"image_generation_job_project_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_project_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.generated_image_asset.generated_image_asset_projectId_fkey",
+    "label": "Add foreign key \"generated_image_asset_projectId_fkey\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "generated_image_asset_projectId_fkey",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"generated_image_asset_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "generated_image_asset_projectId_fkey",
+          "public",
+          "\"public\".\"generated_image_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"generated_image_asset_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"generated_image_asset\"\nADD CONSTRAINT \"generated_image_asset_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"generated_image_asset_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "generated_image_asset_projectId_fkey",
+          "public",
+          "\"public\".\"generated_image_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.generated_image_asset.generated_image_asset_generationJobId_fkey",
+    "label": "Add foreign key \"generated_image_asset_generationJobId_fkey\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "generated_image_asset_generationJobId_fkey",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"generated_image_asset_generationJobId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "generated_image_asset_generationJobId_fkey",
+          "public",
+          "\"public\".\"generated_image_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"generated_image_asset_generationJobId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"generated_image_asset\"\nADD CONSTRAINT \"generated_image_asset_generationJobId_fkey\"\nFOREIGN KEY (\"generationJobId\")\nREFERENCES \"public\".\"image_generation_job\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"generated_image_asset_generationJobId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "generated_image_asset_generationJobId_fkey",
+          "public",
+          "\"public\".\"generated_image_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.generated_image_asset.generated_image_asset_graphicDocumentId_fkey",
+    "label": "Add foreign key \"generated_image_asset_graphicDocumentId_fkey\" on \"generated_image_asset\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "generated_image_asset_graphicDocumentId_fkey",
+        "table": "generated_image_asset"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"generated_image_asset_graphicDocumentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "generated_image_asset_graphicDocumentId_fkey",
+          "public",
+          "\"public\".\"generated_image_asset\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"generated_image_asset_graphicDocumentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"generated_image_asset\"\nADD CONSTRAINT \"generated_image_asset_graphicDocumentId_fkey\"\nFOREIGN KEY (\"graphicDocumentId\")\nREFERENCES \"public\".\"graphic_document\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"generated_image_asset_graphicDocumentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "generated_image_asset_graphicDocumentId_fkey",
+          "public",
+          "\"public\".\"generated_image_asset\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.graphic_document.graphic_document_projectId_fkey",
+    "label": "Add foreign key \"graphic_document_projectId_fkey\" on \"graphic_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "graphic_document_projectId_fkey",
+        "table": "graphic_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"graphic_document_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "graphic_document_projectId_fkey",
+          "public",
+          "\"public\".\"graphic_document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"graphic_document_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"graphic_document\"\nADD CONSTRAINT \"graphic_document_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"graphic_document_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "graphic_document_projectId_fkey",
+          "public",
+          "\"public\".\"graphic_document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.image_generation_job.image_generation_job_projectId_fkey",
+    "label": "Add foreign key \"image_generation_job_projectId_fkey\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "image_generation_job_projectId_fkey",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"image_generation_job_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "image_generation_job_projectId_fkey",
+          "public",
+          "\"public\".\"image_generation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"image_generation_job_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"image_generation_job\"\nADD CONSTRAINT \"image_generation_job_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"image_generation_job_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "image_generation_job_projectId_fkey",
+          "public",
+          "\"public\".\"image_generation_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.image_generation_job.image_generation_job_graphicDocumentId_fkey",
+    "label": "Add foreign key \"image_generation_job_graphicDocumentId_fkey\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "image_generation_job_graphicDocumentId_fkey",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"image_generation_job_graphicDocumentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "image_generation_job_graphicDocumentId_fkey",
+          "public",
+          "\"public\".\"image_generation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"image_generation_job_graphicDocumentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"image_generation_job\"\nADD CONSTRAINT \"image_generation_job_graphicDocumentId_fkey\"\nFOREIGN KEY (\"graphicDocumentId\")\nREFERENCES \"public\".\"graphic_document\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"image_generation_job_graphicDocumentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "image_generation_job_graphicDocumentId_fkey",
+          "public",
+          "\"public\".\"image_generation_job\""
+        ]
+      }
+    ]
+  }
+]

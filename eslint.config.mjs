@@ -21,6 +21,8 @@ const eslintConfig = defineConfig([
     ".cursor/**",
     ".devin/**",
     ".opencode/**",
+    // Generated output from the brag skill; never source.
+    "brag-output-*/**",
   ]),
 ]);
 

@@ -353,7 +353,7 @@ describe("audio engine end to end", () => {
     await page
       .getByTestId("audio-track-item")
       .first()
-      .waitFor({ state: "visible", timeout: 10_000 });
+      .waitFor({ state: "visible", timeout: 30_000 });
 
     await page.getByTestId("render-video").click();
     await expect

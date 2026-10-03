@@ -2,7 +2,7 @@ import { HttpError } from "../../../lib/http";
 import { normalizeAssetRef } from "../domain/validation";
 
 export type ResolvedAssetRef = {
-  kind: "capture" | "asset";
+  kind: "capture" | "asset" | "generated";
   id: string;
   ref: string;
   width: number | null;
@@ -23,16 +23,39 @@ export async function resolveAssetRef(
   rawRef: string,
 ): Promise<ResolvedAssetRef> {
   const ref = normalizeAssetRef(rawRef);
-  const match = /^(capture|asset):([A-Za-z0-9_-]+)$/.exec(ref);
+  const match = /^(capture|asset|generated):([A-Za-z0-9_-]+)$/.exec(ref);
 
   if (!match) {
-    throw new HttpError(400, "assetRef must be a capture: or asset: reference");
+    throw new HttpError(
+      400,
+      "assetRef must be a capture:, asset: or generated: reference",
+    );
   }
 
-  const kind = match[1] as "capture" | "asset";
+  const kind = match[1] as "capture" | "asset" | "generated";
   const id = match[2]!;
 
   const { db } = await import("../../../prisma/db");
+
+  if (kind === "generated") {
+    const generated = await db.orm.public.GeneratedImageAsset.where({
+      id,
+      projectId,
+    }).first();
+
+    if (!generated || generated.deletedAt) {
+      throw new HttpError(404, "Referenced generated image was not found");
+    }
+
+    return {
+      kind,
+      id,
+      ref,
+      width: generated.width,
+      height: generated.height,
+      durationMs: null,
+    };
+  }
 
   if (kind === "capture") {
     const take = await db.orm.public.CaptureTake.where({ id, projectId }).first();

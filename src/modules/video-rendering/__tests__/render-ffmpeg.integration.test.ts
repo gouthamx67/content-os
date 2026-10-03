@@ -8,6 +8,7 @@ import { LocalRenderStorage } from "../storage/render-storage";
 import { RenderWorker } from "../render-worker";
 import { RenderAssetResolver } from "../assets/render-asset-resolver";
 import { captureStorage } from "../../capture-engine/storage/capture-storage";
+import { imageStorage } from "../../image-generation/storage/image-storage";
 
 const TEST_DATABASE_URL =
   "postgresql://contentos:contentos@localhost:5433/content_os_test";
@@ -59,7 +60,9 @@ function makeWorker(): RenderWorker {
     assets: new RenderAssetResolver({
       captures: container.container.repositories.captures,
       assets: container.container.repositories.assets,
+      images: container.container.repositories.images,
       captureStorage,
+      imageStorage,
       storage: container.container.providers.storage,
     }),
     workDirRoot: workRoot,

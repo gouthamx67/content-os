@@ -154,6 +154,10 @@ model Project {
 
   visualCompositions VisualComposition[]
 
+  graphicDocuments    GraphicDocument[]
+  imageGenerationJobs ImageGenerationJob[]
+  generatedImageAssets GeneratedImageAsset[]
+
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@map("project")
@@ -1968,4 +1972,135 @@ model MuxedVideoArtifact {
   @@index([projectId, createdAt], map: "muxed_video_artifact_project_created_idx")
   @@index([projectId, videoRenderJobId], map: "muxed_video_artifact_project_video_idx")
   @@map("muxed_video_artifact")
+}
+
+// ---------------------------------------------------------------------------
+// CP17 — Image / Graphic Generation Engine
+// ---------------------------------------------------------------------------
+
+enum ImageGenerationJobStatus {
+  @@type("pg/text@1")
+
+  QUEUED = "QUEUED"
+  RUNNING = "RUNNING"
+  SUCCEEDED = "SUCCEEDED"
+  FAILED = "FAILED"
+  CANCEL_REQUESTED = "CANCEL_REQUESTED"
+  CANCELLED = "CANCELLED"
+}
+
+enum ImageGenerationProvider {
+  @@type("pg/text@1")
+
+  LOCAL_GRAPHIC = "LOCAL_GRAPHIC"
+  REMOTE_IMAGE = "REMOTE_IMAGE"
+}
+
+enum ImageOutputFormat {
+  @@type("pg/text@1")
+
+  PNG = "PNG"
+  JPEG = "JPEG"
+}
+
+enum GraphicTemplateType {
+  @@type("pg/text@1")
+
+  PRODUCT_HERO = "PRODUCT_HERO"
+  FEATURE_CALLOUT = "FEATURE_CALLOUT"
+  QUOTE_CARD = "QUOTE_CARD"
+  SOCIAL_POST = "SOCIAL_POST"
+  PROMO_CARD = "PROMO_CARD"
+}
+
+/// A versioned, renderable design document. The design graph is the source of
+/// truth for a graphic; a generation job snapshots it before rasterizing so a
+/// later edit cannot change what an already-queued job produces.
+model GraphicDocument {
+  id               String              @id @default(cuid(2))
+  projectId        String
+  createdById      String
+  name             String
+  templateType     GraphicTemplateType
+  width            Int
+  height           Int
+  outputFormat     ImageOutputFormat   @default(PNG)
+  transparent      Boolean             @default(false)
+  designGraph      String
+  designGraphHash  String
+  contractVersion  Int                 @default(1)
+  deletedAt        TimestamptzString?
+  createdAt        TimestamptzString   @default(now())
+  updatedAt        temporal.updatedAtString()
+
+  project          Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  generationJobs   ImageGenerationJob[]
+  assets           GeneratedImageAsset[]
+
+  @@index([projectId, createdAt], map: "graphic_document_project_created_idx")
+  @@index([projectId, templateType], map: "graphic_document_project_template_idx")
+  @@map("graphic_document")
+}
+
+model ImageGenerationJob {
+  id                String                  @id @default(cuid(2))
+  projectId         String
+  requestedById     String
+  graphicDocumentId String?
+  provider          ImageGenerationProvider
+  status            ImageGenerationJobStatus @default(QUEUED)
+  outputFormat      ImageOutputFormat
+  width             Int
+  height            Int
+  transparent       Boolean                 @default(false)
+  prompt            String
+  // The exact immutable recipe snapshot for this job, serialised as JSON text.
+  generationRecipe  String
+  recipeSha256      String
+  progressPct       Int                     @default(0)
+  providerJobId     String?
+  providerModel     String?
+  providerVersion   String?
+  errorCode         String?
+  errorMessage      String?
+  createdAt         TimestamptzString       @default(now())
+  startedAt         TimestamptzString?
+  finishedAt        TimestamptzString?
+  updatedAt         temporal.updatedAtString()
+
+  project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  graphicDocument   GraphicDocument?    @relation(fields: [graphicDocumentId], references: [id], onDelete: SetNull)
+  assets            GeneratedImageAsset[]
+
+  @@index([projectId, createdAt], map: "image_generation_job_project_created_idx")
+  @@index([projectId, status, createdAt], map: "image_generation_job_project_status_created_idx")
+  @@index([graphicDocumentId, createdAt], map: "image_generation_job_document_created_idx")
+  @@map("image_generation_job")
+}
+
+model GeneratedImageAsset {
+  id                String             @id @default(cuid(2))
+  projectId         String
+  generationJobId   String?
+  graphicDocumentId String?
+  storageKey        String
+  mimeType          String
+  outputFormat      ImageOutputFormat
+  width             Int
+  height            Int
+  byteSize          Int
+  checksumSha256    String
+  transparent       Boolean            @default(false)
+  metadata          String?
+  deletedAt         TimestamptzString?
+  createdAt         TimestamptzString  @default(now())
+
+  project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  generationJob     ImageGenerationJob? @relation(fields: [generationJobId], references: [id], onDelete: SetNull)
+  graphicDocument   GraphicDocument?    @relation(fields: [graphicDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt], map: "generated_image_asset_project_created_idx")
+  @@index([projectId, generationJobId], map: "generated_image_asset_project_job_idx")
+  @@index([projectId, graphicDocumentId], map: "generated_image_asset_project_document_idx")
+  @@map("generated_image_asset")
 }

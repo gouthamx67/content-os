@@ -10,6 +10,7 @@
     "test": "vitest run",
     "render:worker": "tsx src/scripts/render-worker.ts",
     "audio:worker": "tsx src/scripts/audio-worker.ts",
+    "image:worker": "tsx src/scripts/image-generation-worker.ts",
     "postinstall": "prisma skills sync || exit 0",
     "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
@@ -20,6 +21,7 @@
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "sharp": "^0.35.4",
     "undici": "^7.29.1",
     "yauzl": "^3.4.0"
   },

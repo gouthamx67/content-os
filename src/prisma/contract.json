@@ -96,6 +96,18 @@
       "model": "CreativeDirection",
       "namespace": "public"
     },
+    "generated_image_asset": {
+      "model": "GeneratedImageAsset",
+      "namespace": "public"
+    },
+    "graphic_document": {
+      "model": "GraphicDocument",
+      "namespace": "public"
+    },
+    "image_generation_job": {
+      "model": "ImageGenerationJob",
+      "namespace": "public"
+    },
     "intelligence_asset": {
       "model": "IntelligenceAsset",
       "namespace": "public"
@@ -989,6 +1001,86 @@
               {
                 "name": "OTHER",
                 "value": "OTHER"
+              }
+            ]
+          },
+          "GraphicTemplateType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "PRODUCT_HERO",
+                "value": "PRODUCT_HERO"
+              },
+              {
+                "name": "FEATURE_CALLOUT",
+                "value": "FEATURE_CALLOUT"
+              },
+              {
+                "name": "QUOTE_CARD",
+                "value": "QUOTE_CARD"
+              },
+              {
+                "name": "SOCIAL_POST",
+                "value": "SOCIAL_POST"
+              },
+              {
+                "name": "PROMO_CARD",
+                "value": "PROMO_CARD"
+              }
+            ]
+          },
+          "ImageGenerationJobStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "QUEUED",
+                "value": "QUEUED"
+              },
+              {
+                "name": "RUNNING",
+                "value": "RUNNING"
+              },
+              {
+                "name": "SUCCEEDED",
+                "value": "SUCCEEDED"
+              },
+              {
+                "name": "FAILED",
+                "value": "FAILED"
+              },
+              {
+                "name": "CANCEL_REQUESTED",
+                "value": "CANCEL_REQUESTED"
+              },
+              {
+                "name": "CANCELLED",
+                "value": "CANCELLED"
+              }
+            ]
+          },
+          "ImageGenerationProvider": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "LOCAL_GRAPHIC",
+                "value": "LOCAL_GRAPHIC"
+              },
+              {
+                "name": "REMOTE_IMAGE",
+                "value": "REMOTE_IMAGE"
+              }
+            ]
+          },
+          "ImageOutputFormat": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "PNG",
+                "value": "PNG"
+              },
+              {
+                "name": "JPEG",
+                "value": "JPEG"
               }
             ]
           },
@@ -6561,6 +6653,749 @@
               "table": "creative_direction"
             }
           },
+          "GeneratedImageAsset": {
+            "fields": {
+              "byteSize": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "checksumSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "deletedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "generationJobId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "graphicDocumentId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "height": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "metadata": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mimeType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputFormat": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ImageOutputFormat",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "storageKey": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "transparent": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "width": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "generationJob": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "generationJobId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "ImageGenerationJob",
+                  "namespace": "public"
+                }
+              },
+              "graphicDocument": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "graphicDocumentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "GraphicDocument",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "byteSize": {
+                  "column": "byteSize"
+                },
+                "checksumSha256": {
+                  "column": "checksumSha256"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "deletedAt": {
+                  "column": "deletedAt"
+                },
+                "generationJobId": {
+                  "column": "generationJobId"
+                },
+                "graphicDocumentId": {
+                  "column": "graphicDocumentId"
+                },
+                "height": {
+                  "column": "height"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "metadata": {
+                  "column": "metadata"
+                },
+                "mimeType": {
+                  "column": "mimeType"
+                },
+                "outputFormat": {
+                  "column": "outputFormat"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "storageKey": {
+                  "column": "storageKey"
+                },
+                "transparent": {
+                  "column": "transparent"
+                },
+                "width": {
+                  "column": "width"
+                }
+              },
+              "namespaceId": "public",
+              "table": "generated_image_asset"
+            }
+          },
+          "GraphicDocument": {
+            "fields": {
+              "contractVersion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "deletedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "designGraph": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "designGraphHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "height": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputFormat": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ImageOutputFormat",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "templateType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "GraphicTemplateType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "transparent": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "width": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "assets": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "graphicDocumentId"
+                  ]
+                },
+                "to": {
+                  "model": "GeneratedImageAsset",
+                  "namespace": "public"
+                }
+              },
+              "generationJobs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "graphicDocumentId"
+                  ]
+                },
+                "to": {
+                  "model": "ImageGenerationJob",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "contractVersion": {
+                  "column": "contractVersion"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdById": {
+                  "column": "createdById"
+                },
+                "deletedAt": {
+                  "column": "deletedAt"
+                },
+                "designGraph": {
+                  "column": "designGraph"
+                },
+                "designGraphHash": {
+                  "column": "designGraphHash"
+                },
+                "height": {
+                  "column": "height"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "name": {
+                  "column": "name"
+                },
+                "outputFormat": {
+                  "column": "outputFormat"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "templateType": {
+                  "column": "templateType"
+                },
+                "transparent": {
+                  "column": "transparent"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "width": {
+                  "column": "width"
+                }
+              },
+              "namespaceId": "public",
+              "table": "graphic_document"
+            }
+          },
+          "ImageGenerationJob": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorCode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorMessage": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "finishedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "generationRecipe": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "graphicDocumentId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "height": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputFormat": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ImageOutputFormat",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "progressPct": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "prompt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "provider": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ImageGenerationProvider",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "providerJobId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "providerModel": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "providerVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "recipeSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "requestedById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ImageGenerationJobStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "transparent": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "width": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "assets": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "generationJobId"
+                  ]
+                },
+                "to": {
+                  "model": "GeneratedImageAsset",
+                  "namespace": "public"
+                }
+              },
+              "graphicDocument": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "graphicDocumentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "GraphicDocument",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "errorCode": {
+                  "column": "errorCode"
+                },
+                "errorMessage": {
+                  "column": "errorMessage"
+                },
+                "finishedAt": {
+                  "column": "finishedAt"
+                },
+                "generationRecipe": {
+                  "column": "generationRecipe"
+                },
+                "graphicDocumentId": {
+                  "column": "graphicDocumentId"
+                },
+                "height": {
+                  "column": "height"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "outputFormat": {
+                  "column": "outputFormat"
+                },
+                "progressPct": {
+                  "column": "progressPct"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "prompt": {
+                  "column": "prompt"
+                },
+                "provider": {
+                  "column": "provider"
+                },
+                "providerJobId": {
+                  "column": "providerJobId"
+                },
+                "providerModel": {
+                  "column": "providerModel"
+                },
+                "providerVersion": {
+                  "column": "providerVersion"
+                },
+                "recipeSha256": {
+                  "column": "recipeSha256"
+                },
+                "requestedById": {
+                  "column": "requestedById"
+                },
+                "startedAt": {
+                  "column": "startedAt"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "transparent": {
+                  "column": "transparent"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "width": {
+                  "column": "width"
+                }
+              },
+              "namespaceId": "public",
+              "table": "image_generation_job"
+            }
+          },
           "IntelligenceAsset": {
             "fields": {
               "assertionKind": {
@@ -9745,6 +10580,51 @@
                 },
                 "to": {
                   "model": "CreativeDirection",
+                  "namespace": "public"
+                }
+              },
+              "generatedImageAssets": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "GeneratedImageAsset",
+                  "namespace": "public"
+                }
+              },
+              "graphicDocuments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "GraphicDocument",
+                  "namespace": "public"
+                }
+              },
+              "imageGenerationJobs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "ImageGenerationJob",
                   "namespace": "public"
                 }
               },
@@ -16253,6 +17133,640 @@
               },
               "uniques": []
             },
+            "generated_image_asset": {
+              "checks": [
+                {
+                  "expression": "\"outputFormat\" IN ('PNG', 'JPEG')",
+                  "name": "generated_image_asset_outputFormat_check_85875664",
+                  "prefix": "generated_image_asset_outputFormat_check"
+                }
+              ],
+              "columns": {
+                "byteSize": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "checksumSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "deletedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "generationJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "graphicDocumentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "height": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "metadata": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "mimeType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "outputFormat": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ImageOutputFormat",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "storageKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "transparent": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "width": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "generated_image_asset"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "generationJobId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "generated_image_asset"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "image_generation_job"
+                  }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "graphicDocumentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "generated_image_asset"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "graphic_document"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "generationJobId"
+                  ],
+                  "name": "generated_image_asset_generationJobId_idx_486d342e",
+                  "prefix": "generated_image_asset_generationJobId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "graphicDocumentId"
+                  ],
+                  "name": "generated_image_asset_graphicDocumentId_idx_b2981756",
+                  "prefix": "generated_image_asset_graphicDocumentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "generated_image_asset_projectId_idx_a96e4d92",
+                  "prefix": "generated_image_asset_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "generated_image_asset_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "graphicDocumentId"
+                  ],
+                  "name": "generated_image_asset_project_document_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "generationJobId"
+                  ],
+                  "name": "generated_image_asset_project_job_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "graphic_document": {
+              "checks": [
+                {
+                  "expression": "\"outputFormat\" IN ('PNG', 'JPEG')",
+                  "name": "graphic_document_outputFormat_check_85875664",
+                  "prefix": "graphic_document_outputFormat_check"
+                },
+                {
+                  "expression": "\"templateType\" IN ('PRODUCT_HERO', 'FEATURE_CALLOUT', 'QUOTE_CARD', 'SOCIAL_POST', 'PROMO_CARD')",
+                  "name": "graphic_document_templateType_check_769a6e6c",
+                  "prefix": "graphic_document_templateType_check"
+                }
+              ],
+              "columns": {
+                "contractVersion": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "deletedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "designGraph": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "designGraphHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "height": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "outputFormat": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PNG"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ImageOutputFormat",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "templateType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "GraphicTemplateType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "transparent": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "width": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "graphic_document"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "graphic_document_projectId_idx_a96e4d92",
+                  "prefix": "graphic_document_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "graphic_document_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "templateType"
+                  ],
+                  "name": "graphic_document_project_template_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "image_generation_job": {
+              "checks": [
+                {
+                  "expression": "\"outputFormat\" IN ('PNG', 'JPEG')",
+                  "name": "image_generation_job_outputFormat_check_85875664",
+                  "prefix": "image_generation_job_outputFormat_check"
+                },
+                {
+                  "expression": "\"provider\" IN ('LOCAL_GRAPHIC', 'REMOTE_IMAGE')",
+                  "name": "image_generation_job_provider_check_dfff8216",
+                  "prefix": "image_generation_job_provider_check"
+                },
+                {
+                  "expression": "\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED')",
+                  "name": "image_generation_job_status_check_ba978c1e",
+                  "prefix": "image_generation_job_status_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "errorCode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "errorMessage": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "finishedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "generationRecipe": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "graphicDocumentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "height": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "outputFormat": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ImageOutputFormat",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "progressPct": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "prompt": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "provider": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ImageGenerationProvider",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "providerJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "providerModel": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "providerVersion": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "recipeSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "requestedById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "QUEUED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ImageGenerationJobStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "transparent": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "width": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "image_generation_job"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "graphicDocumentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "image_generation_job"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "graphic_document"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "graphicDocumentId",
+                    "createdAt"
+                  ],
+                  "name": "image_generation_job_document_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "graphicDocumentId"
+                  ],
+                  "name": "image_generation_job_graphicDocumentId_idx_b2981756",
+                  "prefix": "image_generation_job_graphicDocumentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "image_generation_job_projectId_idx_a96e4d92",
+                  "prefix": "image_generation_job_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "image_generation_job_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "image_generation_job_project_status_created_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "intelligence_asset": {
               "checks": [
                 {
@@ -21207,6 +22721,41 @@
                 "OTHER"
               ]
             },
+            "GraphicTemplateType": {
+              "kind": "valueSet",
+              "values": [
+                "PRODUCT_HERO",
+                "FEATURE_CALLOUT",
+                "QUOTE_CARD",
+                "SOCIAL_POST",
+                "PROMO_CARD"
+              ]
+            },
+            "ImageGenerationJobStatus": {
+              "kind": "valueSet",
+              "values": [
+                "QUEUED",
+                "RUNNING",
+                "SUCCEEDED",
+                "FAILED",
+                "CANCEL_REQUESTED",
+                "CANCELLED"
+              ]
+            },
+            "ImageGenerationProvider": {
+              "kind": "valueSet",
+              "values": [
+                "LOCAL_GRAPHIC",
+                "REMOTE_IMAGE"
+              ]
+            },
+            "ImageOutputFormat": {
+              "kind": "valueSet",
+              "values": [
+                "PNG",
+                "JPEG"
+              ]
+            },
             "Importance": {
               "kind": "valueSet",
               "values": [
@@ -21499,10 +23048,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "9bb58cae2e25d49890ce74030507a07e2fef44b028f7cfe7830165e74d4b3bd1"
+    "storageHash": "21b5ecc822ef1c8d26b40dd24d974686729497d464d8ee6743c9d2f141f460e9"
   },
   "execution": {
-    "executionHash": "0772790da1ac521a8f645e45131ec8da244f8107264e2164eb6a36258ed310c2",
+    "executionHash": "301c8f523ef6a24b2a829d08c1b93fb4c872811c1e9c9b38b7047b7468ab155f",
     "mutations": {
       "defaults": [
         {
@@ -22026,6 +23575,69 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "creative_direction"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "generated_image_asset"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "graphic_document"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "graphic_document"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "image_generation_job"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "image_generation_job"
           }
         },
         {

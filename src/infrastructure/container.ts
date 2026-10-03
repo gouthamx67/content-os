@@ -87,6 +87,14 @@ import { AudioRenderWorker } from "../modules/audio-engine/render/audio-render-w
 import { AudioSourceResolver } from "../modules/audio-engine/assets/audio-source-resolver";
 import { audioStorage } from "../modules/audio-engine/storage/audio-storage";
 import { ensureAudioComposition } from "../modules/audio-engine/integrations/from-visual-composition";
+import { PostgresImageRepository } from "./repositories/postgres-image-repository";
+import { ImageGenerationService } from "../modules/image-generation/generation-service";
+import { ImageVariantService } from "../modules/image-generation/generate-variants";
+import { GraphicDocumentService } from "../modules/image-generation/graphic-document-service";
+import { ImageGenerationWorker } from "../modules/image-generation/generation-worker";
+import { imageStorage } from "../modules/image-generation/storage/image-storage";
+import type { ImageSourceDependencies } from "../modules/image-generation/assets/resolve-product-asset";
+import { createImageGenerationContextDependencies } from "./image-generation-context";
 
 const orm = db.orm.public;
 
@@ -108,6 +116,7 @@ const repositories = {
   visual: new PostgresVisualRepository(orm),
   renderJobs: new PostgresRenderJobRepository(orm),
   audio: new PostgresAudioRepository(orm),
+  images: new PostgresImageRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -438,7 +447,9 @@ const renderJobService = new RenderJobService({
 const renderAssetResolver = new RenderAssetResolver({
   captures: repositories.captures,
   assets: repositories.assets,
+  images: repositories.images,
   captureStorage,
+  imageStorage,
   storage: providers.storage,
   probe: probeMedia,
 });
@@ -549,6 +560,74 @@ export function createAudioWorker(): AudioRenderWorker {
   });
 }
 
+/**
+ * CP17 image / graphic engine.
+ *
+ * The context adapter reads CP06/CP08/CP09/CP10/CP11 through their ports and
+ * freezes the result into a recipe, so a job is reproducible after the project
+ * moves on. The source resolver only reads bytes the same project already owns,
+ * which is what makes a generated graphic unable to pull in another project's
+ * media.
+ */
+const imageContext = createImageGenerationContextDependencies({
+  brand: repositories.brand,
+  intelligence: repositories.intelligence,
+  contentIntents: repositories.contentIntents,
+  creativeDirections: repositories.creativeDirections,
+  storyboards: repositories.storyboards,
+  assets: repositories.assets,
+});
+
+const imageSourceResolver: ImageSourceDependencies = {
+  getProjectAsset: async (projectId, assetId) => {
+    const asset = await repositories.assets.getById(assetId);
+    if (!asset || asset.projectId !== projectId) return null;
+    return { uri: asset.uri, name: asset.name };
+  },
+  getGeneratedAsset: async (projectId, assetId) => {
+    const asset = await repositories.images.getAsset(projectId, assetId);
+    if (!asset) return null;
+    return { storageKey: asset.storageKey, mimeType: asset.mimeType };
+  },
+  storage: providers.storage,
+  imageStorage,
+};
+
+const imageGenerationService = new ImageGenerationService({
+  repository: repositories.images,
+  authorizeProject: authorizeVisualProject,
+  context: imageContext,
+});
+
+const graphicDocumentService = new GraphicDocumentService({
+  repository: repositories.images,
+  authorizeProject: authorizeVisualProject,
+  context: imageContext,
+});
+
+const imageVariantService = new ImageVariantService({
+  generation: imageGenerationService,
+});
+
+const imageServices = {
+  generation: imageGenerationService,
+  documents: graphicDocumentService,
+  variants: imageVariantService,
+  repository: repositories.images,
+  sources: imageSourceResolver,
+};
+
+export const imageWorkerHealth = new RenderWorkerHealth();
+
+export function createImageWorker(): ImageGenerationWorker {
+  return new ImageGenerationWorker({
+    repository: repositories.images,
+    storage: imageStorage,
+    sources: imageSourceResolver,
+    health: imageWorkerHealth,
+  });
+}
+
 export const container = {
   repositories,
   providers,
@@ -572,5 +651,6 @@ export const container = {
     visualLayers: visualLayerService,
     renders: renderJobService,
     audio: audioCompositions,
+    images: imageServices,
   },
 };

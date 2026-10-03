@@ -43,3 +43,13 @@ export const audioRenderJobService = container.services.audio.render;
 export const audioService = container.services.audio;
 
 export const audioSourceResolver = container.services.audio.sources;
+
+export const imageGenerationService = container.services.images.generation;
+
+export const graphicDocumentService = container.services.images.documents;
+
+export const imageVariantService = container.services.images.variants;
+
+export const imageRepository = container.services.images.repository;
+
+export const imageSourceResolver = container.services.images.sources;
