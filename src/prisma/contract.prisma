@@ -158,6 +158,13 @@ model Project {
   imageGenerationJobs ImageGenerationJob[]
   generatedImageAssets GeneratedImageAsset[]
 
+  writingDocuments     WritingDocument[]
+  writingGenerationJobs WritingGenerationJob[]
+  writingClaims        WritingClaim[]
+
+  adaptationBatches    AdaptationBatch[]
+  adaptationJobs       AdaptationJob[]
+
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@map("project")
@@ -2103,4 +2110,319 @@ model GeneratedImageAsset {
   @@index([projectId, generationJobId], map: "generated_image_asset_project_job_idx")
   @@index([projectId, graphicDocumentId], map: "generated_image_asset_project_document_idx")
   @@map("generated_image_asset")
+}
+
+enum WritingJobStatus {
+  @@type("pg/text@1")
+
+  QUEUED = "QUEUED"
+  RUNNING = "RUNNING"
+  SUCCEEDED = "SUCCEEDED"
+  FAILED = "FAILED"
+  CANCEL_REQUESTED = "CANCEL_REQUESTED"
+  CANCELLED = "CANCELLED"
+}
+
+enum WritingProvider {
+  @@type("pg/text@1")
+
+  LOCAL_RULES = "LOCAL_RULES"
+  REMOTE_LLM = "REMOTE_LLM"
+}
+
+enum WritingBlockType {
+  @@type("pg/text@1")
+
+  HEADLINE = "HEADLINE"
+  HOOK = "HOOK"
+  SUBHEAD = "SUBHEAD"
+  BODY = "BODY"
+  CAPTION = "CAPTION"
+  CTA = "CTA"
+  AD_COPY = "AD_COPY"
+  PRODUCT_DESCRIPTION = "PRODUCT_DESCRIPTION"
+  SCRIPT = "SCRIPT"
+  VOICEOVER = "VOICEOVER"
+}
+
+enum WritingTone {
+  @@type("pg/text@1")
+
+  BRAND = "BRAND"
+  PROFESSIONAL = "PROFESSIONAL"
+  FRIENDLY = "FRIENDLY"
+  PLAYFUL = "PLAYFUL"
+  BOLD = "BOLD"
+  MINIMAL = "MINIMAL"
+  TECHNICAL = "TECHNICAL"
+  CONVERSATIONAL = "CONVERSATIONAL"
+}
+
+enum WritingLength {
+  @@type("pg/text@1")
+
+  SHORT = "SHORT"
+  MEDIUM = "MEDIUM"
+  LONG = "LONG"
+}
+
+enum ClaimStatus {
+  @@type("pg/text@1")
+
+  GROUNDED = "GROUNDED"
+  UNSUPPORTED = "UNSUPPORTED"
+  REVIEW = "REVIEW"
+}
+
+/// A versioned, grounded piece of written content. The writing context is
+/// frozen into `contextSnapshot` at enqueue time, so a later edit to the brand,
+/// product or storyboard cannot change what an already-queued document says. The
+/// `contextSha256` is over the canonical JSON of that snapshot, and `contentSha256`
+/// is over the selected `content`, so a silent edit is detectable.
+model WritingDocument {
+  id                  String           @id @default(cuid(2))
+  projectId           String
+  createdById         String
+  title               String
+  blockType           WritingBlockType
+  tone                WritingTone
+  length              WritingLength
+  objective           String
+  audience            String?
+  language            String?
+  content             String
+  contentSha256       String
+  contextSnapshot     String
+  contextSha256       String
+  version             Int              @default(1)
+  brandVersion        Int?
+  intelligenceVersion Int?
+  intentId            String?
+  directionId         String?
+  storyboardId        String?
+  sceneId             String?
+  selectedVariantId   String?
+  createdAt           TimestamptzString @default(now())
+  updatedAt           temporal.updatedAtString()
+
+  project             Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  variants            WritingVariant[]
+  claims              WritingClaim[]
+  generationJobs      WritingGenerationJob[]
+
+  @@index([projectId, createdAt], map: "writing_document_project_created_idx")
+  @@index([projectId, blockType], map: "writing_document_project_block_idx")
+  @@map("writing_document")
+}
+
+/// One candidate rendering of a document. Every rewrite is a new row, never an
+/// overwrite, so the history of what was said stays readable. Exactly one variant
+/// per document is `selected`.
+model WritingVariant {
+  id           String            @id @default(cuid(2))
+  documentId   String
+  ordinal      Int
+  label        String
+  text         String
+  textSha256   String
+  instruction  String?
+  selected     Boolean           @default(false)
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+
+  document     WritingDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  claims       WritingClaim[]
+
+  @@unique([documentId, ordinal], map: "writing_variant_document_ordinal")
+  @@index([documentId], map: "writing_variant_document_idx")
+  @@map("writing_variant")
+}
+
+/// A generation request and its outcome. The recipe and context snapshot are
+/// carried on the job as well as the document so a queued job is self-contained
+/// and reproducible after the project has moved on.
+model WritingGenerationJob {
+  id                String            @id @default(cuid(2))
+  projectId         String
+  requestedById     String
+  documentId        String?
+  provider          WritingProvider
+  status            WritingJobStatus   @default(QUEUED)
+  blockType         WritingBlockType
+  tone              WritingTone
+  length            WritingLength
+  objective         String
+  audience          String?
+  language          String?
+  prompt            String
+  generationRecipe  String
+  recipeSha256      String
+  contextSnapshot   String
+  contextSha256     String
+  variantCount      Int
+  progressPct       Int               @default(0)
+  providerJobId     String?
+  providerModel     String?
+  providerVersion   String?
+  errorCode         String?
+  errorMessage      String?
+  createdAt         TimestamptzString @default(now())
+  startedAt         TimestamptzString?
+  finishedAt        TimestamptzString?
+  updatedAt         temporal.updatedAtString()
+
+  project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  document          WritingDocument?   @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt], map: "writing_generation_job_project_created_idx")
+  @@index([projectId, status, createdAt], map: "writing_generation_job_project_status_created_idx")
+  @@index([documentId, createdAt], map: "writing_generation_job_document_created_idx")
+  @@map("writing_generation_job")
+}
+
+/// A claim extracted from a variant and the verdict on whether the project's own
+/// material supports it. `sourceIds` holds real CP06 Source ids only — an
+/// intelligence entity id (a feature, benefit, workflow or shot) is never a
+/// source id and must not be recorded here.
+model WritingClaim {
+  id          String            @id @default(cuid(2))
+  projectId   String
+  documentId  String
+  variantId   String?
+  text        String
+  status      ClaimStatus       @default(REVIEW)
+  sourceIds   String[]
+  reasoning   String?
+  createdAt   TimestamptzString @default(now())
+
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  document    WritingDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  variant     WritingVariant?   @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([projectId], map: "writing_claim_project_idx")
+  @@index([documentId, status], map: "writing_claim_document_status_idx")
+  @@index([variantId], map: "writing_claim_variant_idx")
+  @@map("writing_claim")
+}
+
+// ---------------------------------------------------------------------------
+// CP19 — Multi-format engine
+// ---------------------------------------------------------------------------
+
+enum AdaptationBatchStatus {
+  @@type("pg/text@1")
+
+  QUEUED = "QUEUED"
+  RUNNING = "RUNNING"
+  SUCCEEDED = "SUCCEEDED"
+  PARTIAL = "PARTIAL"
+  FAILED = "FAILED"
+  CANCEL_REQUESTED = "CANCEL_REQUESTED"
+  CANCELLED = "CANCELLED"
+}
+
+enum AdaptationJobStatus {
+  @@type("pg/text@1")
+
+  QUEUED = "QUEUED"
+  RUNNING = "RUNNING"
+  WAITING_RENDER = "WAITING_RENDER"
+  SUCCEEDED = "SUCCEEDED"
+  FAILED = "FAILED"
+  CANCEL_REQUESTED = "CANCEL_REQUESTED"
+  CANCELLED = "CANCELLED"
+}
+
+enum AdaptationSourceType {
+  @@type("pg/text@1")
+
+  WRITING_VARIANT = "WRITING_VARIANT"
+  GENERATED_IMAGE = "GENERATED_IMAGE"
+  VISUAL_COMPOSITION = "VISUAL_COMPOSITION"
+}
+
+enum AdaptationKind {
+  @@type("pg/text@1")
+
+  COPY = "COPY"
+  IMAGE = "IMAGE"
+  VIDEO = "VIDEO"
+}
+
+/// One request to turn a canonical source into a set of format variants.
+///
+/// The source is frozen here at creation time (`sourceSnapshot` plus its digest),
+/// because every canonical source — a CP18 variant, a CP17 asset, a CP14
+/// composition — keeps changing. A queued adaptation therefore adapts exactly
+/// what the user was looking at, and the digest makes a silent edit detectable.
+/// CP19 never writes back to the source: the batch and its jobs are the only
+/// rows it owns.
+model AdaptationBatch {
+  id              String                @id @default(cuid(2))
+  projectId       String
+  requestedById   String
+  sourceType      AdaptationSourceType
+  sourceId        String
+  sourceSnapshot  String
+  sourceSha256    String
+  targetCount     Int
+  status          AdaptationBatchStatus @default(QUEUED)
+  progressPct     Int                   @default(0)
+  createdAt       TimestamptzString     @default(now())
+  updatedAt       temporal.updatedAtString()
+  finishedAt      TimestamptzString?
+
+  project         Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  jobs            AdaptationJob[]
+
+  @@index([projectId, createdAt], map: "adaptation_batch_project_created_idx")
+  @@index([projectId, status, createdAt], map: "adaptation_batch_project_status_created_idx")
+  @@map("adaptation_batch")
+}
+
+/// One adaptation of one frozen source into one format.
+///
+/// The recipe is frozen alongside the batch snapshot so a job stays reproducible
+/// after the project has moved on, and its digest lets a retry be recognised as
+/// the same work rather than a fresh guess. A video job is not finished when it
+/// is written: it parks in `WAITING_RENDER` and adopts CP15's artifact once the
+/// render it asked for succeeds. `renderJobId` is a plain reference on purpose —
+/// CP15 owns that row, and deleting a composition must not delete the record that
+/// this project once produced that video.
+model AdaptationJob {
+  id                    String             @id @default(cuid(2))
+  batchId               String
+  projectId             String
+  requestedById         String
+  platformId            String
+  formatId              String
+  kind                  AdaptationKind
+  recipe                String
+  recipeSha256          String
+  status                AdaptationJobStatus @default(QUEUED)
+  progressPct           Int                @default(0)
+  outputText            String?
+  outputMimeType        String?
+  outputStorageKey      String?
+  outputByteSize        Int?
+  outputChecksumSha256  String?
+  outputWidth           Int?
+  outputHeight          Int?
+  renderJobId           String?
+  errorCode             String?
+  errorMessage          String?
+  createdAt             TimestamptzString  @default(now())
+  startedAt             TimestamptzString?
+  finishedAt            TimestamptzString?
+  updatedAt             temporal.updatedAtString()
+
+  batch                 AdaptationBatch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  project               Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, formatId, platformId], map: "adaptation_job_batch_format_platform")
+  @@index([batchId, createdAt], map: "adaptation_job_batch_created_idx")
+  @@index([batchId, status], map: "adaptation_job_batch_status_idx")
+  @@index([projectId, status, createdAt], map: "adaptation_job_project_status_created_idx")
+  @@index([renderJobId], map: "adaptation_job_render_idx")
+  @@map("adaptation_job")
 }

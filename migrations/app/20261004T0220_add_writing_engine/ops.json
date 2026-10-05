@@ -1,0 +1,1001 @@
+[
+  {
+    "id": "table.writing_claim",
+    "label": "Create table \"writing_claim\"",
+    "summary": "Creates table \"writing_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "writing_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"writing_claim\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"writing_claim\"",
+        "sql": "CREATE TABLE \"public\".\"writing_claim\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"documentId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"reasoning\" text,\n  \"sourceIds\" text[] NOT NULL,\n  \"status\" text DEFAULT 'REVIEW' NOT NULL,\n  \"text\" text NOT NULL,\n  \"variantId\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"writing_claim_sourceIds_elem_not_null_07253a8e\" CHECK (array_position(\"sourceIds\", NULL) IS NULL),\n  CONSTRAINT \"writing_claim_status_check_70a7aa2b\" CHECK (\"status\" IN ('GROUNDED', 'UNSUPPORTED', 'REVIEW'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"writing_claim\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.writing_document",
+    "label": "Create table \"writing_document\"",
+    "summary": "Creates table \"writing_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "writing_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"writing_document\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"writing_document\"",
+        "sql": "CREATE TABLE \"public\".\"writing_document\" (\n  \"audience\" text,\n  \"blockType\" text NOT NULL,\n  \"brandVersion\" int4,\n  \"content\" text NOT NULL,\n  \"contentSha256\" text NOT NULL,\n  \"contextSha256\" text NOT NULL,\n  \"contextSnapshot\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"directionId\" text,\n  \"id\" text NOT NULL,\n  \"intelligenceVersion\" int4,\n  \"intentId\" text,\n  \"language\" text,\n  \"length\" text NOT NULL,\n  \"objective\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sceneId\" text,\n  \"selectedVariantId\" text,\n  \"storyboardId\" text,\n  \"title\" text NOT NULL,\n  \"tone\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"version\" int4 DEFAULT 1 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"writing_document_blockType_check_71908e47\" CHECK (\"blockType\" IN ('HEADLINE', 'HOOK', 'SUBHEAD', 'BODY', 'CAPTION', 'CTA', 'AD_COPY', 'PRODUCT_DESCRIPTION', 'SCRIPT', 'VOICEOVER')),\n  CONSTRAINT \"writing_document_length_check_e1e66252\" CHECK (\"length\" IN ('SHORT', 'MEDIUM', 'LONG')),\n  CONSTRAINT \"writing_document_tone_check_9045ea36\" CHECK (\"tone\" IN ('BRAND', 'PROFESSIONAL', 'FRIENDLY', 'PLAYFUL', 'BOLD', 'MINIMAL', 'TECHNICAL', 'CONVERSATIONAL'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"writing_document\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.writing_generation_job",
+    "label": "Create table \"writing_generation_job\"",
+    "summary": "Creates table \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"writing_generation_job\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"writing_generation_job\"",
+        "sql": "CREATE TABLE \"public\".\"writing_generation_job\" (\n  \"audience\" text,\n  \"blockType\" text NOT NULL,\n  \"contextSha256\" text NOT NULL,\n  \"contextSnapshot\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"documentId\" text,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"finishedAt\" timestamptz,\n  \"generationRecipe\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"language\" text,\n  \"length\" text NOT NULL,\n  \"objective\" text NOT NULL,\n  \"progressPct\" int4 DEFAULT 0 NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"prompt\" text NOT NULL,\n  \"provider\" text NOT NULL,\n  \"providerJobId\" text,\n  \"providerModel\" text,\n  \"providerVersion\" text,\n  \"recipeSha256\" text NOT NULL,\n  \"requestedById\" text NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'QUEUED' NOT NULL,\n  \"tone\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"variantCount\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"writing_generation_job_blockType_check_71908e47\" CHECK (\"blockType\" IN ('HEADLINE', 'HOOK', 'SUBHEAD', 'BODY', 'CAPTION', 'CTA', 'AD_COPY', 'PRODUCT_DESCRIPTION', 'SCRIPT', 'VOICEOVER')),\n  CONSTRAINT \"writing_generation_job_length_check_e1e66252\" CHECK (\"length\" IN ('SHORT', 'MEDIUM', 'LONG')),\n  CONSTRAINT \"writing_generation_job_provider_check_1d241a04\" CHECK (\"provider\" IN ('LOCAL_RULES', 'REMOTE_LLM')),\n  CONSTRAINT \"writing_generation_job_status_check_ba978c1e\" CHECK (\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED')),\n  CONSTRAINT \"writing_generation_job_tone_check_9045ea36\" CHECK (\"tone\" IN ('BRAND', 'PROFESSIONAL', 'FRIENDLY', 'PLAYFUL', 'BOLD', 'MINIMAL', 'TECHNICAL', 'CONVERSATIONAL'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"writing_generation_job\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.writing_variant",
+    "label": "Create table \"writing_variant\"",
+    "summary": "Creates table \"writing_variant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "writing_variant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"writing_variant\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_variant\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"writing_variant\"",
+        "sql": "CREATE TABLE \"public\".\"writing_variant\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"documentId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"instruction\" text,\n  \"label\" text NOT NULL,\n  \"ordinal\" int4 NOT NULL,\n  \"selected\" bool DEFAULT false NOT NULL,\n  \"text\" text NOT NULL,\n  \"textSha256\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"writing_variant\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_variant\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.writing_variant.writing_variant_document_ordinal",
+    "label": "Add unique constraint on \"writing_variant\" (documentId, ordinal)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "writing_variant_document_ordinal",
+        "table": "writing_variant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"writing_variant_document_ordinal\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_variant_document_ordinal",
+          "public",
+          "\"public\".\"writing_variant\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"writing_variant_document_ordinal\"",
+        "sql": "ALTER TABLE \"public\".\"writing_variant\" ADD CONSTRAINT \"writing_variant_document_ordinal\" UNIQUE (\"documentId\", \"ordinal\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"writing_variant_document_ordinal\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_variant_document_ordinal",
+          "public",
+          "\"public\".\"writing_variant\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_claim.writing_claim_documentId_idx_825ef746",
+    "label": "Create index \"writing_claim_documentId_idx_825ef746\" on \"writing_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_claim_documentId_idx_825ef746",
+        "table": "writing_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_claim_documentId_idx_825ef746\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim_documentId_idx_825ef746\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_claim_documentId_idx_825ef746\"",
+        "sql": "CREATE INDEX \"writing_claim_documentId_idx_825ef746\" ON \"public\".\"writing_claim\" (\"documentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_claim_documentId_idx_825ef746\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim_documentId_idx_825ef746\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_claim.writing_claim_document_status_idx",
+    "label": "Create index \"writing_claim_document_status_idx\" on \"writing_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_claim_document_status_idx",
+        "table": "writing_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_claim_document_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim_document_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_claim_document_status_idx\"",
+        "sql": "CREATE INDEX \"writing_claim_document_status_idx\" ON \"public\".\"writing_claim\" (\"documentId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_claim_document_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim_document_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_claim.writing_claim_project_idx",
+    "label": "Create index \"writing_claim_project_idx\" on \"writing_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_claim_project_idx",
+        "table": "writing_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_claim_project_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim_project_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_claim_project_idx\"",
+        "sql": "CREATE INDEX \"writing_claim_project_idx\" ON \"public\".\"writing_claim\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_claim_project_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim_project_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_claim.writing_claim_variant_idx",
+    "label": "Create index \"writing_claim_variant_idx\" on \"writing_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_claim_variant_idx",
+        "table": "writing_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_claim_variant_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim_variant_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_claim_variant_idx\"",
+        "sql": "CREATE INDEX \"writing_claim_variant_idx\" ON \"public\".\"writing_claim\" (\"variantId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_claim_variant_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_claim_variant_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_document.writing_document_projectId_idx_a96e4d92",
+    "label": "Create index \"writing_document_projectId_idx_a96e4d92\" on \"writing_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_document_projectId_idx_a96e4d92",
+        "table": "writing_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_document_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_document_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_document_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"writing_document_projectId_idx_a96e4d92\" ON \"public\".\"writing_document\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_document_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_document_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_document.writing_document_project_block_idx",
+    "label": "Create index \"writing_document_project_block_idx\" on \"writing_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_document_project_block_idx",
+        "table": "writing_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_document_project_block_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_document_project_block_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_document_project_block_idx\"",
+        "sql": "CREATE INDEX \"writing_document_project_block_idx\" ON \"public\".\"writing_document\" (\"projectId\", \"blockType\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_document_project_block_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_document_project_block_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_document.writing_document_project_created_idx",
+    "label": "Create index \"writing_document_project_created_idx\" on \"writing_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_document_project_created_idx",
+        "table": "writing_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_document_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_document_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_document_project_created_idx\"",
+        "sql": "CREATE INDEX \"writing_document_project_created_idx\" ON \"public\".\"writing_document\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_document_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_document_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_generation_job.writing_generation_job_documentId_idx_825ef746",
+    "label": "Create index \"writing_generation_job_documentId_idx_825ef746\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_generation_job_documentId_idx_825ef746",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_generation_job_documentId_idx_825ef746\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_documentId_idx_825ef746\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_generation_job_documentId_idx_825ef746\"",
+        "sql": "CREATE INDEX \"writing_generation_job_documentId_idx_825ef746\" ON \"public\".\"writing_generation_job\" (\"documentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_generation_job_documentId_idx_825ef746\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_documentId_idx_825ef746\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_generation_job.writing_generation_job_document_created_idx",
+    "label": "Create index \"writing_generation_job_document_created_idx\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_generation_job_document_created_idx",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_generation_job_document_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_document_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_generation_job_document_created_idx\"",
+        "sql": "CREATE INDEX \"writing_generation_job_document_created_idx\" ON \"public\".\"writing_generation_job\" (\"documentId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_generation_job_document_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_document_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_generation_job.writing_generation_job_projectId_idx_a96e4d92",
+    "label": "Create index \"writing_generation_job_projectId_idx_a96e4d92\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_generation_job_projectId_idx_a96e4d92",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_generation_job_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_generation_job_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"writing_generation_job_projectId_idx_a96e4d92\" ON \"public\".\"writing_generation_job\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_generation_job_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_generation_job.writing_generation_job_project_created_idx",
+    "label": "Create index \"writing_generation_job_project_created_idx\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_generation_job_project_created_idx",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_generation_job_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_generation_job_project_created_idx\"",
+        "sql": "CREATE INDEX \"writing_generation_job_project_created_idx\" ON \"public\".\"writing_generation_job\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_generation_job_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_generation_job.writing_generation_job_project_status_created_idx",
+    "label": "Create index \"writing_generation_job_project_status_created_idx\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_generation_job_project_status_created_idx",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_generation_job_project_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_project_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_generation_job_project_status_created_idx\"",
+        "sql": "CREATE INDEX \"writing_generation_job_project_status_created_idx\" ON \"public\".\"writing_generation_job\" (\"projectId\", \"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_generation_job_project_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_project_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_variant.writing_variant_document_idx",
+    "label": "Create index \"writing_variant_document_idx\" on \"writing_variant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_variant_document_idx",
+        "table": "writing_variant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_variant_document_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_variant_document_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_variant_document_idx\"",
+        "sql": "CREATE INDEX \"writing_variant_document_idx\" ON \"public\".\"writing_variant\" (\"documentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_variant_document_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_variant_document_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.writing_claim.writing_claim_projectId_fkey",
+    "label": "Add foreign key \"writing_claim_projectId_fkey\" on \"writing_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "writing_claim_projectId_fkey",
+        "table": "writing_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"writing_claim_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_claim_projectId_fkey",
+          "public",
+          "\"public\".\"writing_claim\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"writing_claim_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"writing_claim\"\nADD CONSTRAINT \"writing_claim_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"writing_claim_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_claim_projectId_fkey",
+          "public",
+          "\"public\".\"writing_claim\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.writing_claim.writing_claim_documentId_fkey",
+    "label": "Add foreign key \"writing_claim_documentId_fkey\" on \"writing_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "writing_claim_documentId_fkey",
+        "table": "writing_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"writing_claim_documentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_claim_documentId_fkey",
+          "public",
+          "\"public\".\"writing_claim\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"writing_claim_documentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"writing_claim\"\nADD CONSTRAINT \"writing_claim_documentId_fkey\"\nFOREIGN KEY (\"documentId\")\nREFERENCES \"public\".\"writing_document\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"writing_claim_documentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_claim_documentId_fkey",
+          "public",
+          "\"public\".\"writing_claim\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.writing_claim.writing_claim_variantId_fkey",
+    "label": "Add foreign key \"writing_claim_variantId_fkey\" on \"writing_claim\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "writing_claim_variantId_fkey",
+        "table": "writing_claim"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"writing_claim_variantId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_claim_variantId_fkey",
+          "public",
+          "\"public\".\"writing_claim\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"writing_claim_variantId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"writing_claim\"\nADD CONSTRAINT \"writing_claim_variantId_fkey\"\nFOREIGN KEY (\"variantId\")\nREFERENCES \"public\".\"writing_variant\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"writing_claim_variantId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_claim_variantId_fkey",
+          "public",
+          "\"public\".\"writing_claim\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.writing_document.writing_document_projectId_fkey",
+    "label": "Add foreign key \"writing_document_projectId_fkey\" on \"writing_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "writing_document_projectId_fkey",
+        "table": "writing_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"writing_document_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_document_projectId_fkey",
+          "public",
+          "\"public\".\"writing_document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"writing_document_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"writing_document\"\nADD CONSTRAINT \"writing_document_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"writing_document_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_document_projectId_fkey",
+          "public",
+          "\"public\".\"writing_document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.writing_generation_job.writing_generation_job_projectId_fkey",
+    "label": "Add foreign key \"writing_generation_job_projectId_fkey\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "writing_generation_job_projectId_fkey",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"writing_generation_job_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_generation_job_projectId_fkey",
+          "public",
+          "\"public\".\"writing_generation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"writing_generation_job_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"writing_generation_job\"\nADD CONSTRAINT \"writing_generation_job_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"writing_generation_job_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_generation_job_projectId_fkey",
+          "public",
+          "\"public\".\"writing_generation_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.writing_generation_job.writing_generation_job_documentId_fkey",
+    "label": "Add foreign key \"writing_generation_job_documentId_fkey\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "writing_generation_job_documentId_fkey",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"writing_generation_job_documentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_generation_job_documentId_fkey",
+          "public",
+          "\"public\".\"writing_generation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"writing_generation_job_documentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"writing_generation_job\"\nADD CONSTRAINT \"writing_generation_job_documentId_fkey\"\nFOREIGN KEY (\"documentId\")\nREFERENCES \"public\".\"writing_document\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"writing_generation_job_documentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_generation_job_documentId_fkey",
+          "public",
+          "\"public\".\"writing_generation_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.writing_variant.writing_variant_documentId_fkey",
+    "label": "Add foreign key \"writing_variant_documentId_fkey\" on \"writing_variant\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "writing_variant_documentId_fkey",
+        "table": "writing_variant"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"writing_variant_documentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_variant_documentId_fkey",
+          "public",
+          "\"public\".\"writing_variant\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"writing_variant_documentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"writing_variant\"\nADD CONSTRAINT \"writing_variant_documentId_fkey\"\nFOREIGN KEY (\"documentId\")\nREFERENCES \"public\".\"writing_document\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"writing_variant_documentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "writing_variant_documentId_fkey",
+          "public",
+          "\"public\".\"writing_variant\""
+        ]
+      }
+    ]
+  }
+]

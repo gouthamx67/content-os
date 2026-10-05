@@ -4,6 +4,14 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "adaptation_batch": {
+      "model": "AdaptationBatch",
+      "namespace": "public"
+    },
+    "adaptation_job": {
+      "model": "AdaptationJob",
+      "namespace": "public"
+    },
     "asset": {
       "model": "Asset",
       "namespace": "public"
@@ -223,12 +231,128 @@
     "workspace_member": {
       "model": "WorkspaceMember",
       "namespace": "public"
+    },
+    "writing_claim": {
+      "model": "WritingClaim",
+      "namespace": "public"
+    },
+    "writing_document": {
+      "model": "WritingDocument",
+      "namespace": "public"
+    },
+    "writing_generation_job": {
+      "model": "WritingGenerationJob",
+      "namespace": "public"
+    },
+    "writing_variant": {
+      "model": "WritingVariant",
+      "namespace": "public"
     }
   },
   "domain": {
     "namespaces": {
       "public": {
         "enum": {
+          "AdaptationBatchStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "QUEUED",
+                "value": "QUEUED"
+              },
+              {
+                "name": "RUNNING",
+                "value": "RUNNING"
+              },
+              {
+                "name": "SUCCEEDED",
+                "value": "SUCCEEDED"
+              },
+              {
+                "name": "PARTIAL",
+                "value": "PARTIAL"
+              },
+              {
+                "name": "FAILED",
+                "value": "FAILED"
+              },
+              {
+                "name": "CANCEL_REQUESTED",
+                "value": "CANCEL_REQUESTED"
+              },
+              {
+                "name": "CANCELLED",
+                "value": "CANCELLED"
+              }
+            ]
+          },
+          "AdaptationJobStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "QUEUED",
+                "value": "QUEUED"
+              },
+              {
+                "name": "RUNNING",
+                "value": "RUNNING"
+              },
+              {
+                "name": "WAITING_RENDER",
+                "value": "WAITING_RENDER"
+              },
+              {
+                "name": "SUCCEEDED",
+                "value": "SUCCEEDED"
+              },
+              {
+                "name": "FAILED",
+                "value": "FAILED"
+              },
+              {
+                "name": "CANCEL_REQUESTED",
+                "value": "CANCEL_REQUESTED"
+              },
+              {
+                "name": "CANCELLED",
+                "value": "CANCELLED"
+              }
+            ]
+          },
+          "AdaptationKind": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "COPY",
+                "value": "COPY"
+              },
+              {
+                "name": "IMAGE",
+                "value": "IMAGE"
+              },
+              {
+                "name": "VIDEO",
+                "value": "VIDEO"
+              }
+            ]
+          },
+          "AdaptationSourceType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "WRITING_VARIANT",
+                "value": "WRITING_VARIANT"
+              },
+              {
+                "name": "GENERATED_IMAGE",
+                "value": "GENERATED_IMAGE"
+              },
+              {
+                "name": "VISUAL_COMPOSITION",
+                "value": "VISUAL_COMPOSITION"
+              }
+            ]
+          },
           "AssertionKind": {
             "codecId": "pg/text@1",
             "members": [
@@ -818,6 +942,23 @@
               {
                 "name": "DELETED",
                 "value": "DELETED"
+              }
+            ]
+          },
+          "ClaimStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "GROUNDED",
+                "value": "GROUNDED"
+              },
+              {
+                "name": "UNSUPPORTED",
+                "value": "UNSUPPORTED"
+              },
+              {
+                "name": "REVIEW",
+                "value": "REVIEW"
               }
             ]
           },
@@ -1822,9 +1963,641 @@
                 "value": "MEMBER"
               }
             ]
+          },
+          "WritingBlockType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "HEADLINE",
+                "value": "HEADLINE"
+              },
+              {
+                "name": "HOOK",
+                "value": "HOOK"
+              },
+              {
+                "name": "SUBHEAD",
+                "value": "SUBHEAD"
+              },
+              {
+                "name": "BODY",
+                "value": "BODY"
+              },
+              {
+                "name": "CAPTION",
+                "value": "CAPTION"
+              },
+              {
+                "name": "CTA",
+                "value": "CTA"
+              },
+              {
+                "name": "AD_COPY",
+                "value": "AD_COPY"
+              },
+              {
+                "name": "PRODUCT_DESCRIPTION",
+                "value": "PRODUCT_DESCRIPTION"
+              },
+              {
+                "name": "SCRIPT",
+                "value": "SCRIPT"
+              },
+              {
+                "name": "VOICEOVER",
+                "value": "VOICEOVER"
+              }
+            ]
+          },
+          "WritingJobStatus": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "QUEUED",
+                "value": "QUEUED"
+              },
+              {
+                "name": "RUNNING",
+                "value": "RUNNING"
+              },
+              {
+                "name": "SUCCEEDED",
+                "value": "SUCCEEDED"
+              },
+              {
+                "name": "FAILED",
+                "value": "FAILED"
+              },
+              {
+                "name": "CANCEL_REQUESTED",
+                "value": "CANCEL_REQUESTED"
+              },
+              {
+                "name": "CANCELLED",
+                "value": "CANCELLED"
+              }
+            ]
+          },
+          "WritingLength": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "SHORT",
+                "value": "SHORT"
+              },
+              {
+                "name": "MEDIUM",
+                "value": "MEDIUM"
+              },
+              {
+                "name": "LONG",
+                "value": "LONG"
+              }
+            ]
+          },
+          "WritingProvider": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "LOCAL_RULES",
+                "value": "LOCAL_RULES"
+              },
+              {
+                "name": "REMOTE_LLM",
+                "value": "REMOTE_LLM"
+              }
+            ]
+          },
+          "WritingTone": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "BRAND",
+                "value": "BRAND"
+              },
+              {
+                "name": "PROFESSIONAL",
+                "value": "PROFESSIONAL"
+              },
+              {
+                "name": "FRIENDLY",
+                "value": "FRIENDLY"
+              },
+              {
+                "name": "PLAYFUL",
+                "value": "PLAYFUL"
+              },
+              {
+                "name": "BOLD",
+                "value": "BOLD"
+              },
+              {
+                "name": "MINIMAL",
+                "value": "MINIMAL"
+              },
+              {
+                "name": "TECHNICAL",
+                "value": "TECHNICAL"
+              },
+              {
+                "name": "CONVERSATIONAL",
+                "value": "CONVERSATIONAL"
+              }
+            ]
           }
         },
         "models": {
+          "AdaptationBatch": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "finishedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "progressPct": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "requestedById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceSnapshot": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AdaptationSourceType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AdaptationBatchStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "targetCount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "jobs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "batchId"
+                  ]
+                },
+                "to": {
+                  "model": "AdaptationJob",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "finishedAt": {
+                  "column": "finishedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "progressPct": {
+                  "column": "progressPct"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "requestedById": {
+                  "column": "requestedById"
+                },
+                "sourceId": {
+                  "column": "sourceId"
+                },
+                "sourceSha256": {
+                  "column": "sourceSha256"
+                },
+                "sourceSnapshot": {
+                  "column": "sourceSnapshot"
+                },
+                "sourceType": {
+                  "column": "sourceType"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "targetCount": {
+                  "column": "targetCount"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "adaptation_batch"
+            }
+          },
+          "AdaptationJob": {
+            "fields": {
+              "batchId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorCode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorMessage": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "finishedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "formatId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "kind": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AdaptationKind",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "outputByteSize": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputChecksumSha256": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputHeight": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputMimeType": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputStorageKey": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputText": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "outputWidth": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "platformId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "progressPct": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "recipe": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "recipeSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "renderJobId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "requestedById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "AdaptationJobStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "batch": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "batchId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "AdaptationBatch",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "batchId": {
+                  "column": "batchId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "errorCode": {
+                  "column": "errorCode"
+                },
+                "errorMessage": {
+                  "column": "errorMessage"
+                },
+                "finishedAt": {
+                  "column": "finishedAt"
+                },
+                "formatId": {
+                  "column": "formatId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "kind": {
+                  "column": "kind"
+                },
+                "outputByteSize": {
+                  "column": "outputByteSize"
+                },
+                "outputChecksumSha256": {
+                  "column": "outputChecksumSha256"
+                },
+                "outputHeight": {
+                  "column": "outputHeight"
+                },
+                "outputMimeType": {
+                  "column": "outputMimeType"
+                },
+                "outputStorageKey": {
+                  "column": "outputStorageKey"
+                },
+                "outputText": {
+                  "column": "outputText"
+                },
+                "outputWidth": {
+                  "column": "outputWidth"
+                },
+                "platformId": {
+                  "column": "platformId"
+                },
+                "progressPct": {
+                  "column": "progressPct"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "recipe": {
+                  "column": "recipe"
+                },
+                "recipeSha256": {
+                  "column": "recipeSha256"
+                },
+                "renderJobId": {
+                  "column": "renderJobId"
+                },
+                "requestedById": {
+                  "column": "requestedById"
+                },
+                "startedAt": {
+                  "column": "startedAt"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "adaptation_job"
+            }
+          },
           "Asset": {
             "fields": {
               "createdAt": {
@@ -10372,6 +11145,36 @@
               }
             },
             "relations": {
+              "adaptationBatches": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "AdaptationBatch",
+                  "namespace": "public"
+                }
+              },
+              "adaptationJobs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "AdaptationJob",
+                  "namespace": "public"
+                }
+              },
               "assets": {
                 "cardinality": "1:N",
                 "on": {
@@ -10882,6 +11685,51 @@
                 },
                 "to": {
                   "model": "Workspace",
+                  "namespace": "public"
+                }
+              },
+              "writingClaims": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "WritingClaim",
+                  "namespace": "public"
+                }
+              },
+              "writingDocuments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "WritingDocument",
+                  "namespace": "public"
+                }
+              },
+              "writingGenerationJobs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "projectId"
+                  ]
+                },
+                "to": {
+                  "model": "WritingGenerationJob",
                   "namespace": "public"
                 }
               }
@@ -12995,6 +13843,991 @@
               "namespaceId": "public",
               "table": "workspace_member"
             }
+          },
+          "WritingClaim": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "documentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "reasoning": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sourceIds": {
+                "many": true,
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "ClaimStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "text": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "variantId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "document": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "documentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "WritingDocument",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "variant": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "variantId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "WritingVariant",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "documentId": {
+                  "column": "documentId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "reasoning": {
+                  "column": "reasoning"
+                },
+                "sourceIds": {
+                  "column": "sourceIds"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "text": {
+                  "column": "text"
+                },
+                "variantId": {
+                  "column": "variantId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "writing_claim"
+            }
+          },
+          "WritingDocument": {
+            "fields": {
+              "audience": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "blockType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WritingBlockType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "brandVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "content": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "contentSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "contextSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "contextSnapshot": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "directionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "intelligenceVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "intentId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "language": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "length": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WritingLength",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "objective": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sceneId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "selectedVariantId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "storyboardId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "title": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "tone": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WritingTone",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "version": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "claims": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "documentId"
+                  ]
+                },
+                "to": {
+                  "model": "WritingClaim",
+                  "namespace": "public"
+                }
+              },
+              "generationJobs": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "documentId"
+                  ]
+                },
+                "to": {
+                  "model": "WritingGenerationJob",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              },
+              "variants": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "documentId"
+                  ]
+                },
+                "to": {
+                  "model": "WritingVariant",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "audience": {
+                  "column": "audience"
+                },
+                "blockType": {
+                  "column": "blockType"
+                },
+                "brandVersion": {
+                  "column": "brandVersion"
+                },
+                "content": {
+                  "column": "content"
+                },
+                "contentSha256": {
+                  "column": "contentSha256"
+                },
+                "contextSha256": {
+                  "column": "contextSha256"
+                },
+                "contextSnapshot": {
+                  "column": "contextSnapshot"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdById": {
+                  "column": "createdById"
+                },
+                "directionId": {
+                  "column": "directionId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "intelligenceVersion": {
+                  "column": "intelligenceVersion"
+                },
+                "intentId": {
+                  "column": "intentId"
+                },
+                "language": {
+                  "column": "language"
+                },
+                "length": {
+                  "column": "length"
+                },
+                "objective": {
+                  "column": "objective"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "sceneId": {
+                  "column": "sceneId"
+                },
+                "selectedVariantId": {
+                  "column": "selectedVariantId"
+                },
+                "storyboardId": {
+                  "column": "storyboardId"
+                },
+                "title": {
+                  "column": "title"
+                },
+                "tone": {
+                  "column": "tone"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "version": {
+                  "column": "version"
+                }
+              },
+              "namespaceId": "public",
+              "table": "writing_document"
+            }
+          },
+          "WritingGenerationJob": {
+            "fields": {
+              "audience": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "blockType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WritingBlockType",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "contextSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "contextSnapshot": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "documentId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorCode": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "errorMessage": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "finishedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "generationRecipe": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "language": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "length": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WritingLength",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "objective": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "progressPct": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "projectId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "prompt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "provider": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WritingProvider",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "providerJobId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "providerModel": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "providerVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "recipeSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "requestedById": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WritingJobStatus",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "tone": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "WritingTone",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "variantCount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "document": {
+                "cardinality": "N:1",
+                "nullable": true,
+                "on": {
+                  "localFields": [
+                    "documentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "WritingDocument",
+                  "namespace": "public"
+                }
+              },
+              "project": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "projectId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Project",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "audience": {
+                  "column": "audience"
+                },
+                "blockType": {
+                  "column": "blockType"
+                },
+                "contextSha256": {
+                  "column": "contextSha256"
+                },
+                "contextSnapshot": {
+                  "column": "contextSnapshot"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "documentId": {
+                  "column": "documentId"
+                },
+                "errorCode": {
+                  "column": "errorCode"
+                },
+                "errorMessage": {
+                  "column": "errorMessage"
+                },
+                "finishedAt": {
+                  "column": "finishedAt"
+                },
+                "generationRecipe": {
+                  "column": "generationRecipe"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "language": {
+                  "column": "language"
+                },
+                "length": {
+                  "column": "length"
+                },
+                "objective": {
+                  "column": "objective"
+                },
+                "progressPct": {
+                  "column": "progressPct"
+                },
+                "projectId": {
+                  "column": "projectId"
+                },
+                "prompt": {
+                  "column": "prompt"
+                },
+                "provider": {
+                  "column": "provider"
+                },
+                "providerJobId": {
+                  "column": "providerJobId"
+                },
+                "providerModel": {
+                  "column": "providerModel"
+                },
+                "providerVersion": {
+                  "column": "providerVersion"
+                },
+                "recipeSha256": {
+                  "column": "recipeSha256"
+                },
+                "requestedById": {
+                  "column": "requestedById"
+                },
+                "startedAt": {
+                  "column": "startedAt"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "tone": {
+                  "column": "tone"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "variantCount": {
+                  "column": "variantCount"
+                }
+              },
+              "namespaceId": "public",
+              "table": "writing_generation_job"
+            }
+          },
+          "WritingVariant": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "documentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "instruction": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "label": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "ordinal": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "selected": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "text": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "textSha256": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "claims": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "variantId"
+                  ]
+                },
+                "to": {
+                  "model": "WritingClaim",
+                  "namespace": "public"
+                }
+              },
+              "document": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "documentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "WritingDocument",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "documentId": {
+                  "column": "documentId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "instruction": {
+                  "column": "instruction"
+                },
+                "label": {
+                  "column": "label"
+                },
+                "ordinal": {
+                  "column": "ordinal"
+                },
+                "selected": {
+                  "column": "selected"
+                },
+                "text": {
+                  "column": "text"
+                },
+                "textSha256": {
+                  "column": "textSha256"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "writing_variant"
+            }
           }
         }
       }
@@ -13005,6 +14838,429 @@
       "public": {
         "entries": {
           "table": {
+            "adaptation_batch": {
+              "checks": [
+                {
+                  "expression": "\"sourceType\" IN ('WRITING_VARIANT', 'GENERATED_IMAGE', 'VISUAL_COMPOSITION')",
+                  "name": "adaptation_batch_sourceType_check_63f55b86",
+                  "prefix": "adaptation_batch_sourceType_check"
+                },
+                {
+                  "expression": "\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'PARTIAL', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED')",
+                  "name": "adaptation_batch_status_check_dc5a4cf0",
+                  "prefix": "adaptation_batch_status_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "finishedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "progressPct": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "requestedById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceSnapshot": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sourceType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AdaptationSourceType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "QUEUED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AdaptationBatchStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "targetCount": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "adaptation_batch"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "adaptation_batch_projectId_idx_a96e4d92",
+                  "prefix": "adaptation_batch_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "adaptation_batch_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "adaptation_batch_project_status_created_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "adaptation_job": {
+              "checks": [
+                {
+                  "expression": "\"kind\" IN ('COPY', 'IMAGE', 'VIDEO')",
+                  "name": "adaptation_job_kind_check_c3fab27c",
+                  "prefix": "adaptation_job_kind_check"
+                },
+                {
+                  "expression": "\"status\" IN ('QUEUED', 'RUNNING', 'WAITING_RENDER', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED')",
+                  "name": "adaptation_job_status_check_a62b1769",
+                  "prefix": "adaptation_job_status_check"
+                }
+              ],
+              "columns": {
+                "batchId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "errorCode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "errorMessage": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "finishedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "formatId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "kind": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AdaptationKind",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "outputByteSize": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "outputChecksumSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "outputHeight": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "outputMimeType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "outputStorageKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "outputText": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "outputWidth": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "platformId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "progressPct": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "recipe": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "recipeSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "renderJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "requestedById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "QUEUED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "AdaptationJobStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "batchId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "adaptation_job"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "adaptation_batch"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "adaptation_job"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "batchId"
+                  ],
+                  "name": "adaptation_job_batchId_idx_84d4b0b9",
+                  "prefix": "adaptation_job_batchId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "batchId",
+                    "createdAt"
+                  ],
+                  "name": "adaptation_job_batch_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "batchId",
+                    "status"
+                  ],
+                  "name": "adaptation_job_batch_status_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "adaptation_job_projectId_idx_a96e4d92",
+                  "prefix": "adaptation_job_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "adaptation_job_project_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "renderJobId"
+                  ],
+                  "name": "adaptation_job_render_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "batchId",
+                    "formatId",
+                    "platformId"
+                  ],
+                  "name": "adaptation_job_batch_format_platform"
+                }
+              ]
+            },
             "asset": {
               "checks": [
                 {
@@ -22408,9 +24664,836 @@
                   ]
                 }
               ]
+            },
+            "writing_claim": {
+              "checks": [
+                {
+                  "expression": "array_position(\"sourceIds\", NULL) IS NULL",
+                  "name": "writing_claim_sourceIds_elem_not_null_07253a8e",
+                  "prefix": "writing_claim_sourceIds_elem_not_null"
+                },
+                {
+                  "expression": "\"status\" IN ('GROUNDED', 'UNSUPPORTED', 'REVIEW')",
+                  "name": "writing_claim_status_check_70a7aa2b",
+                  "prefix": "writing_claim_status_check"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "documentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "reasoning": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "sourceIds": {
+                  "codecId": "pg/text@1",
+                  "many": true,
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "REVIEW"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "ClaimStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "text": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "variantId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_claim"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "documentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_claim"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_document"
+                  }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "variantId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_claim"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_variant"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "documentId"
+                  ],
+                  "name": "writing_claim_documentId_idx_825ef746",
+                  "prefix": "writing_claim_documentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "documentId",
+                    "status"
+                  ],
+                  "name": "writing_claim_document_status_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "writing_claim_project_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "variantId"
+                  ],
+                  "name": "writing_claim_variant_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "writing_document": {
+              "checks": [
+                {
+                  "expression": "\"blockType\" IN ('HEADLINE', 'HOOK', 'SUBHEAD', 'BODY', 'CAPTION', 'CTA', 'AD_COPY', 'PRODUCT_DESCRIPTION', 'SCRIPT', 'VOICEOVER')",
+                  "name": "writing_document_blockType_check_71908e47",
+                  "prefix": "writing_document_blockType_check"
+                },
+                {
+                  "expression": "\"length\" IN ('SHORT', 'MEDIUM', 'LONG')",
+                  "name": "writing_document_length_check_e1e66252",
+                  "prefix": "writing_document_length_check"
+                },
+                {
+                  "expression": "\"tone\" IN ('BRAND', 'PROFESSIONAL', 'FRIENDLY', 'PLAYFUL', 'BOLD', 'MINIMAL', 'TECHNICAL', 'CONVERSATIONAL')",
+                  "name": "writing_document_tone_check_9045ea36",
+                  "prefix": "writing_document_tone_check"
+                }
+              ],
+              "columns": {
+                "audience": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "blockType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WritingBlockType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "brandVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "content": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "contentSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "contextSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "contextSnapshot": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "directionId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "intelligenceVersion": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "intentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "language": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "length": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WritingLength",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "objective": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "sceneId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "selectedVariantId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "storyboardId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "title": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "tone": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WritingTone",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "version": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 1
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_document"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "writing_document_projectId_idx_a96e4d92",
+                  "prefix": "writing_document_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "blockType"
+                  ],
+                  "name": "writing_document_project_block_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "writing_document_project_created_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "writing_generation_job": {
+              "checks": [
+                {
+                  "expression": "\"blockType\" IN ('HEADLINE', 'HOOK', 'SUBHEAD', 'BODY', 'CAPTION', 'CTA', 'AD_COPY', 'PRODUCT_DESCRIPTION', 'SCRIPT', 'VOICEOVER')",
+                  "name": "writing_generation_job_blockType_check_71908e47",
+                  "prefix": "writing_generation_job_blockType_check"
+                },
+                {
+                  "expression": "\"length\" IN ('SHORT', 'MEDIUM', 'LONG')",
+                  "name": "writing_generation_job_length_check_e1e66252",
+                  "prefix": "writing_generation_job_length_check"
+                },
+                {
+                  "expression": "\"provider\" IN ('LOCAL_RULES', 'REMOTE_LLM')",
+                  "name": "writing_generation_job_provider_check_1d241a04",
+                  "prefix": "writing_generation_job_provider_check"
+                },
+                {
+                  "expression": "\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED')",
+                  "name": "writing_generation_job_status_check_ba978c1e",
+                  "prefix": "writing_generation_job_status_check"
+                },
+                {
+                  "expression": "\"tone\" IN ('BRAND', 'PROFESSIONAL', 'FRIENDLY', 'PLAYFUL', 'BOLD', 'MINIMAL', 'TECHNICAL', 'CONVERSATIONAL')",
+                  "name": "writing_generation_job_tone_check_9045ea36",
+                  "prefix": "writing_generation_job_tone_check"
+                }
+              ],
+              "columns": {
+                "audience": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "blockType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WritingBlockType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "contextSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "contextSnapshot": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "documentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "errorCode": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "errorMessage": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "finishedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "generationRecipe": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "language": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "length": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WritingLength",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "objective": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "progressPct": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "projectId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "prompt": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "provider": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WritingProvider",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "providerJobId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "providerModel": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "providerVersion": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "recipeSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "requestedById": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "QUEUED"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WritingJobStatus",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "tone": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "WritingTone",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "variantCount": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "projectId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_generation_job"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "project"
+                  }
+                },
+                {
+                  "onDelete": "setNull",
+                  "source": {
+                    "columns": [
+                      "documentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_generation_job"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_document"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "documentId"
+                  ],
+                  "name": "writing_generation_job_documentId_idx_825ef746",
+                  "prefix": "writing_generation_job_documentId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "documentId",
+                    "createdAt"
+                  ],
+                  "name": "writing_generation_job_document_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId"
+                  ],
+                  "name": "writing_generation_job_projectId_idx_a96e4d92",
+                  "prefix": "writing_generation_job_projectId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "createdAt"
+                  ],
+                  "name": "writing_generation_job_project_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "projectId",
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "writing_generation_job_project_status_created_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "writing_variant": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "documentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "instruction": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "label": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "ordinal": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "selected": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "text": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "textSha256": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "documentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_variant"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "writing_document"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "documentId"
+                  ],
+                  "name": "writing_variant_document_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "documentId",
+                    "ordinal"
+                  ],
+                  "name": "writing_variant_document_ordinal"
+                }
+              ]
             }
           },
           "valueSet": {
+            "AdaptationBatchStatus": {
+              "kind": "valueSet",
+              "values": [
+                "QUEUED",
+                "RUNNING",
+                "SUCCEEDED",
+                "PARTIAL",
+                "FAILED",
+                "CANCEL_REQUESTED",
+                "CANCELLED"
+              ]
+            },
+            "AdaptationJobStatus": {
+              "kind": "valueSet",
+              "values": [
+                "QUEUED",
+                "RUNNING",
+                "WAITING_RENDER",
+                "SUCCEEDED",
+                "FAILED",
+                "CANCEL_REQUESTED",
+                "CANCELLED"
+              ]
+            },
+            "AdaptationKind": {
+              "kind": "valueSet",
+              "values": [
+                "COPY",
+                "IMAGE",
+                "VIDEO"
+              ]
+            },
+            "AdaptationSourceType": {
+              "kind": "valueSet",
+              "values": [
+                "WRITING_VARIANT",
+                "GENERATED_IMAGE",
+                "VISUAL_COMPOSITION"
+              ]
+            },
             "AssertionKind": {
               "kind": "valueSet",
               "values": [
@@ -22647,6 +25730,14 @@
                 "ACCEPTED",
                 "REJECTED",
                 "DELETED"
+              ]
+            },
+            "ClaimStatus": {
+              "kind": "valueSet",
+              "values": [
+                "GROUNDED",
+                "UNSUPPORTED",
+                "REVIEW"
               ]
             },
             "ClaimType": {
@@ -23041,6 +26132,60 @@
                 "ADMIN",
                 "MEMBER"
               ]
+            },
+            "WritingBlockType": {
+              "kind": "valueSet",
+              "values": [
+                "HEADLINE",
+                "HOOK",
+                "SUBHEAD",
+                "BODY",
+                "CAPTION",
+                "CTA",
+                "AD_COPY",
+                "PRODUCT_DESCRIPTION",
+                "SCRIPT",
+                "VOICEOVER"
+              ]
+            },
+            "WritingJobStatus": {
+              "kind": "valueSet",
+              "values": [
+                "QUEUED",
+                "RUNNING",
+                "SUCCEEDED",
+                "FAILED",
+                "CANCEL_REQUESTED",
+                "CANCELLED"
+              ]
+            },
+            "WritingLength": {
+              "kind": "valueSet",
+              "values": [
+                "SHORT",
+                "MEDIUM",
+                "LONG"
+              ]
+            },
+            "WritingProvider": {
+              "kind": "valueSet",
+              "values": [
+                "LOCAL_RULES",
+                "REMOTE_LLM"
+              ]
+            },
+            "WritingTone": {
+              "kind": "valueSet",
+              "values": [
+                "BRAND",
+                "PROFESSIONAL",
+                "FRIENDLY",
+                "PLAYFUL",
+                "BOLD",
+                "MINIMAL",
+                "TECHNICAL",
+                "CONVERSATIONAL"
+              ]
             }
           }
         },
@@ -23048,12 +26193,64 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "21b5ecc822ef1c8d26b40dd24d974686729497d464d8ee6743c9d2f141f460e9"
+    "storageHash": "760ab4923672cf1bcac674e1046a06a8fd7d9d9c5661f1050f74a11d6874df43"
   },
   "execution": {
-    "executionHash": "301c8f523ef6a24b2a829d08c1b93fb4c872811c1e9c9b38b7047b7468ab155f",
+    "executionHash": "74ead7059df8283bc95d86fc80e3033bfde286b2b14c38de93fc0093eab63ec2",
     "mutations": {
       "defaults": [
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "adaptation_batch"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "adaptation_batch"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "adaptation_job"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "adaptation_job"
+          }
+        },
         {
           "onCreate": {
             "id": "cuid2",
@@ -24257,6 +27454,95 @@
             "column": "id",
             "namespace": "public",
             "table": "workspace_member"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "writing_claim"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "writing_document"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "writing_document"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "writing_generation_job"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "writing_generation_job"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "writing_variant"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "writing_variant"
           }
         }
       ]

@@ -1,0 +1,599 @@
+[
+  {
+    "id": "table.adaptation_batch",
+    "label": "Create table \"adaptation_batch\"",
+    "summary": "Creates table \"adaptation_batch\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "adaptation_batch"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"adaptation_batch\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_batch\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"adaptation_batch\"",
+        "sql": "CREATE TABLE \"public\".\"adaptation_batch\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"finishedAt\" timestamptz,\n  \"id\" text NOT NULL,\n  \"progressPct\" int4 DEFAULT 0 NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"requestedById\" text NOT NULL,\n  \"sourceId\" text NOT NULL,\n  \"sourceSha256\" text NOT NULL,\n  \"sourceSnapshot\" text NOT NULL,\n  \"sourceType\" text NOT NULL,\n  \"status\" text DEFAULT 'QUEUED' NOT NULL,\n  \"targetCount\" int4 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"adaptation_batch_sourceType_check_63f55b86\" CHECK (\"sourceType\" IN ('WRITING_VARIANT', 'GENERATED_IMAGE', 'VISUAL_COMPOSITION')),\n  CONSTRAINT \"adaptation_batch_status_check_dc5a4cf0\" CHECK (\"status\" IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'PARTIAL', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"adaptation_batch\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_batch\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.adaptation_job",
+    "label": "Create table \"adaptation_job\"",
+    "summary": "Creates table \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"adaptation_job\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"adaptation_job\"",
+        "sql": "CREATE TABLE \"public\".\"adaptation_job\" (\n  \"batchId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"finishedAt\" timestamptz,\n  \"formatId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"outputByteSize\" int4,\n  \"outputChecksumSha256\" text,\n  \"outputHeight\" int4,\n  \"outputMimeType\" text,\n  \"outputStorageKey\" text,\n  \"outputText\" text,\n  \"outputWidth\" int4,\n  \"platformId\" text NOT NULL,\n  \"progressPct\" int4 DEFAULT 0 NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"recipe\" text NOT NULL,\n  \"recipeSha256\" text NOT NULL,\n  \"renderJobId\" text,\n  \"requestedById\" text NOT NULL,\n  \"startedAt\" timestamptz,\n  \"status\" text DEFAULT 'QUEUED' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"adaptation_job_kind_check_c3fab27c\" CHECK (\"kind\" IN ('COPY', 'IMAGE', 'VIDEO')),\n  CONSTRAINT \"adaptation_job_status_check_a62b1769\" CHECK (\"status\" IN ('QUEUED', 'RUNNING', 'WAITING_RENDER', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"adaptation_job\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.adaptation_job.adaptation_job_batch_format_platform",
+    "label": "Add unique constraint on \"adaptation_job\" (batchId, formatId, platformId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "adaptation_job_batch_format_platform",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"adaptation_job_batch_format_platform\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adaptation_job_batch_format_platform",
+          "public",
+          "\"public\".\"adaptation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"adaptation_job_batch_format_platform\"",
+        "sql": "ALTER TABLE \"public\".\"adaptation_job\" ADD CONSTRAINT \"adaptation_job_batch_format_platform\" UNIQUE (\"batchId\", \"formatId\", \"platformId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"adaptation_job_batch_format_platform\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adaptation_job_batch_format_platform",
+          "public",
+          "\"public\".\"adaptation_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_batch.adaptation_batch_projectId_idx_a96e4d92",
+    "label": "Create index \"adaptation_batch_projectId_idx_a96e4d92\" on \"adaptation_batch\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_batch_projectId_idx_a96e4d92",
+        "table": "adaptation_batch"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_batch_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_batch_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_batch_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"adaptation_batch_projectId_idx_a96e4d92\" ON \"public\".\"adaptation_batch\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_batch_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_batch_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_batch.adaptation_batch_project_created_idx",
+    "label": "Create index \"adaptation_batch_project_created_idx\" on \"adaptation_batch\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_batch_project_created_idx",
+        "table": "adaptation_batch"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_batch_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_batch_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_batch_project_created_idx\"",
+        "sql": "CREATE INDEX \"adaptation_batch_project_created_idx\" ON \"public\".\"adaptation_batch\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_batch_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_batch_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_batch.adaptation_batch_project_status_created_idx",
+    "label": "Create index \"adaptation_batch_project_status_created_idx\" on \"adaptation_batch\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_batch_project_status_created_idx",
+        "table": "adaptation_batch"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_batch_project_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_batch_project_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_batch_project_status_created_idx\"",
+        "sql": "CREATE INDEX \"adaptation_batch_project_status_created_idx\" ON \"public\".\"adaptation_batch\" (\"projectId\", \"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_batch_project_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_batch_project_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_job.adaptation_job_batchId_idx_84d4b0b9",
+    "label": "Create index \"adaptation_job_batchId_idx_84d4b0b9\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_job_batchId_idx_84d4b0b9",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_job_batchId_idx_84d4b0b9\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_batchId_idx_84d4b0b9\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_job_batchId_idx_84d4b0b9\"",
+        "sql": "CREATE INDEX \"adaptation_job_batchId_idx_84d4b0b9\" ON \"public\".\"adaptation_job\" (\"batchId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_job_batchId_idx_84d4b0b9\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_batchId_idx_84d4b0b9\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_job.adaptation_job_batch_created_idx",
+    "label": "Create index \"adaptation_job_batch_created_idx\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_job_batch_created_idx",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_job_batch_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_batch_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_job_batch_created_idx\"",
+        "sql": "CREATE INDEX \"adaptation_job_batch_created_idx\" ON \"public\".\"adaptation_job\" (\"batchId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_job_batch_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_batch_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_job.adaptation_job_batch_status_idx",
+    "label": "Create index \"adaptation_job_batch_status_idx\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_job_batch_status_idx",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_job_batch_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_batch_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_job_batch_status_idx\"",
+        "sql": "CREATE INDEX \"adaptation_job_batch_status_idx\" ON \"public\".\"adaptation_job\" (\"batchId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_job_batch_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_batch_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_job.adaptation_job_projectId_idx_a96e4d92",
+    "label": "Create index \"adaptation_job_projectId_idx_a96e4d92\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_job_projectId_idx_a96e4d92",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_job_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_job_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"adaptation_job_projectId_idx_a96e4d92\" ON \"public\".\"adaptation_job\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_job_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_job.adaptation_job_project_status_created_idx",
+    "label": "Create index \"adaptation_job_project_status_created_idx\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_job_project_status_created_idx",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_job_project_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_project_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_job_project_status_created_idx\"",
+        "sql": "CREATE INDEX \"adaptation_job_project_status_created_idx\" ON \"public\".\"adaptation_job\" (\"projectId\", \"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_job_project_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_project_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_job.adaptation_job_render_idx",
+    "label": "Create index \"adaptation_job_render_idx\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_job_render_idx",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_job_render_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_render_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_job_render_idx\"",
+        "sql": "CREATE INDEX \"adaptation_job_render_idx\" ON \"public\".\"adaptation_job\" (\"renderJobId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_job_render_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_render_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.adaptation_batch.adaptation_batch_projectId_fkey",
+    "label": "Add foreign key \"adaptation_batch_projectId_fkey\" on \"adaptation_batch\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "adaptation_batch_projectId_fkey",
+        "table": "adaptation_batch"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"adaptation_batch_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adaptation_batch_projectId_fkey",
+          "public",
+          "\"public\".\"adaptation_batch\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"adaptation_batch_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"adaptation_batch\"\nADD CONSTRAINT \"adaptation_batch_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"adaptation_batch_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adaptation_batch_projectId_fkey",
+          "public",
+          "\"public\".\"adaptation_batch\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.adaptation_job.adaptation_job_batchId_fkey",
+    "label": "Add foreign key \"adaptation_job_batchId_fkey\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "adaptation_job_batchId_fkey",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"adaptation_job_batchId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adaptation_job_batchId_fkey",
+          "public",
+          "\"public\".\"adaptation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"adaptation_job_batchId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"adaptation_job\"\nADD CONSTRAINT \"adaptation_job_batchId_fkey\"\nFOREIGN KEY (\"batchId\")\nREFERENCES \"public\".\"adaptation_batch\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"adaptation_job_batchId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adaptation_job_batchId_fkey",
+          "public",
+          "\"public\".\"adaptation_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.adaptation_job.adaptation_job_projectId_fkey",
+    "label": "Add foreign key \"adaptation_job_projectId_fkey\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "adaptation_job_projectId_fkey",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"adaptation_job_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adaptation_job_projectId_fkey",
+          "public",
+          "\"public\".\"adaptation_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"adaptation_job_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"adaptation_job\"\nADD CONSTRAINT \"adaptation_job_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"adaptation_job_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "adaptation_job_projectId_fkey",
+          "public",
+          "\"public\".\"adaptation_job\""
+        ]
+      }
+    ]
+  }
+]

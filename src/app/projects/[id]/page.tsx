@@ -55,6 +55,7 @@ import {
 } from "../../../lib/recommendation-api";
 import { RecommendationsPanel } from "../../../components/recommendations/RecommendationsPanel";
 import { ImageGenerationWorkspace } from "../../../modules/image-generation/ui/ImageGenerationWorkspace";
+import { WritingWorkspace } from "../../../modules/writing-engine/ui/WritingWorkspace";
 
 type ProjectDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -228,6 +229,10 @@ export default async function ProjectDetailPage({
 
         <div className="mt-8">
           <ImageGenerationWorkspace projectId={project.id} />
+        </div>
+
+        <div className="mt-8">
+          <WritingWorkspace projectId={project.id} />
         </div>
 
         <div className="mt-8">

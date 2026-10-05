@@ -103,6 +103,7 @@ export type E2EStack = {
   devServer?: ChildProcess;
   imageWorker?: ChildProcess;
   videoWorker?: ChildProcess;
+  writingWorker?: ChildProcess;
   startedDevServer: boolean;
 };
 
@@ -143,6 +144,16 @@ export async function startStack(options?: {
     },
   );
 
+  stack.writingWorker = spawn(
+    "npx",
+    ["tsx", "src/scripts/writing-worker.ts"],
+    {
+      cwd: repoRoot,
+      env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
+      stdio: "ignore",
+    },
+  );
+
   if (options?.withRenderWorker) {
     stack.videoWorker = spawn("npx", ["tsx", "src/scripts/render-worker.ts"], {
       cwd: repoRoot,
@@ -162,10 +173,54 @@ export async function startStack(options?: {
 
 export function stopStack(stack: E2EStack): void {
   if (stack.videoWorker) stack.videoWorker.kill("SIGTERM");
+  if (stack.writingWorker) stack.writingWorker.kill("SIGTERM");
   if (stack.imageWorker) stack.imageWorker.kill("SIGTERM");
   if (stack.startedDevServer && stack.devServer) {
     stack.devServer.kill("SIGTERM");
   }
+}
+
+/** A brief the deterministic analyzers turn into real product facts and voice. */
+export const WRITING_BRIEF = [
+  "# Northwind Analytics",
+  "",
+  "Northwind Analytics is a scheduling tool for engineering teams.",
+  "",
+  "## What it does",
+  "",
+  "Scheduled exports send a status report on a fixed schedule.",
+  "",
+  "## Proof",
+  "",
+  "The product dashboard shows a next run time for every export.",
+  "",
+  "## Voice",
+  "",
+  "Plain and direct. Say single source of truth rather than revolutionary.",
+].join("\n");
+
+/**
+ * Creates a project whose brief has been analyzed, so the writing worker has
+ * real facts to ground copy against instead of an empty graph.
+ */
+export async function createAnalyzedE2EProject(
+  workspaceId: string,
+  userId: string,
+  name: string,
+  brief = WRITING_BRIEF,
+): Promise<string> {
+  const services = await import("../../../src/infrastructure/services");
+  const project = await services.projectService.createForWorkspace(
+    workspaceId,
+    { name },
+    userId,
+  );
+  await services.inputService.createBatch(project.id, userId, [
+    { type: "text", name: "Writing brief", value: brief },
+  ]);
+  await services.intelligenceService.analyze(project.id, userId, {});
+  await services.brandService.analyze(project.id, userId);
+  return project.id;
 }
 
 export type RegisteredBrowserUser = {

@@ -11,6 +11,7 @@
     "render:worker": "tsx src/scripts/render-worker.ts",
     "audio:worker": "tsx src/scripts/audio-worker.ts",
     "image:worker": "tsx src/scripts/image-generation-worker.ts",
+    "writing:worker": "tsx src/scripts/writing-worker.ts",
     "postinstall": "prisma skills sync || exit 0",
     "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },

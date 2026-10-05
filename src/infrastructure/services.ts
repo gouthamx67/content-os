@@ -53,3 +53,9 @@ export const imageVariantService = container.services.images.variants;
 export const imageRepository = container.services.images.repository;
 
 export const imageSourceResolver = container.services.images.sources;
+
+export const writingGenerationService = container.services.writing.generation;
+
+export const writingRepository = container.services.writing.repository;
+
+export const writingProviderRegistry = container.services.writing.registry;

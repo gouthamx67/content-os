@@ -95,6 +95,16 @@ import { ImageGenerationWorker } from "../modules/image-generation/generation-wo
 import { imageStorage } from "../modules/image-generation/storage/image-storage";
 import type { ImageSourceDependencies } from "../modules/image-generation/assets/resolve-product-asset";
 import { createImageGenerationContextDependencies } from "./image-generation-context";
+import { PostgresWritingRepository } from "./repositories/postgres-writing-repository";
+import { WritingGenerationService } from "../modules/writing-engine/writing-generation-service";
+import { WritingGenerationWorker } from "../modules/writing-engine/writing-generation-worker";
+import { createWritingGenerationContextDependencies } from "./writing-generation-context";
+import { createWritingProviderRegistry } from "../modules/writing-engine/providers/registry";
+import { createLocalRulesProvider } from "../modules/writing-engine/providers/local-rules-provider";
+import {
+  createRemoteLlmProvider,
+  remoteLlmConfigFromEnv,
+} from "../modules/writing-engine/providers/remote-llm-provider";
 
 const orm = db.orm.public;
 
@@ -117,6 +127,7 @@ const repositories = {
   renderJobs: new PostgresRenderJobRepository(orm),
   audio: new PostgresAudioRepository(orm),
   images: new PostgresImageRepository(orm),
+  writing: new PostgresWritingRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -628,6 +639,55 @@ export function createImageWorker(): ImageGenerationWorker {
   });
 }
 
+/**
+ * CP18 writing / copy engine.
+ *
+ * The context adapter freezes CP06/CP08/CP09/CP10/CP11 into the job snapshot,
+ * so generation is grounded against exactly the facts captured at enqueue time.
+ * The registry only exposes REMOTE_LLM once credentials exist, so a client can
+ * never be told an external model wrote copy when none is wired.
+ */
+const writingContext = createWritingGenerationContextDependencies({
+  brand: repositories.brand,
+  intelligence: repositories.intelligence,
+  contentIntents: repositories.contentIntents,
+  creativeDirections: repositories.creativeDirections,
+  storyboards: repositories.storyboards,
+  sources: repositories.sources,
+});
+
+const remoteWritingConfig = remoteLlmConfigFromEnv();
+
+const writingProviderRegistry = createWritingProviderRegistry({
+  local: createLocalRulesProvider(),
+  ...(remoteWritingConfig
+    ? { remote: createRemoteLlmProvider(remoteWritingConfig) }
+    : {}),
+});
+
+const writingGenerationService = new WritingGenerationService({
+  repository: repositories.writing,
+  authorizeProject: authorizeVisualProject,
+  context: writingContext,
+  registry: writingProviderRegistry,
+});
+
+const writingServices = {
+  generation: writingGenerationService,
+  repository: repositories.writing,
+  registry: writingProviderRegistry,
+};
+
+export const writingWorkerHealth = new RenderWorkerHealth();
+
+export function createWritingWorker(): WritingGenerationWorker {
+  return new WritingGenerationWorker({
+    repository: repositories.writing,
+    registry: writingProviderRegistry,
+    health: writingWorkerHealth,
+  });
+}
+
 export const container = {
   repositories,
   providers,
@@ -652,5 +712,6 @@ export const container = {
     renders: renderJobService,
     audio: audioCompositions,
     images: imageServices,
+    writing: writingServices,
   },
 };
