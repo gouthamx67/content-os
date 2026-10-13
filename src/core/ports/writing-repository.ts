@@ -158,6 +158,12 @@ export interface WritingRepository {
     variantId: string,
   ): Promise<WritingVariantRecord | null>;
 
+  /** The document that owns a variant, for grounding an edited node in its context. */
+  getDocumentByVariant(
+    projectId: string,
+    variantId: string,
+  ): Promise<WritingDocumentRecord | null>;
+
   listVariants(documentId: string): Promise<WritingVariantRecord[]>;
 
   countVariants(documentId: string): Promise<number>;

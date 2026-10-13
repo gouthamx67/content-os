@@ -29,6 +29,8 @@ export const ADAPTATION_ERROR_CODES = [
   "ADAPTATION_OUTPUT_INVALID",
   "ADAPTATION_STORAGE_FAILED",
   "ADAPTATION_OUTPUT_UNAVAILABLE",
+  "ADAPTATION_RECIPE_MALFORMED",
+  "ADAPTATION_STALE_JOB",
   "ADAPTATION_FAILED",
 ] as const;
 export type AdaptationErrorCode = (typeof ADAPTATION_ERROR_CODES)[number];
@@ -75,6 +77,9 @@ export const ADAPTATION_ERRORS: Record<AdaptationErrorCode, string> = {
   ADAPTATION_OUTPUT_INVALID: "The adapted output failed validation",
   ADAPTATION_STORAGE_FAILED: "The adapted output could not be stored",
   ADAPTATION_OUTPUT_UNAVAILABLE: "The adapted output is not ready yet",
+  ADAPTATION_RECIPE_MALFORMED: "The frozen recipe could not be read",
+  ADAPTATION_STALE_JOB:
+    "This adaptation was never picked up by a worker",
   ADAPTATION_FAILED: "Adaptation failed",
 };
 

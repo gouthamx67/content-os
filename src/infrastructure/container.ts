@@ -105,6 +105,25 @@ import {
   createRemoteLlmProvider,
   remoteLlmConfigFromEnv,
 } from "../modules/writing-engine/providers/remote-llm-provider";
+import { PostgresAdaptationRepository } from "./repositories/postgres-adaptation-repository";
+import { PostgresEditorRepository } from "./repositories/postgres-editor-repository";
+import { PostgresCampaignRepository } from "./repositories/postgres-campaign-repository";
+import {
+  createCampaignArtifacts,
+  createCampaignGroundingProvider,
+  type CampaignIntegrationDeps,
+} from "./campaign-integrations";
+import { CampaignService } from "../modules/campaign-engine/campaign-service";
+import { createId } from "../lib/id";
+import { EditorService } from "../modules/editor-engine/editor-service";
+import { EditorAIService } from "../modules/editor-engine/ai/ai-service";
+import { EditorImportService } from "../modules/editor-engine/integrations/imports";
+import { EditorAssetResolver } from "../modules/editor-engine/assets/editor-asset-resolver";
+import { PostgresSourceResolver } from "./source-resolvers/postgres-source-resolver";
+import { AdaptationService } from "../modules/multiformat-engine/adaptation-service";
+import { AdaptationWorker } from "../modules/multiformat-engine/adaptation-worker";
+import { Cp09PlatformAuthority } from "../modules/multiformat-engine/platform/cp09-platform-authority";
+import { adaptationStorage } from "../modules/multiformat-engine/storage/adaptation-storage";
 
 const orm = db.orm.public;
 
@@ -128,6 +147,9 @@ const repositories = {
   audio: new PostgresAudioRepository(orm),
   images: new PostgresImageRepository(orm),
   writing: new PostgresWritingRepository(orm),
+  adaptations: new PostgresAdaptationRepository(orm),
+  editor: new PostgresEditorRepository(orm),
+  campaigns: new PostgresCampaignRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -688,6 +710,164 @@ export function createWritingWorker(): WritingGenerationWorker {
   });
 }
 
+/**
+ * CP19 multi-format engine.
+ *
+ * Every decision about what a variant should be is made once, in the service, and
+ * frozen into the job's recipe. The worker only executes recipes, so a format
+ * change cannot quietly alter work that was already queued.
+ *
+ * Platform support is not decided here either: CP09's registry and the project's
+ * declared intents answer that, and CP19 only refuses to go against their verdict.
+ */
+const adaptationSourceResolver = new PostgresSourceResolver({
+  writing: repositories.writing,
+  images: repositories.images,
+  visuals: repositories.visual,
+});
+
+const adaptationPlatformAuthority = new Cp09PlatformAuthority({
+  contentIntents: repositories.contentIntents,
+});
+
+const adaptationService = new AdaptationService({
+  repository: repositories.adaptations,
+  sources: adaptationSourceResolver,
+  platforms: adaptationPlatformAuthority,
+  renderJobs: renderJobService,
+  authorizeProject: authorizeVisualProject,
+});
+
+const adaptationServices = {
+  service: adaptationService,
+  repository: repositories.adaptations,
+  sources: adaptationSourceResolver,
+  platforms: adaptationPlatformAuthority,
+};
+
+/**
+ * CP20 AI content editor.
+ *
+ * The editor composes what a project already holds — assets from capture and
+ * generation, copy from writing, frames from the visual engine — and has no
+ * opinion about who may open the project beyond that membership. Every write is
+ * a revision against the head the caller read, so the editor never resolves a
+ * concurrent edit on the client's behalf.
+ */
+const editorService = new EditorService({
+  repository: repositories.editor,
+  newId: createId,
+  authorizeProject: authorizeVisualProject,
+});
+
+/**
+ * The editor's streaming boundary: a controlled `prefix:id` reference becomes a
+ * read stream only after the artifact has been verified to belong to the
+ * requested project. Wire the same storages the owning engines use, so the
+ * editor never holds its own copy of media.
+ */
+const editorAssetResolver = new EditorAssetResolver({
+  captures: repositories.captures,
+  assets: repositories.assets,
+  images: repositories.images,
+  adaptations: repositories.adaptations,
+  renderJobs: repositories.renderJobs,
+  captureStorage,
+  imageStorage,
+  adaptationStorage,
+  renderStorage,
+  storage: providers.storage,
+});
+
+const editorImportService = new EditorImportService({
+  editor: editorService,
+  captures: repositories.captures,
+  assets: repositories.assets,
+  images: repositories.images,
+  writing: repositories.writing,
+  adaptations: repositories.adaptations,
+  audio: repositories.audio,
+  visualCompositionFor: (args) => visualCompositionService.getComposition(args),
+});
+
+/**
+ * The editor's AI layer is deterministic by default: the local interpreter
+ * understands a fixed instruction vocabulary, so proposals work offline. A
+ * remote model is only attached behind the same interpretation gate as the
+ * other model-assisted paths, where a mock provider cannot be mistaken for a
+ * working model.
+ */
+const editorAIService = new EditorAIService({
+  editor: editorService,
+  writing: repositories.writing,
+  remote:
+    process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+      ? { provider: providers.ai }
+      : null,
+});
+
+const editorServices = {
+  service: editorService,
+  repository: repositories.editor,
+  ai: editorAIService,
+  imports: editorImportService,
+  assets: editorAssetResolver,
+};
+
+/**
+ * CP21 launch campaign engine.
+ *
+ * A campaign composes what a project already holds — sources, brand and
+ * intelligence versions, content intents, and the artifacts its deliverables
+ * link to — without copying any of it. Membership is the only authorization, and
+ * every mutation is a revision against the head the caller read, so the engine
+ * never resolves a concurrent edit on the client's behalf.
+ */
+const campaignIntegrationDeps = {
+  orm,
+  sources: repositories.sources,
+  assets: repositories.assets,
+  contentIntents: repositories.contentIntents,
+  brand: repositories.brand,
+  intelligence: repositories.intelligence,
+  writing: repositories.writing,
+  adaptations: repositories.adaptations,
+  images: repositories.images,
+  editor: repositories.editor,
+} satisfies CampaignIntegrationDeps;
+
+const campaignGrounding = createCampaignGroundingProvider(campaignIntegrationDeps);
+const campaignArtifacts = createCampaignArtifacts(campaignIntegrationDeps);
+
+const campaignService = new CampaignService({
+  repository: repositories.campaigns,
+  authorizeProject: authorizeVisualProject,
+  newId: createId,
+  now: () => new Date().toISOString(),
+  grounding: campaignGrounding,
+  artifacts: campaignArtifacts,
+});
+
+const campaignServices = {
+  service: campaignService,
+  repository: repositories.campaigns,
+  grounding: campaignGrounding,
+  artifacts: campaignArtifacts,
+};
+
+
+export const adaptationWorkerHealth = new RenderWorkerHealth();
+
+export function createAdaptationWorker(): AdaptationWorker {
+  return new AdaptationWorker({
+    repository: repositories.adaptations,
+    sources: adaptationSourceResolver,
+    storage: adaptationStorage,
+    renderJobs: renderJobService,
+    health: adaptationWorkerHealth,
+  });
+}
+
 export const container = {
   repositories,
   providers,
@@ -713,5 +893,8 @@ export const container = {
     audio: audioCompositions,
     images: imageServices,
     writing: writingServices,
+    multiformat: adaptationServices,
+    editor: editorServices,
+    campaign: campaignServices,
   },
 };

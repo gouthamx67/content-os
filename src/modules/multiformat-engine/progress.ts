@@ -1,5 +1,4 @@
 import type {
-  AdaptationBatchRecord,
   AdaptationBatchStatus,
   AdaptationJobRecord,
 } from "./domain/types";

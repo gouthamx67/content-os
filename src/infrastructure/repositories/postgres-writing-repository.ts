@@ -233,6 +233,24 @@ export class PostgresWritingRepository implements WritingRepository {
     return row ? decodeVariant(row) : null;
   }
 
+  async getDocumentByVariant(
+    projectId: string,
+    variantId: string,
+  ): Promise<WritingDocumentRecord | null> {
+    const variant = (await this.orm.WritingVariant.where({
+      id: variantId,
+    }).first()) as unknown as { documentId: string } | null;
+
+    if (!variant) return null;
+
+    const row = (await this.orm.WritingDocument.where({
+      id: variant.documentId,
+      projectId,
+    }).first()) as unknown as DocumentRow | null;
+
+    return row ? decodeDocument(row) : null;
+  }
+
   async listVariants(documentId: string): Promise<WritingVariantRecord[]> {
     const rows = (await this.orm.WritingVariant.where({ documentId })
       .orderBy((v) => v.ordinal.asc())

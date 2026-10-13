@@ -1,0 +1,719 @@
+[
+  {
+    "id": "table.campaign",
+    "label": "Create table \"campaign\"",
+    "summary": "Creates table \"campaign\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "campaign"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"campaign\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"campaign\"",
+        "sql": "CREATE TABLE \"public\".\"campaign\" (\n  \"approvalHash\" text,\n  \"approvedAt\" timestamptz,\n  \"approvedById\" text,\n  \"assembledAt\" timestamptz,\n  \"audienceSummary\" text NOT NULL,\n  \"brief\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"keyMessage\" text NOT NULL,\n  \"launchKit\" text,\n  \"launchKitHash\" text,\n  \"name\" text NOT NULL,\n  \"objective\" text NOT NULL,\n  \"plan\" text,\n  \"projectId\" text NOT NULL,\n  \"revisionNumber\" int4 DEFAULT 1 NOT NULL,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"strategy\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"campaign_status_check_c5865b32\" CHECK (\"status\" IN ('DRAFT', 'PLANNED', 'IN_REVIEW', 'APPROVED', 'ARCHIVED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"campaign\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.campaign_deliverable",
+    "label": "Create table \"campaign_deliverable\"",
+    "summary": "Creates table \"campaign_deliverable\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "campaign_deliverable"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"campaign_deliverable\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"campaign_deliverable\"",
+        "sql": "CREATE TABLE \"public\".\"campaign_deliverable\" (\n  \"brief\" text NOT NULL,\n  \"campaignId\" text NOT NULL,\n  \"channel\" text NOT NULL,\n  \"contentTypeId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"links\" text NOT NULL,\n  \"platformId\" text NOT NULL,\n  \"position\" int4 DEFAULT 0 NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"scheduledFor\" timestamptz,\n  \"status\" text DEFAULT 'PLANNED' NOT NULL,\n  \"title\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"campaign_deliverable_channel_check_1c241ad4\" CHECK (\"channel\" IN ('VIDEO', 'IMAGE', 'TEXT', 'AUDIO', 'CAMPAIGN')),\n  CONSTRAINT \"campaign_deliverable_status_check_e2b9e409\" CHECK (\"status\" IN ('PLANNED', 'IN_PROGRESS', 'READY', 'BLOCKED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"campaign_deliverable\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.campaign_revision",
+    "label": "Create table \"campaign_revision\"",
+    "summary": "Creates table \"campaign_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "campaign_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"campaign_revision\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"campaign_revision\"",
+        "sql": "CREATE TABLE \"public\".\"campaign_revision\" (\n  \"campaignId\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"payload\" text NOT NULL,\n  \"revisionNumber\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"campaign_revision_kind_check_838aa307\" CHECK (\"kind\" IN ('CREATE', 'BRIEF_UPDATED', 'STRATEGY_SET', 'PLAN_SET', 'DELIVERABLE_ADDED', 'DELIVERABLE_UPDATED', 'DELIVERABLE_REMOVED', 'SUBMITTED', 'APPROVED', 'RETURNED', 'SCHEDULED', 'ASSEMBLED', 'ARCHIVED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"campaign_revision\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_revision\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.campaign_revision.campaign_revision_campaign_number",
+    "label": "Add unique constraint on \"campaign_revision\" (campaignId, revisionNumber)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "campaign_revision_campaign_number",
+        "table": "campaign_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"campaign_revision_campaign_number\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_revision_campaign_number",
+          "public",
+          "\"public\".\"campaign_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"campaign_revision_campaign_number\"",
+        "sql": "ALTER TABLE \"public\".\"campaign_revision\" ADD CONSTRAINT \"campaign_revision_campaign_number\" UNIQUE (\"campaignId\", \"revisionNumber\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"campaign_revision_campaign_number\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_revision_campaign_number",
+          "public",
+          "\"public\".\"campaign_revision\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign.campaign_projectId_idx_a96e4d92",
+    "label": "Create index \"campaign_projectId_idx_a96e4d92\" on \"campaign\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_projectId_idx_a96e4d92",
+        "table": "campaign"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"campaign_projectId_idx_a96e4d92\" ON \"public\".\"campaign\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign.campaign_project_created_idx",
+    "label": "Create index \"campaign_project_created_idx\" on \"campaign\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_project_created_idx",
+        "table": "campaign"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_project_created_idx\"",
+        "sql": "CREATE INDEX \"campaign_project_created_idx\" ON \"public\".\"campaign\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign.campaign_project_status_idx",
+    "label": "Create index \"campaign_project_status_idx\" on \"campaign\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_project_status_idx",
+        "table": "campaign"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_project_status_idx\"",
+        "sql": "CREATE INDEX \"campaign_project_status_idx\" ON \"public\".\"campaign\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign_deliverable.campaign_deliverable_campaignId_idx_3aacd648",
+    "label": "Create index \"campaign_deliverable_campaignId_idx_3aacd648\" on \"campaign_deliverable\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_deliverable_campaignId_idx_3aacd648",
+        "table": "campaign_deliverable"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_deliverable_campaignId_idx_3aacd648\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_campaignId_idx_3aacd648\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_deliverable_campaignId_idx_3aacd648\"",
+        "sql": "CREATE INDEX \"campaign_deliverable_campaignId_idx_3aacd648\" ON \"public\".\"campaign_deliverable\" (\"campaignId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_deliverable_campaignId_idx_3aacd648\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_campaignId_idx_3aacd648\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign_deliverable.campaign_deliverable_campaign_position_idx",
+    "label": "Create index \"campaign_deliverable_campaign_position_idx\" on \"campaign_deliverable\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_deliverable_campaign_position_idx",
+        "table": "campaign_deliverable"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_deliverable_campaign_position_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_campaign_position_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_deliverable_campaign_position_idx\"",
+        "sql": "CREATE INDEX \"campaign_deliverable_campaign_position_idx\" ON \"public\".\"campaign_deliverable\" (\"campaignId\", \"position\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_deliverable_campaign_position_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_campaign_position_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign_deliverable.campaign_deliverable_campaign_scheduled_idx",
+    "label": "Create index \"campaign_deliverable_campaign_scheduled_idx\" on \"campaign_deliverable\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_deliverable_campaign_scheduled_idx",
+        "table": "campaign_deliverable"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_deliverable_campaign_scheduled_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_campaign_scheduled_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_deliverable_campaign_scheduled_idx\"",
+        "sql": "CREATE INDEX \"campaign_deliverable_campaign_scheduled_idx\" ON \"public\".\"campaign_deliverable\" (\"campaignId\", \"scheduledFor\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_deliverable_campaign_scheduled_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_campaign_scheduled_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign_deliverable.campaign_deliverable_projectId_idx_a96e4d92",
+    "label": "Create index \"campaign_deliverable_projectId_idx_a96e4d92\" on \"campaign_deliverable\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_deliverable_projectId_idx_a96e4d92",
+        "table": "campaign_deliverable"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_deliverable_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_deliverable_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"campaign_deliverable_projectId_idx_a96e4d92\" ON \"public\".\"campaign_deliverable\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_deliverable_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign_deliverable.campaign_deliverable_project_status_idx",
+    "label": "Create index \"campaign_deliverable_project_status_idx\" on \"campaign_deliverable\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_deliverable_project_status_idx",
+        "table": "campaign_deliverable"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_deliverable_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_deliverable_project_status_idx\"",
+        "sql": "CREATE INDEX \"campaign_deliverable_project_status_idx\" ON \"public\".\"campaign_deliverable\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_deliverable_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_deliverable_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign_revision.campaign_revision_campaignId_idx_3aacd648",
+    "label": "Create index \"campaign_revision_campaignId_idx_3aacd648\" on \"campaign_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_revision_campaignId_idx_3aacd648",
+        "table": "campaign_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_revision_campaignId_idx_3aacd648\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_revision_campaignId_idx_3aacd648\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_revision_campaignId_idx_3aacd648\"",
+        "sql": "CREATE INDEX \"campaign_revision_campaignId_idx_3aacd648\" ON \"public\".\"campaign_revision\" (\"campaignId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_revision_campaignId_idx_3aacd648\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_revision_campaignId_idx_3aacd648\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.campaign_revision.campaign_revision_campaign_created_idx",
+    "label": "Create index \"campaign_revision_campaign_created_idx\" on \"campaign_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "campaign_revision_campaign_created_idx",
+        "table": "campaign_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"campaign_revision_campaign_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_revision_campaign_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"campaign_revision_campaign_created_idx\"",
+        "sql": "CREATE INDEX \"campaign_revision_campaign_created_idx\" ON \"public\".\"campaign_revision\" (\"campaignId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"campaign_revision_campaign_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"campaign_revision_campaign_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.campaign.campaign_projectId_fkey",
+    "label": "Add foreign key \"campaign_projectId_fkey\" on \"campaign\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "campaign_projectId_fkey",
+        "table": "campaign"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"campaign_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_projectId_fkey",
+          "public",
+          "\"public\".\"campaign\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"campaign_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"campaign\"\nADD CONSTRAINT \"campaign_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"campaign_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_projectId_fkey",
+          "public",
+          "\"public\".\"campaign\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.campaign_deliverable.campaign_deliverable_campaignId_fkey",
+    "label": "Add foreign key \"campaign_deliverable_campaignId_fkey\" on \"campaign_deliverable\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "campaign_deliverable_campaignId_fkey",
+        "table": "campaign_deliverable"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"campaign_deliverable_campaignId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_deliverable_campaignId_fkey",
+          "public",
+          "\"public\".\"campaign_deliverable\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"campaign_deliverable_campaignId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"campaign_deliverable\"\nADD CONSTRAINT \"campaign_deliverable_campaignId_fkey\"\nFOREIGN KEY (\"campaignId\")\nREFERENCES \"public\".\"campaign\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"campaign_deliverable_campaignId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_deliverable_campaignId_fkey",
+          "public",
+          "\"public\".\"campaign_deliverable\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.campaign_deliverable.campaign_deliverable_projectId_fkey",
+    "label": "Add foreign key \"campaign_deliverable_projectId_fkey\" on \"campaign_deliverable\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "campaign_deliverable_projectId_fkey",
+        "table": "campaign_deliverable"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"campaign_deliverable_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_deliverable_projectId_fkey",
+          "public",
+          "\"public\".\"campaign_deliverable\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"campaign_deliverable_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"campaign_deliverable\"\nADD CONSTRAINT \"campaign_deliverable_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"campaign_deliverable_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_deliverable_projectId_fkey",
+          "public",
+          "\"public\".\"campaign_deliverable\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.campaign_revision.campaign_revision_campaignId_fkey",
+    "label": "Add foreign key \"campaign_revision_campaignId_fkey\" on \"campaign_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "campaign_revision_campaignId_fkey",
+        "table": "campaign_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"campaign_revision_campaignId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_revision_campaignId_fkey",
+          "public",
+          "\"public\".\"campaign_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"campaign_revision_campaignId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"campaign_revision\"\nADD CONSTRAINT \"campaign_revision_campaignId_fkey\"\nFOREIGN KEY (\"campaignId\")\nREFERENCES \"public\".\"campaign\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"campaign_revision_campaignId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "campaign_revision_campaignId_fkey",
+          "public",
+          "\"public\".\"campaign_revision\""
+        ]
+      }
+    ]
+  }
+]

@@ -395,27 +395,31 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
     await db.transaction(async (tx) => {
       // Queued work is finished here and now; nothing has started, so there is
       // nothing to unwind.
-      await tx.sql.public.adaptation_job
-        .update({
-          status: "CANCELLED",
-          finishedAt: input.finishedAt,
-          updatedAt: input.finishedAt,
-        })
-        .where((f, fns) => fns.eq(f.batchId, batch.id))
-        .where((f, fns) => fns.eq(f.status, "QUEUED"))
-        .build();
+      await tx.query(
+        tx.sql.public.adaptation_job
+          .update({
+            status: "CANCELLED",
+            finishedAt: input.finishedAt,
+            updatedAt: input.finishedAt,
+          })
+          .where((f, fns) => fns.eq(f.batchId, batch.id))
+          .where((f, fns) => fns.eq(f.status, "QUEUED"))
+          .build(),
+      );
 
       // Running work, and work parked on a render, is asked to stop and then
       // finalise its own row.
       for (const status of ["RUNNING", "WAITING_RENDER"]) {
-        await tx.sql.public.adaptation_job
-          .update({
-            status: "CANCEL_REQUESTED",
-            updatedAt: input.finishedAt,
-          })
-          .where((f, fns) => fns.eq(f.batchId, batch.id))
-          .where((f, fns) => fns.eq(f.status, status))
-          .build();
+        await tx.query(
+          tx.sql.public.adaptation_job
+            .update({
+              status: "CANCEL_REQUESTED",
+              updatedAt: input.finishedAt,
+            })
+            .where((f, fns) => fns.eq(f.batchId, batch.id))
+            .where((f, fns) => fns.eq(f.status, status))
+            .build(),
+        );
       }
     });
 

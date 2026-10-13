@@ -1,0 +1,803 @@
+[
+  {
+    "id": "table.editor_document",
+    "label": "Create table \"editor_document\"",
+    "summary": "Creates table \"editor_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "editor_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"editor_document\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"editor_document\"",
+        "sql": "CREATE TABLE \"public\".\"editor_document\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"currentRevisionId\" text,\n  \"documentVersion\" int4 DEFAULT 1 NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"editor_document_status_check_1d0cbbdd\" CHECK (\"status\" IN ('DRAFT', 'READY', 'ARCHIVED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"editor_document\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.editor_node",
+    "label": "Create table \"editor_node\"",
+    "summary": "Creates table \"editor_node\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "editor_node"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"editor_node\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_node\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"editor_node\"",
+        "sql": "CREATE TABLE \"public\".\"editor_node\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"documentId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"parentId\" text,\n  \"sortIndex\" int4 DEFAULT 0 NOT NULL,\n  \"type\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"zIndex\" int4 DEFAULT 0 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"editor_node_type_check_9ab11ff3\" CHECK (\"type\" IN ('TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'SHAPE', 'GROUP'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"editor_node\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_node\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.editor_revision",
+    "label": "Create table \"editor_revision\"",
+    "summary": "Creates table \"editor_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "editor_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"editor_revision\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"editor_revision\"",
+        "sql": "CREATE TABLE \"public\".\"editor_revision\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"documentId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"operationPayload\" text NOT NULL,\n  \"operationType\" text NOT NULL,\n  \"provenanceSourceIds\" text[] NOT NULL,\n  \"restoredFromRevisionId\" text,\n  \"revisionNumber\" int4 NOT NULL,\n  \"snapshot\" text NOT NULL,\n  \"snapshotSha256\" text NOT NULL,\n  \"sourceId\" text,\n  \"sourceType\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"editor_revision_operationType_check_ecf179b5\" CHECK (\"operationType\" IN ('CREATE', 'SET_TEXT', 'REPLACE_ASSET', 'MOVE', 'RESIZE', 'ROTATE', 'SET_OPACITY', 'SET_STYLE', 'TRIM', 'SET_GAIN', 'SET_MUTE', 'SET_VISIBILITY', 'REORDER', 'DUPLICATE', 'DELETE', 'SPLIT', 'RESTORE')),\n  CONSTRAINT \"editor_revision_provenanceSourceIds_elem_not_null_4aac0ed6\" CHECK (array_position(\"provenanceSourceIds\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"editor_revision\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.editor_revision.editor_revision_document_number",
+    "label": "Add unique constraint on \"editor_revision\" (documentId, revisionNumber)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "editor_revision_document_number",
+        "table": "editor_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"editor_revision_document_number\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_revision_document_number",
+          "public",
+          "\"public\".\"editor_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"editor_revision_document_number\"",
+        "sql": "ALTER TABLE \"public\".\"editor_revision\" ADD CONSTRAINT \"editor_revision_document_number\" UNIQUE (\"documentId\", \"revisionNumber\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"editor_revision_document_number\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_revision_document_number",
+          "public",
+          "\"public\".\"editor_revision\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_document.editor_document_current_revision_idx",
+    "label": "Create index \"editor_document_current_revision_idx\" on \"editor_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_document_current_revision_idx",
+        "table": "editor_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_document_current_revision_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_document_current_revision_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_document_current_revision_idx\"",
+        "sql": "CREATE INDEX \"editor_document_current_revision_idx\" ON \"public\".\"editor_document\" (\"currentRevisionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_document_current_revision_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_document_current_revision_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_document.editor_document_projectId_idx_a96e4d92",
+    "label": "Create index \"editor_document_projectId_idx_a96e4d92\" on \"editor_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_document_projectId_idx_a96e4d92",
+        "table": "editor_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_document_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_document_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_document_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"editor_document_projectId_idx_a96e4d92\" ON \"public\".\"editor_document\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_document_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_document_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_document.editor_document_project_created_idx",
+    "label": "Create index \"editor_document_project_created_idx\" on \"editor_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_document_project_created_idx",
+        "table": "editor_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_document_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_document_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_document_project_created_idx\"",
+        "sql": "CREATE INDEX \"editor_document_project_created_idx\" ON \"public\".\"editor_document\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_document_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_document_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_node.editor_node_documentId_idx_825ef746",
+    "label": "Create index \"editor_node_documentId_idx_825ef746\" on \"editor_node\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_node_documentId_idx_825ef746",
+        "table": "editor_node"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_node_documentId_idx_825ef746\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_node_documentId_idx_825ef746\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_node_documentId_idx_825ef746\"",
+        "sql": "CREATE INDEX \"editor_node_documentId_idx_825ef746\" ON \"public\".\"editor_node\" (\"documentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_node_documentId_idx_825ef746\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_node_documentId_idx_825ef746\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_node.editor_node_document_parent_sort_idx",
+    "label": "Create index \"editor_node_document_parent_sort_idx\" on \"editor_node\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_node_document_parent_sort_idx",
+        "table": "editor_node"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_node_document_parent_sort_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_node_document_parent_sort_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_node_document_parent_sort_idx\"",
+        "sql": "CREATE INDEX \"editor_node_document_parent_sort_idx\" ON \"public\".\"editor_node\" (\"documentId\", \"parentId\", \"sortIndex\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_node_document_parent_sort_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_node_document_parent_sort_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_node.editor_node_parentId_idx_6a68f597",
+    "label": "Create index \"editor_node_parentId_idx_6a68f597\" on \"editor_node\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_node_parentId_idx_6a68f597",
+        "table": "editor_node"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_node_parentId_idx_6a68f597\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_node_parentId_idx_6a68f597\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_node_parentId_idx_6a68f597\"",
+        "sql": "CREATE INDEX \"editor_node_parentId_idx_6a68f597\" ON \"public\".\"editor_node\" (\"parentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_node_parentId_idx_6a68f597\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_node_parentId_idx_6a68f597\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_revision.editor_revision_documentId_idx_825ef746",
+    "label": "Create index \"editor_revision_documentId_idx_825ef746\" on \"editor_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_revision_documentId_idx_825ef746",
+        "table": "editor_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_revision_documentId_idx_825ef746\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision_documentId_idx_825ef746\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_revision_documentId_idx_825ef746\"",
+        "sql": "CREATE INDEX \"editor_revision_documentId_idx_825ef746\" ON \"public\".\"editor_revision\" (\"documentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_revision_documentId_idx_825ef746\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision_documentId_idx_825ef746\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_revision.editor_revision_document_created_idx",
+    "label": "Create index \"editor_revision_document_created_idx\" on \"editor_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_revision_document_created_idx",
+        "table": "editor_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_revision_document_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision_document_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_revision_document_created_idx\"",
+        "sql": "CREATE INDEX \"editor_revision_document_created_idx\" ON \"public\".\"editor_revision\" (\"documentId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_revision_document_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision_document_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_revision.editor_revision_document_source_idx",
+    "label": "Create index \"editor_revision_document_source_idx\" on \"editor_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_revision_document_source_idx",
+        "table": "editor_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_revision_document_source_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision_document_source_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_revision_document_source_idx\"",
+        "sql": "CREATE INDEX \"editor_revision_document_source_idx\" ON \"public\".\"editor_revision\" (\"documentId\", \"sourceType\", \"sourceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_revision_document_source_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision_document_source_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.editor_revision.editor_revision_restored_from_idx",
+    "label": "Create index \"editor_revision_restored_from_idx\" on \"editor_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "editor_revision_restored_from_idx",
+        "table": "editor_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"editor_revision_restored_from_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision_restored_from_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"editor_revision_restored_from_idx\"",
+        "sql": "CREATE INDEX \"editor_revision_restored_from_idx\" ON \"public\".\"editor_revision\" (\"restoredFromRevisionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"editor_revision_restored_from_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"editor_revision_restored_from_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.editor_document.editor_document_projectId_fkey",
+    "label": "Add foreign key \"editor_document_projectId_fkey\" on \"editor_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "editor_document_projectId_fkey",
+        "table": "editor_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"editor_document_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_document_projectId_fkey",
+          "public",
+          "\"public\".\"editor_document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"editor_document_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"editor_document\"\nADD CONSTRAINT \"editor_document_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"editor_document_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_document_projectId_fkey",
+          "public",
+          "\"public\".\"editor_document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.editor_document.editor_document_currentRevisionId_fkey",
+    "label": "Add foreign key \"editor_document_currentRevisionId_fkey\" on \"editor_document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "editor_document_currentRevisionId_fkey",
+        "table": "editor_document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"editor_document_currentRevisionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_document_currentRevisionId_fkey",
+          "public",
+          "\"public\".\"editor_document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"editor_document_currentRevisionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"editor_document\"\nADD CONSTRAINT \"editor_document_currentRevisionId_fkey\"\nFOREIGN KEY (\"currentRevisionId\")\nREFERENCES \"public\".\"editor_revision\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"editor_document_currentRevisionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_document_currentRevisionId_fkey",
+          "public",
+          "\"public\".\"editor_document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.editor_node.editor_node_documentId_fkey",
+    "label": "Add foreign key \"editor_node_documentId_fkey\" on \"editor_node\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "editor_node_documentId_fkey",
+        "table": "editor_node"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"editor_node_documentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_node_documentId_fkey",
+          "public",
+          "\"public\".\"editor_node\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"editor_node_documentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"editor_node\"\nADD CONSTRAINT \"editor_node_documentId_fkey\"\nFOREIGN KEY (\"documentId\")\nREFERENCES \"public\".\"editor_document\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"editor_node_documentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_node_documentId_fkey",
+          "public",
+          "\"public\".\"editor_node\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.editor_node.editor_node_parentId_fkey",
+    "label": "Add foreign key \"editor_node_parentId_fkey\" on \"editor_node\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "editor_node_parentId_fkey",
+        "table": "editor_node"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"editor_node_parentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_node_parentId_fkey",
+          "public",
+          "\"public\".\"editor_node\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"editor_node_parentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"editor_node\"\nADD CONSTRAINT \"editor_node_parentId_fkey\"\nFOREIGN KEY (\"parentId\")\nREFERENCES \"public\".\"editor_node\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"editor_node_parentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_node_parentId_fkey",
+          "public",
+          "\"public\".\"editor_node\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.editor_revision.editor_revision_documentId_fkey",
+    "label": "Add foreign key \"editor_revision_documentId_fkey\" on \"editor_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "editor_revision_documentId_fkey",
+        "table": "editor_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"editor_revision_documentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_revision_documentId_fkey",
+          "public",
+          "\"public\".\"editor_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"editor_revision_documentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"editor_revision\"\nADD CONSTRAINT \"editor_revision_documentId_fkey\"\nFOREIGN KEY (\"documentId\")\nREFERENCES \"public\".\"editor_document\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"editor_revision_documentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_revision_documentId_fkey",
+          "public",
+          "\"public\".\"editor_revision\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.editor_revision.editor_revision_restoredFromRevisionId_fkey",
+    "label": "Add foreign key \"editor_revision_restoredFromRevisionId_fkey\" on \"editor_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "editor_revision_restoredFromRevisionId_fkey",
+        "table": "editor_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"editor_revision_restoredFromRevisionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_revision_restoredFromRevisionId_fkey",
+          "public",
+          "\"public\".\"editor_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"editor_revision_restoredFromRevisionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"editor_revision\"\nADD CONSTRAINT \"editor_revision_restoredFromRevisionId_fkey\"\nFOREIGN KEY (\"restoredFromRevisionId\")\nREFERENCES \"public\".\"editor_revision\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"editor_revision_restoredFromRevisionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "editor_revision_restoredFromRevisionId_fkey",
+          "public",
+          "\"public\".\"editor_revision\""
+        ]
+      }
+    ]
+  }
+]

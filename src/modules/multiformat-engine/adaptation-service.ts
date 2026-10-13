@@ -12,9 +12,9 @@ import type {
   AdaptationBatchRecord,
   AdaptationJobRecord,
   AdaptationKind,
+  AdaptationSourceSnapshot,
   AdaptationSourceType,
   FormatContract,
-  SnapshotClaim,
 } from "./domain/types";
 import { NO_PLATFORM } from "./domain/types";
 import { AdaptationError } from "./errors";
@@ -59,6 +59,14 @@ export type FormatOption = {
   maxCharacters: number | null;
   maxWords: number | null;
   transparent: boolean | null;
+};
+
+/** Which store holds a finished variant's bytes, once the caller is authorized. */
+export type AdaptationArtifactDescriptor = {
+  storage: "CP19" | "CP15";
+  storageKey: string;
+  mimeType: string;
+  byteSize: number;
 };
 
 export type AdaptationServiceDeps = {
@@ -154,9 +162,7 @@ export class AdaptationService {
     const planned: {
       format: FormatContract;
       platformId: string;
-      platformIdInRecipe: string | null;
       provenanceSourceIds: string[];
-      storageKey: string;
       recipe: string;
       recipeSha256: string;
     }[] = [];
@@ -167,7 +173,7 @@ export class AdaptationService {
         formatId: target.formatId,
       });
 
-      const platformId = target.platformId?.trim() ?? "";
+      const platformId = target.platformId?.trim() ?? NO_PLATFORM;
       const key = `${format.id}::${platformId}`;
       if (seen.has(key)) {
         throw new AdaptationError(
@@ -213,9 +219,7 @@ export class AdaptationService {
       planned.push({
         format,
         platformId,
-        platformIdInRecipe: platformId || null,
         provenanceSourceIds,
-        storageKey,
         recipe: stableStringify(recipe),
         recipeSha256,
       });
@@ -448,6 +452,84 @@ export class AdaptationService {
   }
 
   /**
+   * Where a finished variant's bytes are, once the caller is authorized.
+   *
+   * The descriptor names the storage CP19 keeps its own artifacts in or CP15's
+   * render storage, but never hands back a filesystem path or a raw key from an
+   * unauthorized project: authorization has already happened here, so the route
+   * can dereference without re-checking anything.
+   */
+  async artifactFor(args: {
+    projectId: string;
+    userId: string;
+    jobId: string;
+  }): Promise<AdaptationArtifactDescriptor> {
+    const job = await this.getJob(args);
+
+    if (job.status !== "SUCCEEDED") {
+      throw new AdaptationError(
+        "ADAPTATION_OUTPUT_UNAVAILABLE",
+        "This adaptation has not finished yet",
+        409,
+      );
+    }
+
+    if (job.kind === "IMAGE") {
+      if (!job.outputStorageKey) {
+        throw new AdaptationError(
+          "ADAPTATION_OUTPUT_UNAVAILABLE",
+          "This adaptation produced no image",
+          409,
+        );
+      }
+
+      return {
+        storage: "CP19",
+        storageKey: job.outputStorageKey,
+        mimeType: job.outputMimeType ?? "image/png",
+        byteSize: job.outputByteSize ?? 0,
+      };
+    }
+
+    if (job.kind === "VIDEO") {
+      if (!job.renderJobId) {
+        throw new AdaptationError(
+          "ADAPTATION_OUTPUT_UNAVAILABLE",
+          "This adaptation produced no video",
+          409,
+        );
+      }
+
+      const artifact = await this.renderJobs?.artifact({
+        projectId: job.projectId,
+        renderJobId: job.renderJobId,
+        userId: args.userId,
+      });
+
+      if (!artifact) {
+        throw new AdaptationError(
+          "ADAPTATION_OUTPUT_UNAVAILABLE",
+          "The render for this adaptation produced no artifact",
+          409,
+        );
+      }
+
+      return {
+        storage: "CP15",
+        storageKey: artifact.storageKey,
+        mimeType: artifact.mimeType,
+        byteSize: artifact.byteSize,
+      };
+    }
+
+    throw new AdaptationError(
+      "ADAPTATION_OUTPUT_UNAVAILABLE",
+      "This adaptation has no downloadable artifact",
+      409,
+    );
+  }
+
+  /**
    * The formats a source of this kind can become, with CP09's verdict on the
    * chosen platform attached.
    *
@@ -462,7 +544,7 @@ export class AdaptationService {
   }): Promise<{ formats: FormatOption[]; platformName: string | null }> {
     await this.authorizeProject(args.projectId, args.userId);
 
-    const platformId = args.platformId?.trim() ?? "";
+    const platformId = args.platformId?.trim() ?? NO_PLATFORM;
     let platformSupported: boolean | null = null;
     let platformName: string | null = null;
 
@@ -524,28 +606,46 @@ export class AdaptationService {
  * The provenance a variant is allowed to carry at creation time.
  *
  * For copy it is the CP06 sources behind the claims that survive the format's
- * limit; for a raster or a re-render there is no new textual assertion to
- * support, so nothing is claimed.
+ * limit. Fitting here rather than at write time is deliberate: the fit is a pure
+ * function of the frozen text and the format's limits, so the worker will land on
+ * exactly this text, and the provenance recorded now describes the output that
+ * will exist rather than a guess at it.
+ *
+ * A raster or a re-render asserts nothing new, so it claims no sources.
  */
 function collectProvenance(
-  snapshot: { claims?: readonly SnapshotClaim[]; sourceType: string },
+  snapshot: AdaptationSourceSnapshot,
   format: FormatContract,
 ): string[] {
-  if (format.kind !== "COPY" || !snapshot.claims) return [];
+  if (format.kind !== "COPY" || snapshot.sourceType !== "WRITING_VARIANT") {
+    return [];
+  }
 
+  const maxCharacters = format.copy?.maxCharacters ?? 0;
+  const maxWords = format.copy?.maxWords ?? 0;
   const fitted = fitCopy({
-    text: snapshot.claims.map((claim) => claim.text).join(" "),
-    maxCharacters: format.copy?.maxCharacters ?? 1,
-    maxWords: format.copy?.maxWords ?? 1,
+    text: snapshot.text,
+    maxCharacters,
+    maxWords,
   });
 
-  const sourceText =
-    snapshot.claims.length > 0
-      ? snapshot.claims.map((claim) => claim.text).join(" ")
-      : "";
+  if (fitted.text.length === 0) {
+    throw new AdaptationError(
+      "ADAPTATION_OUTPUT_INVALID",
+      `Not even the first word fits ${format.id}`,
+      422,
+    );
+  }
+
+  validateCopyOutput({
+    outputText: fitted.text,
+    sourceText: snapshot.text,
+    maxCharacters,
+    maxWords,
+  });
 
   return survivingClaims({
-    outputText: fitted.text || sourceText,
+    outputText: fitted.text,
     claims: snapshot.claims,
   }).sourceIds;
 }

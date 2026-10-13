@@ -1,7 +1,13 @@
+import { emptyStyle } from "../../../src/modules/editor-engine/domain/types";
+import type { EditorNode } from "../../../src/modules/editor-engine/domain/types";
 import { spawn, type ChildProcess } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import { execFile as execFileCb } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFile = promisify(execFileCb);
 
 /**
  * Shared plumbing for the CP17 browser end-to-end specs.
@@ -11,6 +17,26 @@ import path from "node:path";
  * job, which is the point — a generated image that never rasterised must fail
  * the suite rather than pass on a placeholder.
  */
+
+/**
+ * The autostarted server runs the production build rather than `next dev`.
+ *
+ * Next.js compiles route handlers lazily in development, so the first request a
+ * fresh dev server ever sees pays a one-time compile. Batch work finishes faster
+ * than that compile was measured to take, which made cancellation tests a race
+ * nobody consciously wrote. A production server has every route compiled at build
+ * time, so the first request behaves like every later one.
+ */
+let buildPromise: Promise<void> | undefined;
+
+async function ensureProductionBuild(): Promise<void> {
+  if (!buildPromise) {
+    buildPromise = execFile("npm", ["run", "build"], {
+      cwd: repoRoot,
+    }).then(() => undefined);
+  }
+  await buildPromise;
+}
 
 export const BASE_URL =
   process.env["VISUAL_E2E_BASE_URL"] ?? "http://localhost:3000";
@@ -104,15 +130,18 @@ export type E2EStack = {
   imageWorker?: ChildProcess;
   videoWorker?: ChildProcess;
   writingWorker?: ChildProcess;
+  multiformatWorker?: ChildProcess;
   startedDevServer: boolean;
 };
 
 /**
- * Starts whatever is missing for a real generation run: the Next.js server, the
- * CP17 image worker, and (when requested) the CP15 render worker.
+ * Starts whatever is missing for a real generation run: the Next.js server (a
+ * one-time production build that it then serves — see `ensureProductionBuild`),
+ * the CP17 image worker, and (when requested) the CP15 render worker.
  */
 export async function startStack(options?: {
   withRenderWorker?: boolean;
+  withMultiformatWorker?: boolean;
 }): Promise<E2EStack> {
   process.env["DATABASE_URL"] = DATABASE_URL;
 
@@ -123,7 +152,8 @@ export async function startStack(options?: {
   };
 
   if (!stack.reachable && !process.env["CONTENT_OS_E2E_NO_AUTOSTART"]) {
-    stack.devServer = spawn("npm", ["run", "dev"], {
+    await ensureProductionBuild();
+    stack.devServer = spawn("npm", ["run", "start"], {
       cwd: repoRoot,
       env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
       stdio: "ignore",
@@ -162,6 +192,18 @@ export async function startStack(options?: {
     });
   }
 
+  if (options?.withMultiformatWorker) {
+    stack.multiformatWorker = spawn(
+      "npx",
+      ["tsx", "src/scripts/multiformat-worker.ts"],
+      {
+        cwd: repoRoot,
+        env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
+        stdio: "ignore",
+      },
+    );
+  }
+
   stack.executablePath = await resolveChromium();
   if (!stack.executablePath) {
     stack.available = false;
@@ -172,6 +214,7 @@ export async function startStack(options?: {
 }
 
 export function stopStack(stack: E2EStack): void {
+  if (stack.multiformatWorker) stack.multiformatWorker.kill("SIGTERM");
   if (stack.videoWorker) stack.videoWorker.kill("SIGTERM");
   if (stack.writingWorker) stack.writingWorker.kill("SIGTERM");
   if (stack.imageWorker) stack.imageWorker.kill("SIGTERM");
@@ -294,4 +337,55 @@ export async function cleanupE2EUser(
       .catch(() => undefined);
   }
   await orm.User.where({ id: user.id }).delete().catch(() => undefined);
+}
+
+/**
+ * A minimal, valid TEXT node to draw into an editor document for a browser
+ * spec. The stage renders it, the layer tree lists it, and the inspector
+ * reports it — so a whole editing flow can run against real server state.
+ */
+export function editorTextNode(
+  overrides: Partial<EditorNode> & { id?: string } = {},
+): EditorNode {
+  return {
+    id: overrides.id ?? `enode-${Date.now()}`,
+    parentId: null,
+    type: "TEXT",
+    name: "Headline",
+    zIndex: 0,
+    transform: { x: 40, y: 80, width: 900, height: 200, rotation: 0, opacity: 1 },
+    visible: true,
+    asset: null,
+    text: { value: "Draft headline" },
+    style: emptyStyle(),
+    trim: null,
+    audio: null,
+    shape: null,
+    motion: null,
+    effects: [],
+    automation: [],
+    provenance: null,
+    ...overrides,
+  } satisfies EditorNode;
+}
+
+/**
+ * Creates an editor document in-process. The document lands in the same
+ * database the browser talks to, so navigating to its page loads real state
+ * rather than something staged in memory.
+ */
+export async function createE2EEditorDocument(
+  projectId: string,
+  userId: string,
+  name: string,
+  nodes: EditorNode[] = [],
+): Promise<{ documentId: string; revisionId: string }> {
+  const services = await import("../../../src/infrastructure/services");
+  const detail = await services.editorService.createDocument({
+    projectId,
+    userId,
+    name,
+    nodes,
+  });
+  return { documentId: detail.document.id, revisionId: detail.revision.id };
 }

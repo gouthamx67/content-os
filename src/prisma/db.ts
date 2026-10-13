@@ -10,3 +10,6 @@ export const db = postgres<Contract>({
 export type DbClient = typeof db;
 
 export type PublicOrm = DbClient["orm"]["public"];
+
+/** The scoped handle a transaction callback receives. */
+export type Transaction = Parameters<Parameters<DbClient["transaction"]>[0]>[0];

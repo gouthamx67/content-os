@@ -39,7 +39,7 @@ export async function validateImageOutput(
 
   try {
     facts = await inspectImage(args.bytes);
-  } catch (error) {
+  } catch {
     throw new AdaptationError(
       "ADAPTATION_IMAGE_INVALID",
       ADAPTATION_ERRORS.ADAPTATION_IMAGE_INVALID,

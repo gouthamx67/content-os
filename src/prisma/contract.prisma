@@ -2426,3 +2426,255 @@ model AdaptationJob {
   @@index([renderJobId], map: "adaptation_job_render_idx")
   @@map("adaptation_job")
 }
+
+// ---------------------------------------------------------------------------
+// CP20 — AI content editor
+// ---------------------------------------------------------------------------
+//
+// The snapshot is stored as a string of stable JSON rather than a jsonb column,
+// matching how CP19 froze `AdaptationBatch.sourceSnapshot`. This contract has no
+// jsonb column anywhere, and the string form is what the snapshot hash is taken
+// over: storing the value twice would create two things that can disagree.
+
+enum EditorDocumentStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  READY = "READY"
+  ARCHIVED = "ARCHIVED"
+}
+
+enum EditorNodeType {
+  @@type("pg/text@1")
+
+  TEXT = "TEXT"
+  IMAGE = "IMAGE"
+  VIDEO = "VIDEO"
+  AUDIO = "AUDIO"
+  SHAPE = "SHAPE"
+  GROUP = "GROUP"
+}
+
+enum EditorOperationType {
+  @@type("pg/text@1")
+
+  CREATE = "CREATE"
+  SET_TEXT = "SET_TEXT"
+  REPLACE_ASSET = "REPLACE_ASSET"
+  MOVE = "MOVE"
+  RESIZE = "RESIZE"
+  ROTATE = "ROTATE"
+  SET_OPACITY = "SET_OPACITY"
+  SET_STYLE = "SET_STYLE"
+  TRIM = "TRIM"
+  SET_GAIN = "SET_GAIN"
+  SET_MUTE = "SET_MUTE"
+  SET_VISIBILITY = "SET_VISIBILITY"
+  REORDER = "REORDER"
+  DUPLICATE = "DUPLICATE"
+  DELETE = "DELETE"
+  SPLIT = "SPLIT"
+  RESTORE = "RESTORE"
+}
+
+model EditorDocument {
+  id                String               @id @default(cuid(2))
+  projectId         String
+  name              String
+  status            EditorDocumentStatus @default(DRAFT)
+  documentVersion   Int                  @default(1)
+  currentRevisionId String?
+  createdById       String
+  createdAt         TimestamptzString    @default(now())
+  updatedAt         temporal.updatedAtString()
+
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  nodes           EditorNode[]
+  revisions       EditorRevision[] @relation("EditorDocumentRevisions")
+  currentRevision EditorRevision?  @relation("EditorDocumentCurrentRevision", fields: [currentRevisionId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt], map: "editor_document_project_created_idx")
+  @@index([currentRevisionId], map: "editor_document_current_revision_idx")
+  @@map("editor_document")
+}
+
+model EditorNode {
+  id         String         @id @default(cuid(2))
+  documentId String
+  parentId   String?
+  type       EditorNodeType
+  name       String
+  zIndex     Int            @default(0)
+  sortIndex  Int            @default(0)
+  createdAt  TimestamptzString @default(now())
+  updatedAt  temporal.updatedAtString()
+
+  document EditorDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  parent   EditorNode?   @relation("EditorNodeParent", fields: [parentId], references: [id], onDelete: Cascade)
+  children EditorNode[]  @relation("EditorNodeParent")
+
+  @@index([documentId, parentId, sortIndex], map: "editor_node_document_parent_sort_idx")
+  @@map("editor_node")
+}
+
+model EditorRevision {
+  id                     String             @id @default(cuid(2))
+  documentId             String
+  revisionNumber         Int
+  operationType          EditorOperationType
+  operationPayload       String
+  snapshot               String
+  snapshotSha256         String
+  createdById            String
+  sourceType             String
+  sourceId               String?
+  provenanceSourceIds    String[]
+  restoredFromRevisionId String?
+  createdAt              TimestamptzString  @default(now())
+
+  document     EditorDocument   @relation("EditorDocumentRevisions", fields: [documentId], references: [id], onDelete: Cascade)
+  currentOf    EditorDocument[] @relation("EditorDocumentCurrentRevision")
+  restoredFrom EditorRevision?  @relation("EditorRevisionRestoreLineage", fields: [restoredFromRevisionId], references: [id], onDelete: SetNull)
+  restores     EditorRevision[] @relation("EditorRevisionRestoreLineage")
+
+  @@unique([documentId, revisionNumber], map: "editor_revision_document_number")
+  @@index([documentId, createdAt], map: "editor_revision_document_created_idx")
+  @@index([documentId, sourceType, sourceId], map: "editor_revision_document_source_idx")
+  @@index([restoredFromRevisionId], map: "editor_revision_restored_from_idx")
+  @@map("editor_revision")
+}
+
+// ---------------------------------------------------------------------------
+// CP21 — Launch kit / campaign engine
+// ---------------------------------------------------------------------------
+//
+// The brief, the strategy, the plan and the assembled launch kit are each
+// canonical JSON stored as text, the same shape CP19 uses for a frozen source
+// snapshot and CP20 for an editor snapshot. This contract has no jsonb column
+// anywhere, and a value that is digested (the approval and launch-kit hashes)
+// must have exactly one representation, which a jsonb round-trip would not
+// guarantee.
+
+enum CampaignStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  PLANNED = "PLANNED"
+  IN_REVIEW = "IN_REVIEW"
+  APPROVED = "APPROVED"
+  ARCHIVED = "ARCHIVED"
+}
+
+enum CampaignDeliverableStatus {
+  @@type("pg/text@1")
+
+  PLANNED = "PLANNED"
+  IN_PROGRESS = "IN_PROGRESS"
+  READY = "READY"
+  BLOCKED = "BLOCKED"
+}
+
+enum CampaignRevisionKind {
+  @@type("pg/text@1")
+
+  CREATE = "CREATE"
+  BRIEF_UPDATED = "BRIEF_UPDATED"
+  STRATEGY_SET = "STRATEGY_SET"
+  PLAN_SET = "PLAN_SET"
+  DELIVERABLE_ADDED = "DELIVERABLE_ADDED"
+  DELIVERABLE_UPDATED = "DELIVERABLE_UPDATED"
+  DELIVERABLE_REMOVED = "DELIVERABLE_REMOVED"
+  SUBMITTED = "SUBMITTED"
+  APPROVED = "APPROVED"
+  RETURNED = "RETURNED"
+  SCHEDULED = "SCHEDULED"
+  ASSEMBLED = "ASSEMBLED"
+  ARCHIVED = "ARCHIVED"
+}
+
+/// One launch campaign for a project.
+///
+/// `approvalHash` is the digest of everything an approver signed off on; a later
+/// material change recomputes it and no longer matches, which is what invalidates
+/// the approval rather than a separate flag that could drift.
+model Campaign {
+  id             String             @id @default(cuid(2))
+  projectId      String
+  name           String
+  objective      String
+  audienceSummary String
+  keyMessage     String
+  brief          String
+  status         CampaignStatus     @default(DRAFT)
+  strategy       String?
+  plan           String?
+  revisionNumber Int                @default(1)
+  approvalHash   String?
+  approvedById   String?
+  approvedAt     TimestamptzString?
+  launchKit      String?
+  launchKitHash  String?
+  assembledAt    TimestamptzString?
+  createdById    String
+  createdAt      TimestamptzString  @default(now())
+  updatedAt      temporal.updatedAtString()
+
+  project      Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deliverables CampaignDeliverable[]
+  revisions    CampaignRevision[]
+
+  @@index([projectId, createdAt], map: "campaign_project_created_idx")
+  @@index([projectId, status], map: "campaign_project_status_idx")
+  @@map("campaign")
+}
+
+/// One planned deliverable on one channel for one platform.
+///
+/// `links` is canonical JSON naming the artifacts this deliverable is composed
+/// from — a CP18 writing document, a CP19 adaptation batch, a CP20 editor
+/// document, CP16 generated images. It is a reference list, not a copy: the
+/// owning engines stay the source of truth, and deleting an artifact leaves the
+/// reference dangling rather than deleting the plan.
+model CampaignDeliverable {
+  id            String                    @id @default(cuid(2))
+  campaignId    String
+  projectId     String
+  title         String
+  channel       ContentChannel
+  platformId    String
+  contentTypeId String
+  brief         String
+  links         String
+  position      Int                       @default(0)
+  status        CampaignDeliverableStatus @default(PLANNED)
+  scheduledFor  TimestamptzString?
+  createdById   String
+  createdAt     TimestamptzString         @default(now())
+  updatedAt     temporal.updatedAtString()
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, position], map: "campaign_deliverable_campaign_position_idx")
+  @@index([projectId, status], map: "campaign_deliverable_project_status_idx")
+  @@index([campaignId, scheduledFor], map: "campaign_deliverable_campaign_scheduled_idx")
+  @@map("campaign_deliverable")
+}
+
+/// Append-only campaign activity, mirroring CP20's revision log: nothing is ever
+/// updated or deleted, so "how did this campaign get here" is answerable.
+model CampaignRevision {
+  id             String               @id @default(cuid(2))
+  campaignId     String
+  revisionNumber Int
+  kind           CampaignRevisionKind
+  payload        String
+  createdById    String
+  createdAt      TimestamptzString    @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, revisionNumber], map: "campaign_revision_campaign_number")
+  @@index([campaignId, createdAt], map: "campaign_revision_campaign_created_idx")
+  @@map("campaign_revision")
+}

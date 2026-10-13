@@ -1,3 +1,4 @@
+import { spawn, type ChildProcess } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -25,6 +26,12 @@ const DATABASE_URL =
   "postgresql://contentos:contentos@localhost:5433/content_os";
 const SESSION_COOKIE =
   process.env["SESSION_COOKIE_NAME"] ?? "content_os_session";
+
+const repoRoot = process.cwd();
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function resolveChromium(): Promise<string | undefined> {
   const explicit = process.env["CONTENT_OS_BROWSER_EXECUTABLE"];
@@ -89,6 +96,15 @@ async function serverReachable(): Promise<boolean> {
   }
 }
 
+async function waitForServer(timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (await serverReachable()) return true;
+    await sleep(1000);
+  }
+  return false;
+}
+
 type Services = typeof import("../../src/infrastructure/services");
 
 let services: Services;
@@ -97,6 +113,9 @@ let browser: Browser;
 let context: BrowserContext;
 let reachable = false;
 let available = true;
+
+let devServer: ChildProcess | undefined;
+let startedDevServer = false;
 
 let email = "";
 const password = "test-password-1";
@@ -107,6 +126,16 @@ beforeAll(async () => {
   process.env["DATABASE_URL"] = DATABASE_URL;
 
   reachable = await serverReachable();
+  if (!reachable && !process.env["CONTENT_OS_E2E_NO_AUTOSTART"]) {
+    devServer = spawn("npm", ["run", "dev"], {
+      cwd: repoRoot,
+      env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
+      stdio: "ignore",
+    });
+    startedDevServer = true;
+    reachable = await waitForServer(90_000);
+  }
+
   if (!reachable) return;
 
   executablePath = await resolveChromium();
@@ -176,6 +205,8 @@ afterAll(async () => {
   if (browser) {
     await browser.close();
   }
+
+  if (startedDevServer && devServer) devServer.kill("SIGTERM");
 
   if (reachable && projectId && services) {
     const { db } = await import("../../src/prisma/db");

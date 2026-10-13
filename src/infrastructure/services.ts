@@ -59,3 +59,25 @@ export const writingGenerationService = container.services.writing.generation;
 export const writingRepository = container.services.writing.repository;
 
 export const writingProviderRegistry = container.services.writing.registry;
+
+export const adaptationService = container.services.multiformat.service;
+
+export const adaptationRepository = container.services.multiformat.repository;
+
+export const adaptationSourceResolver = container.services.multiformat.sources;
+
+export const adaptationPlatformAuthority = container.services.multiformat.platforms;
+
+export const editorService = container.services.editor.service;
+
+export const editorRepository = container.services.editor.repository;
+
+export const editorAIService = container.services.editor.ai;
+
+export const editorImportService = container.services.editor.imports;
+
+export const editorAssetResolver = container.services.editor.assets;
+
+export const campaignService = container.services.campaign.service;
+
+export const campaignRepository = container.services.campaign.repository;

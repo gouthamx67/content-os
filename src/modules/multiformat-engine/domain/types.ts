@@ -202,7 +202,8 @@ export type AdaptationRecipe = {
     maxWords: number | null;
   };
   provenanceSourceIds: string[];
-  outputStorageKey: string;
+  /** `null` for a video: CP15 owns those bytes, CP19 records the render. */
+  outputStorageKey: string | null;
 };
 
 export type CopyAdaptation = {
