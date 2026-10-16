@@ -2678,3 +2678,164 @@ model CampaignRevision {
   @@index([campaignId, createdAt], map: "campaign_revision_campaign_created_idx")
   @@map("campaign_revision")
 }
+
+enum LocalizationStrategy {
+  @@type("pg/text@1")
+
+  TRANSLATE = "TRANSLATE"
+  TRANSCREATE = "TRANSCREATE"
+}
+
+enum LocalizationSourceType {
+  @@type("pg/text@1")
+
+  WRITING_DOCUMENT = "WRITING_DOCUMENT"
+  EDITOR_DOCUMENT = "EDITOR_DOCUMENT"
+  ADAPTATION_JOB = "ADAPTATION_JOB"
+  CAMPAIGN = "CAMPAIGN"
+}
+
+enum LocalizationStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  READY_TO_LOCALIZE = "READY_TO_LOCALIZE"
+  PROCESSING = "PROCESSING"
+  NEEDS_REVIEW = "NEEDS_REVIEW"
+  CHANGES_REQUESTED = "CHANGES_REQUESTED"
+  APPROVED = "APPROVED"
+  APPLIED = "APPLIED"
+  STALE = "STALE"
+  FAILED = "FAILED"
+}
+
+enum TextDirection {
+  @@type("pg/text@1")
+
+  LTR = "LTR"
+  RTL = "RTL"
+}
+
+enum LocalizationRevisionKind {
+  @@type("pg/text@1")
+
+  CREATE = "CREATE"
+  SEGMENT_EDITED = "SEGMENT_EDITED"
+  PROCESSED = "PROCESSED"
+  VALIDATED = "VALIDATED"
+  SUBMITTED = "SUBMITTED"
+  CHANGES_REQUESTED = "CHANGES_REQUESTED"
+  APPROVED = "APPROVED"
+  APPLIED = "APPLIED"
+  MARKED_STALE = "MARKED_STALE"
+  FAILED = "FAILED"
+}
+
+/// A locale a project writes in or targets.
+///
+/// The locale is stored canonical (`pt-BR`) and direction is configured, never
+/// inferred from the language name, so a reviewer can correct an unusual script.
+model ProjectLocale {
+  id          String        @id @default(cuid(2))
+  projectId   String
+  locale      String
+  label       String
+  direction   TextDirection @default(LTR)
+  isSource    Boolean       @default(false)
+  isTarget    Boolean       @default(true)
+  createdById String
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, locale], map: "project_locale_project_locale")
+  @@map("project_locale")
+}
+
+/// A pinned term for one language pair.
+model LocaleGlossary {
+  id            String  @id @default(cuid(2))
+  projectId     String
+  sourceLocale  String
+  targetLocale  String
+  term          String
+  translation   String
+  doNotTranslate Boolean @default(false)
+  createdById   String
+  createdAt     TimestamptzString @default(now())
+  updatedAt     temporal.updatedAtString()
+
+  @@unique([projectId, sourceLocale, targetLocale, term], map: "locale_glossary_unique")
+  @@index([projectId, sourceLocale, targetLocale], map: "locale_glossary_pair_idx")
+  @@map("locale_glossary")
+}
+
+/// A reusable translated string, keyed by the hash of its source.
+model TranslationMemory {
+  id           String @id @default(cuid(2))
+  projectId    String
+  sourceLocale String
+  targetLocale String
+  sourceHash   String
+  sourceText   String
+  targetText   String
+  createdById  String
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+
+  @@unique([projectId, sourceLocale, targetLocale, sourceHash], map: "translation_memory_unique")
+  @@map("translation_memory")
+}
+
+/// One localization of one source revision into one target locale.
+model LocalizationJob {
+  id                     String                 @id @default(cuid(2))
+  projectId              String
+  sourceType             LocalizationSourceType
+  sourceId               String
+  sourceRevision         String
+  sourceHash             String
+  sourceLocale           String
+  targetLocale           String
+  strategy               LocalizationStrategy
+  status                 LocalizationStatus      @default(DRAFT)
+  provider               String?
+  headRevisionNumber     Int                    @default(1)
+  approvalRevisionNumber Int?
+  approvedById           String?
+  approvedAt             TimestamptzString?
+  appliedAt              TimestamptzString?
+  errorCode              String?
+  errorMessage           String?
+  createdById            String
+  createdAt              TimestamptzString      @default(now())
+  updatedAt              temporal.updatedAtString()
+
+  project   Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revisions LocalizationRevision[]
+
+  @@index([projectId, createdAt], map: "localization_job_project_created_idx")
+  @@index([projectId, status], map: "localization_job_project_status_idx")
+  @@index([projectId, sourceType, sourceId], map: "localization_job_project_source_idx")
+  @@map("localization_job")
+}
+
+/// Append-only localization activity. Every transition writes one revision whose
+/// snapshot is the whole segment list, so approval names exactly the bytes it saw.
+model LocalizationRevision {
+  id             String                   @id @default(cuid(2))
+  jobId          String
+  revisionNumber Int
+  kind           LocalizationRevisionKind
+  snapshot       String
+  snapshotHash   String
+  createdById    String
+  createdAt      TimestamptzString        @default(now())
+
+  job LocalizationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, revisionNumber], map: "localization_revision_job_number")
+  @@index([jobId, createdAt], map: "localization_revision_job_created_idx")
+  @@map("localization_revision")
+}

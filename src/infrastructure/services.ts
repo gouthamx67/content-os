@@ -81,3 +81,9 @@ export const editorAssetResolver = container.services.editor.assets;
 export const campaignService = container.services.campaign.service;
 
 export const campaignRepository = container.services.campaign.repository;
+
+export const localizationService = container.services.localization.service;
+
+export const localizationRepository = container.services.localization.repository;
+
+export const localizationProviders = container.services.localization.providers;

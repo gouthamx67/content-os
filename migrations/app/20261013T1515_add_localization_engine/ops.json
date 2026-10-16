@@ -1,0 +1,803 @@
+[
+  {
+    "id": "table.locale_glossary",
+    "label": "Create table \"locale_glossary\"",
+    "summary": "Creates table \"locale_glossary\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "locale_glossary"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"locale_glossary\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"locale_glossary\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"locale_glossary\"",
+        "sql": "CREATE TABLE \"public\".\"locale_glossary\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"doNotTranslate\" bool DEFAULT false NOT NULL,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceLocale\" text NOT NULL,\n  \"targetLocale\" text NOT NULL,\n  \"term\" text NOT NULL,\n  \"translation\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"locale_glossary\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"locale_glossary\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.localization_job",
+    "label": "Create table \"localization_job\"",
+    "summary": "Creates table \"localization_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "localization_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"localization_job\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"localization_job\"",
+        "sql": "CREATE TABLE \"public\".\"localization_job\" (\n  \"appliedAt\" timestamptz,\n  \"approvalRevisionNumber\" int4,\n  \"approvedAt\" timestamptz,\n  \"approvedById\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"headRevisionNumber\" int4 DEFAULT 1 NOT NULL,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"provider\" text,\n  \"sourceHash\" text NOT NULL,\n  \"sourceId\" text NOT NULL,\n  \"sourceLocale\" text NOT NULL,\n  \"sourceRevision\" text NOT NULL,\n  \"sourceType\" text NOT NULL,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"strategy\" text NOT NULL,\n  \"targetLocale\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"localization_job_sourceType_check_62ad7fd5\" CHECK (\"sourceType\" IN ('WRITING_DOCUMENT', 'EDITOR_DOCUMENT', 'ADAPTATION_JOB', 'CAMPAIGN')),\n  CONSTRAINT \"localization_job_status_check_ad1ab034\" CHECK (\"status\" IN ('DRAFT', 'READY_TO_LOCALIZE', 'PROCESSING', 'NEEDS_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'APPLIED', 'STALE', 'FAILED')),\n  CONSTRAINT \"localization_job_strategy_check_17a80209\" CHECK (\"strategy\" IN ('TRANSLATE', 'TRANSCREATE'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"localization_job\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.localization_revision",
+    "label": "Create table \"localization_revision\"",
+    "summary": "Creates table \"localization_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "localization_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"localization_revision\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"localization_revision\"",
+        "sql": "CREATE TABLE \"public\".\"localization_revision\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"jobId\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"revisionNumber\" int4 NOT NULL,\n  \"snapshot\" text NOT NULL,\n  \"snapshotHash\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"localization_revision_kind_check_ba1c464d\" CHECK (\"kind\" IN ('CREATE', 'SEGMENT_EDITED', 'PROCESSED', 'VALIDATED', 'SUBMITTED', 'CHANGES_REQUESTED', 'APPROVED', 'APPLIED', 'MARKED_STALE', 'FAILED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"localization_revision\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_revision\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.project_locale",
+    "label": "Create table \"project_locale\"",
+    "summary": "Creates table \"project_locale\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "project_locale"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"project_locale\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project_locale\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"project_locale\"",
+        "sql": "CREATE TABLE \"public\".\"project_locale\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"direction\" text DEFAULT 'LTR' NOT NULL,\n  \"id\" text NOT NULL,\n  \"isSource\" bool DEFAULT false NOT NULL,\n  \"isTarget\" bool DEFAULT true NOT NULL,\n  \"label\" text NOT NULL,\n  \"locale\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"project_locale_direction_check_95cbf4cb\" CHECK (\"direction\" IN ('LTR', 'RTL'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"project_locale\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project_locale\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.translation_memory",
+    "label": "Create table \"translation_memory\"",
+    "summary": "Creates table \"translation_memory\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "translation_memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"translation_memory\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"translation_memory\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"translation_memory\"",
+        "sql": "CREATE TABLE \"public\".\"translation_memory\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"sourceHash\" text NOT NULL,\n  \"sourceLocale\" text NOT NULL,\n  \"sourceText\" text NOT NULL,\n  \"targetLocale\" text NOT NULL,\n  \"targetText\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"translation_memory\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"translation_memory\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.locale_glossary.locale_glossary_unique",
+    "label": "Add unique constraint on \"locale_glossary\" (projectId, sourceLocale, targetLocale, term)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "locale_glossary_unique",
+        "table": "locale_glossary"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"locale_glossary_unique\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "locale_glossary_unique",
+          "public",
+          "\"public\".\"locale_glossary\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"locale_glossary_unique\"",
+        "sql": "ALTER TABLE \"public\".\"locale_glossary\" ADD CONSTRAINT \"locale_glossary_unique\" UNIQUE (\"projectId\", \"sourceLocale\", \"targetLocale\", \"term\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"locale_glossary_unique\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "locale_glossary_unique",
+          "public",
+          "\"public\".\"locale_glossary\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.localization_revision.localization_revision_job_number",
+    "label": "Add unique constraint on \"localization_revision\" (jobId, revisionNumber)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "localization_revision_job_number",
+        "table": "localization_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"localization_revision_job_number\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "localization_revision_job_number",
+          "public",
+          "\"public\".\"localization_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"localization_revision_job_number\"",
+        "sql": "ALTER TABLE \"public\".\"localization_revision\" ADD CONSTRAINT \"localization_revision_job_number\" UNIQUE (\"jobId\", \"revisionNumber\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"localization_revision_job_number\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "localization_revision_job_number",
+          "public",
+          "\"public\".\"localization_revision\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.project_locale.project_locale_project_locale",
+    "label": "Add unique constraint on \"project_locale\" (projectId, locale)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "project_locale_project_locale",
+        "table": "project_locale"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"project_locale_project_locale\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "project_locale_project_locale",
+          "public",
+          "\"public\".\"project_locale\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"project_locale_project_locale\"",
+        "sql": "ALTER TABLE \"public\".\"project_locale\" ADD CONSTRAINT \"project_locale_project_locale\" UNIQUE (\"projectId\", \"locale\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"project_locale_project_locale\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "project_locale_project_locale",
+          "public",
+          "\"public\".\"project_locale\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.translation_memory.translation_memory_unique",
+    "label": "Add unique constraint on \"translation_memory\" (projectId, sourceLocale, targetLocale, sourceHash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "translation_memory_unique",
+        "table": "translation_memory"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"translation_memory_unique\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "translation_memory_unique",
+          "public",
+          "\"public\".\"translation_memory\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"translation_memory_unique\"",
+        "sql": "ALTER TABLE \"public\".\"translation_memory\" ADD CONSTRAINT \"translation_memory_unique\" UNIQUE (\"projectId\", \"sourceLocale\", \"targetLocale\", \"sourceHash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"translation_memory_unique\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "translation_memory_unique",
+          "public",
+          "\"public\".\"translation_memory\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.locale_glossary.locale_glossary_pair_idx",
+    "label": "Create index \"locale_glossary_pair_idx\" on \"locale_glossary\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "locale_glossary_pair_idx",
+        "table": "locale_glossary"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"locale_glossary_pair_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"locale_glossary_pair_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"locale_glossary_pair_idx\"",
+        "sql": "CREATE INDEX \"locale_glossary_pair_idx\" ON \"public\".\"locale_glossary\" (\"projectId\", \"sourceLocale\", \"targetLocale\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"locale_glossary_pair_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"locale_glossary_pair_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.localization_job.localization_job_projectId_idx_a96e4d92",
+    "label": "Create index \"localization_job_projectId_idx_a96e4d92\" on \"localization_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "localization_job_projectId_idx_a96e4d92",
+        "table": "localization_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"localization_job_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"localization_job_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"localization_job_projectId_idx_a96e4d92\" ON \"public\".\"localization_job\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"localization_job_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.localization_job.localization_job_project_created_idx",
+    "label": "Create index \"localization_job_project_created_idx\" on \"localization_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "localization_job_project_created_idx",
+        "table": "localization_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"localization_job_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"localization_job_project_created_idx\"",
+        "sql": "CREATE INDEX \"localization_job_project_created_idx\" ON \"public\".\"localization_job\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"localization_job_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.localization_job.localization_job_project_source_idx",
+    "label": "Create index \"localization_job_project_source_idx\" on \"localization_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "localization_job_project_source_idx",
+        "table": "localization_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"localization_job_project_source_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job_project_source_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"localization_job_project_source_idx\"",
+        "sql": "CREATE INDEX \"localization_job_project_source_idx\" ON \"public\".\"localization_job\" (\"projectId\", \"sourceType\", \"sourceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"localization_job_project_source_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job_project_source_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.localization_job.localization_job_project_status_idx",
+    "label": "Create index \"localization_job_project_status_idx\" on \"localization_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "localization_job_project_status_idx",
+        "table": "localization_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"localization_job_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"localization_job_project_status_idx\"",
+        "sql": "CREATE INDEX \"localization_job_project_status_idx\" ON \"public\".\"localization_job\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"localization_job_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_job_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.localization_revision.localization_revision_jobId_idx_623c8f77",
+    "label": "Create index \"localization_revision_jobId_idx_623c8f77\" on \"localization_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "localization_revision_jobId_idx_623c8f77",
+        "table": "localization_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"localization_revision_jobId_idx_623c8f77\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_revision_jobId_idx_623c8f77\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"localization_revision_jobId_idx_623c8f77\"",
+        "sql": "CREATE INDEX \"localization_revision_jobId_idx_623c8f77\" ON \"public\".\"localization_revision\" (\"jobId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"localization_revision_jobId_idx_623c8f77\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_revision_jobId_idx_623c8f77\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.localization_revision.localization_revision_job_created_idx",
+    "label": "Create index \"localization_revision_job_created_idx\" on \"localization_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "localization_revision_job_created_idx",
+        "table": "localization_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"localization_revision_job_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_revision_job_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"localization_revision_job_created_idx\"",
+        "sql": "CREATE INDEX \"localization_revision_job_created_idx\" ON \"public\".\"localization_revision\" (\"jobId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"localization_revision_job_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"localization_revision_job_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.project_locale.project_locale_projectId_idx_a96e4d92",
+    "label": "Create index \"project_locale_projectId_idx_a96e4d92\" on \"project_locale\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "project_locale_projectId_idx_a96e4d92",
+        "table": "project_locale"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"project_locale_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project_locale_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"project_locale_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"project_locale_projectId_idx_a96e4d92\" ON \"public\".\"project_locale\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"project_locale_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project_locale_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.localization_job.localization_job_projectId_fkey",
+    "label": "Add foreign key \"localization_job_projectId_fkey\" on \"localization_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "localization_job_projectId_fkey",
+        "table": "localization_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"localization_job_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "localization_job_projectId_fkey",
+          "public",
+          "\"public\".\"localization_job\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"localization_job_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"localization_job\"\nADD CONSTRAINT \"localization_job_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"localization_job_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "localization_job_projectId_fkey",
+          "public",
+          "\"public\".\"localization_job\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.localization_revision.localization_revision_jobId_fkey",
+    "label": "Add foreign key \"localization_revision_jobId_fkey\" on \"localization_revision\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "localization_revision_jobId_fkey",
+        "table": "localization_revision"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"localization_revision_jobId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "localization_revision_jobId_fkey",
+          "public",
+          "\"public\".\"localization_revision\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"localization_revision_jobId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"localization_revision\"\nADD CONSTRAINT \"localization_revision_jobId_fkey\"\nFOREIGN KEY (\"jobId\")\nREFERENCES \"public\".\"localization_job\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"localization_revision_jobId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "localization_revision_jobId_fkey",
+          "public",
+          "\"public\".\"localization_revision\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.project_locale.project_locale_projectId_fkey",
+    "label": "Add foreign key \"project_locale_projectId_fkey\" on \"project_locale\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "project_locale_projectId_fkey",
+        "table": "project_locale"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"project_locale_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "project_locale_projectId_fkey",
+          "public",
+          "\"public\".\"project_locale\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"project_locale_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"project_locale\"\nADD CONSTRAINT \"project_locale_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"project_locale_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "project_locale_projectId_fkey",
+          "public",
+          "\"public\".\"project_locale\""
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,40 @@
+import { localizationService } from "../../../../../../../../infrastructure/services";
+import { requireUser } from "../../../../../../../../lib/require-auth";
+import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../../../../lib/http";
+import {
+  localizationErrorResponse,
+  requireRevisionNumber,
+  requireString,
+} from "../../../../../../../../lib/localization-http";
+
+type RouteContext = {
+  params: Promise<{ id: string; jobId: string; segmentId: string }>;
+};
+
+export async function PATCH(request: Request, context: RouteContext) {
+  try {
+    const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
+
+    const { id, jobId, segmentId } = await context.params;
+    const body = await parseJsonBody(request);
+    if (!body) {
+      throw new HttpError(400, "Expected a JSON body");
+    }
+
+    const detail = await localizationService.editSegment(
+      user.id,
+      id,
+      jobId,
+      segmentId,
+      requireRevisionNumber(body),
+      requireString(body, "targetText"),
+    );
+
+    return Response.json(detail);
+  } catch (error) {
+    return localizationErrorResponse(error);
+  }
+}

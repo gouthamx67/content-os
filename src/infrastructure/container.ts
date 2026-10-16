@@ -108,6 +108,19 @@ import {
 import { PostgresAdaptationRepository } from "./repositories/postgres-adaptation-repository";
 import { PostgresEditorRepository } from "./repositories/postgres-editor-repository";
 import { PostgresCampaignRepository } from "./repositories/postgres-campaign-repository";
+import { PostgresLocalizationRepository } from "./repositories/postgres-localization-repository";
+import { LocalizationService } from "../modules/localization-engine/services/localization-service";
+import { MaterializationService } from "../modules/localization-engine/services/materialization-service";
+import { SourceExtractor } from "../modules/localization-engine/services/source-extractor";
+import { createLocalizationProviderRegistry } from "../modules/localization-engine/services/localization-provider";
+import {
+  createRemoteLlmLocalizationProvider,
+  localizationLlmConfigFromEnv,
+} from "../modules/localization-engine/services/remote-llm-provider";
+import { WritingSourceAdapter } from "../modules/localization-engine/adapters/writing-source";
+import { EditorSourceAdapter } from "../modules/localization-engine/adapters/editor-source";
+import { AdaptationSourceAdapter } from "../modules/localization-engine/adapters/adaptation-source";
+import { CampaignSourceAdapter } from "../modules/localization-engine/adapters/campaign-source";
 import {
   createCampaignArtifacts,
   createCampaignGroundingProvider,
@@ -150,6 +163,7 @@ const repositories = {
   adaptations: new PostgresAdaptationRepository(orm),
   editor: new PostgresEditorRepository(orm),
   campaigns: new PostgresCampaignRepository(orm),
+  localization: new PostgresLocalizationRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -856,6 +870,47 @@ const campaignServices = {
 };
 
 
+/**
+ * CP22 localization engine.
+ *
+ * Localization reads what a project already holds — writing, editor, adaptation
+ * and campaign artifacts — through an adapter per checkpoint, produces a new
+ * traceable revision, and never rewrites the source it read. Every mutation is a
+ * revision against the head the caller saw, so a concurrent edit is refused
+ * rather than merged.
+ */
+const localizationExtractor = new SourceExtractor([
+  new WritingSourceAdapter(repositories.writing),
+  new EditorSourceAdapter(repositories.editor),
+  new AdaptationSourceAdapter(repositories.adaptations),
+  new CampaignSourceAdapter(repositories.campaigns),
+]);
+const localizationLlmConfig = localizationLlmConfigFromEnv();
+const localizationProviders = createLocalizationProviderRegistry(
+  localizationLlmConfig
+    ? [createRemoteLlmLocalizationProvider(localizationLlmConfig)]
+    : [],
+);
+const localizationMaterialization = new MaterializationService();
+
+const localizationService = new LocalizationService({
+  repository: repositories.localization,
+  extractor: localizationExtractor,
+  providers: localizationProviders,
+  materialization: localizationMaterialization,
+  authorizeProject: authorizeVisualProject,
+  newId: createId,
+  now: () => new Date().toISOString(),
+});
+
+const localizationServices = {
+  service: localizationService,
+  repository: repositories.localization,
+  providers: localizationProviders,
+  materialization: localizationMaterialization,
+};
+
+
 export const adaptationWorkerHealth = new RenderWorkerHealth();
 
 export function createAdaptationWorker(): AdaptationWorker {
@@ -896,5 +951,6 @@ export const container = {
     multiformat: adaptationServices,
     editor: editorServices,
     campaign: campaignServices,
+    localization: localizationServices,
   },
 };
