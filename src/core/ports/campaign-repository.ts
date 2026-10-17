@@ -193,6 +193,12 @@ export type CampaignRepository = {
     deliverableId: string,
   ): Promise<CampaignDeliverableRecord | null>;
 
+  /** Project-scoped deliverable read; null when it lives in another project. */
+  getDeliverableForProject(
+    projectId: string,
+    deliverableId: string,
+  ): Promise<CampaignDeliverableRecord | null>;
+
   listDeliverables(campaignId: string): Promise<CampaignDeliverableRecord[]>;
 
   listRevisions(

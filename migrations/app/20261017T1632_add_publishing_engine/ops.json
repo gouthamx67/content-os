@@ -1,0 +1,1484 @@
+[
+  {
+    "id": "table.analytics_snapshot",
+    "label": "Create table \"analytics_snapshot\"",
+    "summary": "Creates table \"analytics_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "analytics_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"analytics_snapshot\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"analytics_snapshot\"",
+        "sql": "CREATE TABLE \"public\".\"analytics_snapshot\" (\n  \"asOf\" timestamptz NOT NULL,\n  \"collectedAt\" timestamptz NOT NULL,\n  \"completeness\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"definition\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"metricKey\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"provenance\" text NOT NULL,\n  \"providerId\" text NOT NULL,\n  \"publicationId\" text NOT NULL,\n  \"unit\" text NOT NULL,\n  \"value\" int4 NOT NULL,\n  \"windowEnd\" timestamptz NOT NULL,\n  \"windowStart\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"analytics_snapshot\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.optimization_recommendation",
+    "label": "Create table \"optimization_recommendation\"",
+    "summary": "Creates table \"optimization_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "optimization_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"optimization_recommendation\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"optimization_recommendation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"optimization_recommendation\"",
+        "sql": "CREATE TABLE \"public\".\"optimization_recommendation\" (\n  \"category\" text NOT NULL,\n  \"confidence\" text NOT NULL,\n  \"confidenceRationale\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"dedupeKey\" text NOT NULL,\n  \"evidence\" text NOT NULL,\n  \"explanation\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"limitations\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"proposedChanges\" text NOT NULL,\n  \"resultPublicationId\" text,\n  \"reviewedAt\" timestamptz,\n  \"reviewedById\" text,\n  \"status\" text DEFAULT 'OPEN' NOT NULL,\n  \"suggestedAction\" text NOT NULL,\n  \"title\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"optimization_recommendation_category_check_303df0ee\" CHECK (\"category\" IN ('PERFORMANCE_OUTLIER', 'TIMING_WINDOW')),\n  CONSTRAINT \"optimization_recommendation_confidence_check_fefd3199\" CHECK (\"confidence\" IN ('LOW', 'MEDIUM', 'HIGH')),\n  CONSTRAINT \"optimization_recommendation_status_check_9d39a3d0\" CHECK (\"status\" IN ('OPEN', 'ACCEPTED', 'DISMISSED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"optimization_recommendation\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"optimization_recommendation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.publication",
+    "label": "Create table \"publication\"",
+    "summary": "Creates table \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"publication\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"publication\"",
+        "sql": "CREATE TABLE \"public\".\"publication\" (\n  \"analyticsClaimedAt\" timestamptz,\n  \"analyticsCollectedAt\" timestamptz,\n  \"analyticsErrorCode\" text,\n  \"analyticsErrorMessage\" text,\n  \"analyticsRequestedAt\" timestamptz,\n  \"attemptedCount\" int4 DEFAULT 0 NOT NULL,\n  \"cancelledAt\" timestamptz,\n  \"connectionId\" text NOT NULL,\n  \"content\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"externalPostId\" text,\n  \"externalPublishedAt\" timestamptz,\n  \"externalUrl\" text,\n  \"id\" text NOT NULL,\n  \"idempotencyKey\" text NOT NULL,\n  \"lastErrorCode\" text,\n  \"lastErrorMessage\" text,\n  \"lastErrorRetryable\" bool,\n  \"originPublicationId\" text,\n  \"projectId\" text NOT NULL,\n  \"publishedAt\" timestamptz,\n  \"recommendationId\" text,\n  \"scheduledFor\" timestamptz,\n  \"scheduledTimezone\" text,\n  \"sourceHash\" text NOT NULL,\n  \"sourceId\" text NOT NULL,\n  \"sourceRevision\" text NOT NULL,\n  \"sourceSnapshot\" text NOT NULL,\n  \"sourceType\" text NOT NULL,\n  \"status\" text DEFAULT 'DRAFT' NOT NULL,\n  \"title\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"validatedAt\" timestamptz,\n  \"validation\" text,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"publication_sourceType_check_dbef7823\" CHECK (\"sourceType\" IN ('WRITING_DOCUMENT', 'CAMPAIGN_DELIVERABLE')),\n  CONSTRAINT \"publication_status_check_a23779dd\" CHECK (\"status\" IN ('DRAFT', 'READY', 'SCHEDULED', 'QUEUED', 'PUBLISHING', 'PUBLISHED', 'FAILED', 'AMBIGUOUS', 'AUTH_REQUIRED', 'STALE', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"publication\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.publish_attempt",
+    "label": "Create table \"publish_attempt\"",
+    "summary": "Creates table \"publish_attempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "publish_attempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"publish_attempt\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publish_attempt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"publish_attempt\"",
+        "sql": "CREATE TABLE \"public\".\"publish_attempt\" (\n  \"attemptNumber\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"errorCode\" text,\n  \"errorMessage\" text,\n  \"finishedAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"metadata\" text,\n  \"outcome\" text NOT NULL,\n  \"projectId\" text NOT NULL,\n  \"providerRequestId\" text,\n  \"publicationId\" text NOT NULL,\n  \"retryable\" bool,\n  \"startedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"publish_attempt_outcome_check_b73358e1\" CHECK (\"outcome\" IN ('SUCCEEDED', 'FAILED', 'AMBIGUOUS'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"publish_attempt\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publish_attempt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.publishing_connection",
+    "label": "Create table \"publishing_connection\"",
+    "summary": "Creates table \"publishing_connection\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "publishing_connection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"publishing_connection\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publishing_connection\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"publishing_connection\"",
+        "sql": "CREATE TABLE \"public\".\"publishing_connection\" (\n  \"capabilities\" text NOT NULL,\n  \"connectedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdById\" text NOT NULL,\n  \"credentialCiphertext\" text,\n  \"credentialExpiresAt\" timestamptz,\n  \"disconnectedAt\" timestamptz,\n  \"displayName\" text NOT NULL,\n  \"externalAccountId\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"lastCheckedAt\" timestamptz,\n  \"lastErrorCode\" text,\n  \"projectId\" text NOT NULL,\n  \"providerId\" text NOT NULL,\n  \"scopes\" text NOT NULL,\n  \"status\" text DEFAULT 'CONNECTED' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"publishing_connection_status_check_711b8ed1\" CHECK (\"status\" IN ('CONNECTED', 'AUTH_REQUIRED', 'REVOKED', 'DISCONNECTED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"publishing_connection\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publishing_connection\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.analytics_snapshot.analytics_snapshot_unique_point",
+    "label": "Add unique constraint on \"analytics_snapshot\" (publicationId, metricKey, collectedAt)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "analytics_snapshot_unique_point",
+        "table": "analytics_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"analytics_snapshot_unique_point\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "analytics_snapshot_unique_point",
+          "public",
+          "\"public\".\"analytics_snapshot\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"analytics_snapshot_unique_point\"",
+        "sql": "ALTER TABLE \"public\".\"analytics_snapshot\" ADD CONSTRAINT \"analytics_snapshot_unique_point\" UNIQUE (\"publicationId\", \"metricKey\", \"collectedAt\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"analytics_snapshot_unique_point\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "analytics_snapshot_unique_point",
+          "public",
+          "\"public\".\"analytics_snapshot\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.optimization_recommendation.optimization_recommendation_dedupe",
+    "label": "Add unique constraint on \"optimization_recommendation\" (projectId, dedupeKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "optimization_recommendation_dedupe",
+        "table": "optimization_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"optimization_recommendation_dedupe\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "optimization_recommendation_dedupe",
+          "public",
+          "\"public\".\"optimization_recommendation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"optimization_recommendation_dedupe\"",
+        "sql": "ALTER TABLE \"public\".\"optimization_recommendation\" ADD CONSTRAINT \"optimization_recommendation_dedupe\" UNIQUE (\"projectId\", \"dedupeKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"optimization_recommendation_dedupe\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "optimization_recommendation_dedupe",
+          "public",
+          "\"public\".\"optimization_recommendation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.publication.publication_idempotencyKey_key",
+    "label": "Add unique constraint on \"publication\" (idempotencyKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "publication_idempotencyKey_key",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"publication_idempotencyKey_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publication_idempotencyKey_key",
+          "public",
+          "\"public\".\"publication\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"publication_idempotencyKey_key\"",
+        "sql": "ALTER TABLE \"public\".\"publication\" ADD CONSTRAINT \"publication_idempotencyKey_key\" UNIQUE (\"idempotencyKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"publication_idempotencyKey_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publication_idempotencyKey_key",
+          "public",
+          "\"public\".\"publication\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.publish_attempt.publish_attempt_publication_number",
+    "label": "Add unique constraint on \"publish_attempt\" (publicationId, attemptNumber)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "publish_attempt_publication_number",
+        "table": "publish_attempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"publish_attempt_publication_number\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publish_attempt_publication_number",
+          "public",
+          "\"public\".\"publish_attempt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"publish_attempt_publication_number\"",
+        "sql": "ALTER TABLE \"public\".\"publish_attempt\" ADD CONSTRAINT \"publish_attempt_publication_number\" UNIQUE (\"publicationId\", \"attemptNumber\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"publish_attempt_publication_number\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publish_attempt_publication_number",
+          "public",
+          "\"public\".\"publish_attempt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.publishing_connection.publishing_connection_unique_account",
+    "label": "Add unique constraint on \"publishing_connection\" (projectId, providerId, externalAccountId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "publishing_connection_unique_account",
+        "table": "publishing_connection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"publishing_connection_unique_account\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publishing_connection_unique_account",
+          "public",
+          "\"public\".\"publishing_connection\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"publishing_connection_unique_account\"",
+        "sql": "ALTER TABLE \"public\".\"publishing_connection\" ADD CONSTRAINT \"publishing_connection_unique_account\" UNIQUE (\"projectId\", \"providerId\", \"externalAccountId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"publishing_connection_unique_account\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publishing_connection_unique_account",
+          "public",
+          "\"public\".\"publishing_connection\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.analytics_snapshot.analytics_snapshot_projectId_idx_a96e4d92",
+    "label": "Create index \"analytics_snapshot_projectId_idx_a96e4d92\" on \"analytics_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "analytics_snapshot_projectId_idx_a96e4d92",
+        "table": "analytics_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"analytics_snapshot_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"analytics_snapshot_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"analytics_snapshot_projectId_idx_a96e4d92\" ON \"public\".\"analytics_snapshot\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"analytics_snapshot_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.analytics_snapshot.analytics_snapshot_project_collected_idx",
+    "label": "Create index \"analytics_snapshot_project_collected_idx\" on \"analytics_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "analytics_snapshot_project_collected_idx",
+        "table": "analytics_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"analytics_snapshot_project_collected_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot_project_collected_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"analytics_snapshot_project_collected_idx\"",
+        "sql": "CREATE INDEX \"analytics_snapshot_project_collected_idx\" ON \"public\".\"analytics_snapshot\" (\"projectId\", \"collectedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"analytics_snapshot_project_collected_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot_project_collected_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.analytics_snapshot.analytics_snapshot_project_metric_idx",
+    "label": "Create index \"analytics_snapshot_project_metric_idx\" on \"analytics_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "analytics_snapshot_project_metric_idx",
+        "table": "analytics_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"analytics_snapshot_project_metric_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot_project_metric_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"analytics_snapshot_project_metric_idx\"",
+        "sql": "CREATE INDEX \"analytics_snapshot_project_metric_idx\" ON \"public\".\"analytics_snapshot\" (\"projectId\", \"metricKey\", \"collectedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"analytics_snapshot_project_metric_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot_project_metric_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.analytics_snapshot.analytics_snapshot_publicationId_idx_9a426279",
+    "label": "Create index \"analytics_snapshot_publicationId_idx_9a426279\" on \"analytics_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "analytics_snapshot_publicationId_idx_9a426279",
+        "table": "analytics_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"analytics_snapshot_publicationId_idx_9a426279\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot_publicationId_idx_9a426279\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"analytics_snapshot_publicationId_idx_9a426279\"",
+        "sql": "CREATE INDEX \"analytics_snapshot_publicationId_idx_9a426279\" ON \"public\".\"analytics_snapshot\" (\"publicationId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"analytics_snapshot_publicationId_idx_9a426279\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"analytics_snapshot_publicationId_idx_9a426279\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.optimization_recommendation.optimization_recommendation_projectId_idx_a96e4d92",
+    "label": "Create index \"optimization_recommendation_projectId_idx_a96e4d92\" on \"optimization_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "optimization_recommendation_projectId_idx_a96e4d92",
+        "table": "optimization_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"optimization_recommendation_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"optimization_recommendation_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"optimization_recommendation_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"optimization_recommendation_projectId_idx_a96e4d92\" ON \"public\".\"optimization_recommendation\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"optimization_recommendation_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"optimization_recommendation_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.optimization_recommendation.optimization_recommendation_project_status_idx",
+    "label": "Create index \"optimization_recommendation_project_status_idx\" on \"optimization_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "optimization_recommendation_project_status_idx",
+        "table": "optimization_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"optimization_recommendation_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"optimization_recommendation_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"optimization_recommendation_project_status_idx\"",
+        "sql": "CREATE INDEX \"optimization_recommendation_project_status_idx\" ON \"public\".\"optimization_recommendation\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"optimization_recommendation_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"optimization_recommendation_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_analytics_requested_idx",
+    "label": "Create index \"publication_analytics_requested_idx\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_analytics_requested_idx",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_analytics_requested_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_analytics_requested_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_analytics_requested_idx\"",
+        "sql": "CREATE INDEX \"publication_analytics_requested_idx\" ON \"public\".\"publication\" (\"analyticsRequestedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_analytics_requested_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_analytics_requested_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_connectionId_idx_b3eeb6ac",
+    "label": "Create index \"publication_connectionId_idx_b3eeb6ac\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_connectionId_idx_b3eeb6ac",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_connectionId_idx_b3eeb6ac\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_connectionId_idx_b3eeb6ac\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_connectionId_idx_b3eeb6ac\"",
+        "sql": "CREATE INDEX \"publication_connectionId_idx_b3eeb6ac\" ON \"public\".\"publication\" (\"connectionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_connectionId_idx_b3eeb6ac\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_connectionId_idx_b3eeb6ac\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_projectId_idx_a96e4d92",
+    "label": "Create index \"publication_projectId_idx_a96e4d92\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_projectId_idx_a96e4d92",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"publication_projectId_idx_a96e4d92\" ON \"public\".\"publication\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_project_created_idx",
+    "label": "Create index \"publication_project_created_idx\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_project_created_idx",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_project_created_idx\"",
+        "sql": "CREATE INDEX \"publication_project_created_idx\" ON \"public\".\"publication\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_project_source_idx",
+    "label": "Create index \"publication_project_source_idx\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_project_source_idx",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_project_source_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_project_source_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_project_source_idx\"",
+        "sql": "CREATE INDEX \"publication_project_source_idx\" ON \"public\".\"publication\" (\"projectId\", \"sourceType\", \"sourceId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_project_source_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_project_source_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_project_status_idx",
+    "label": "Create index \"publication_project_status_idx\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_project_status_idx",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_project_status_idx\"",
+        "sql": "CREATE INDEX \"publication_project_status_idx\" ON \"public\".\"publication\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_status_created_idx",
+    "label": "Create index \"publication_status_created_idx\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_status_created_idx",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_status_created_idx\"",
+        "sql": "CREATE INDEX \"publication_status_created_idx\" ON \"public\".\"publication\" (\"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_status_scheduled_idx",
+    "label": "Create index \"publication_status_scheduled_idx\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_status_scheduled_idx",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_status_scheduled_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_status_scheduled_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_status_scheduled_idx\"",
+        "sql": "CREATE INDEX \"publication_status_scheduled_idx\" ON \"public\".\"publication\" (\"status\", \"scheduledFor\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_status_scheduled_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_status_scheduled_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publish_attempt.publish_attempt_projectId_idx_a96e4d92",
+    "label": "Create index \"publish_attempt_projectId_idx_a96e4d92\" on \"publish_attempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publish_attempt_projectId_idx_a96e4d92",
+        "table": "publish_attempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publish_attempt_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publish_attempt_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publish_attempt_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"publish_attempt_projectId_idx_a96e4d92\" ON \"public\".\"publish_attempt\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publish_attempt_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publish_attempt_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publish_attempt.publish_attempt_project_created_idx",
+    "label": "Create index \"publish_attempt_project_created_idx\" on \"publish_attempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publish_attempt_project_created_idx",
+        "table": "publish_attempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publish_attempt_project_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publish_attempt_project_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publish_attempt_project_created_idx\"",
+        "sql": "CREATE INDEX \"publish_attempt_project_created_idx\" ON \"public\".\"publish_attempt\" (\"projectId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publish_attempt_project_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publish_attempt_project_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publish_attempt.publish_attempt_publicationId_idx_9a426279",
+    "label": "Create index \"publish_attempt_publicationId_idx_9a426279\" on \"publish_attempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publish_attempt_publicationId_idx_9a426279",
+        "table": "publish_attempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publish_attempt_publicationId_idx_9a426279\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publish_attempt_publicationId_idx_9a426279\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publish_attempt_publicationId_idx_9a426279\"",
+        "sql": "CREATE INDEX \"publish_attempt_publicationId_idx_9a426279\" ON \"public\".\"publish_attempt\" (\"publicationId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publish_attempt_publicationId_idx_9a426279\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publish_attempt_publicationId_idx_9a426279\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publishing_connection.publishing_connection_projectId_idx_a96e4d92",
+    "label": "Create index \"publishing_connection_projectId_idx_a96e4d92\" on \"publishing_connection\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publishing_connection_projectId_idx_a96e4d92",
+        "table": "publishing_connection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publishing_connection_projectId_idx_a96e4d92\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publishing_connection_projectId_idx_a96e4d92\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publishing_connection_projectId_idx_a96e4d92\"",
+        "sql": "CREATE INDEX \"publishing_connection_projectId_idx_a96e4d92\" ON \"public\".\"publishing_connection\" (\"projectId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publishing_connection_projectId_idx_a96e4d92\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publishing_connection_projectId_idx_a96e4d92\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publishing_connection.publishing_connection_project_status_idx",
+    "label": "Create index \"publishing_connection_project_status_idx\" on \"publishing_connection\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publishing_connection_project_status_idx",
+        "table": "publishing_connection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publishing_connection_project_status_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publishing_connection_project_status_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publishing_connection_project_status_idx\"",
+        "sql": "CREATE INDEX \"publishing_connection_project_status_idx\" ON \"public\".\"publishing_connection\" (\"projectId\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publishing_connection_project_status_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publishing_connection_project_status_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.analytics_snapshot.analytics_snapshot_projectId_fkey",
+    "label": "Add foreign key \"analytics_snapshot_projectId_fkey\" on \"analytics_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "analytics_snapshot_projectId_fkey",
+        "table": "analytics_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"analytics_snapshot_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "analytics_snapshot_projectId_fkey",
+          "public",
+          "\"public\".\"analytics_snapshot\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"analytics_snapshot_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"analytics_snapshot\"\nADD CONSTRAINT \"analytics_snapshot_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"analytics_snapshot_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "analytics_snapshot_projectId_fkey",
+          "public",
+          "\"public\".\"analytics_snapshot\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.analytics_snapshot.analytics_snapshot_publicationId_fkey",
+    "label": "Add foreign key \"analytics_snapshot_publicationId_fkey\" on \"analytics_snapshot\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "analytics_snapshot_publicationId_fkey",
+        "table": "analytics_snapshot"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"analytics_snapshot_publicationId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "analytics_snapshot_publicationId_fkey",
+          "public",
+          "\"public\".\"analytics_snapshot\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"analytics_snapshot_publicationId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"analytics_snapshot\"\nADD CONSTRAINT \"analytics_snapshot_publicationId_fkey\"\nFOREIGN KEY (\"publicationId\")\nREFERENCES \"public\".\"publication\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"analytics_snapshot_publicationId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "analytics_snapshot_publicationId_fkey",
+          "public",
+          "\"public\".\"analytics_snapshot\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.optimization_recommendation.optimization_recommendation_projectId_fkey",
+    "label": "Add foreign key \"optimization_recommendation_projectId_fkey\" on \"optimization_recommendation\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "optimization_recommendation_projectId_fkey",
+        "table": "optimization_recommendation"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"optimization_recommendation_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "optimization_recommendation_projectId_fkey",
+          "public",
+          "\"public\".\"optimization_recommendation\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"optimization_recommendation_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"optimization_recommendation\"\nADD CONSTRAINT \"optimization_recommendation_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"optimization_recommendation_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "optimization_recommendation_projectId_fkey",
+          "public",
+          "\"public\".\"optimization_recommendation\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.publication.publication_projectId_fkey",
+    "label": "Add foreign key \"publication_projectId_fkey\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "publication_projectId_fkey",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"publication_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publication_projectId_fkey",
+          "public",
+          "\"public\".\"publication\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"publication_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"publication\"\nADD CONSTRAINT \"publication_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"publication_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publication_projectId_fkey",
+          "public",
+          "\"public\".\"publication\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.publication.publication_connectionId_fkey",
+    "label": "Add foreign key \"publication_connectionId_fkey\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "publication_connectionId_fkey",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"publication_connectionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publication_connectionId_fkey",
+          "public",
+          "\"public\".\"publication\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"publication_connectionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"publication\"\nADD CONSTRAINT \"publication_connectionId_fkey\"\nFOREIGN KEY (\"connectionId\")\nREFERENCES \"public\".\"publishing_connection\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"publication_connectionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publication_connectionId_fkey",
+          "public",
+          "\"public\".\"publication\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.publish_attempt.publish_attempt_projectId_fkey",
+    "label": "Add foreign key \"publish_attempt_projectId_fkey\" on \"publish_attempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "publish_attempt_projectId_fkey",
+        "table": "publish_attempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"publish_attempt_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publish_attempt_projectId_fkey",
+          "public",
+          "\"public\".\"publish_attempt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"publish_attempt_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"publish_attempt\"\nADD CONSTRAINT \"publish_attempt_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"publish_attempt_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publish_attempt_projectId_fkey",
+          "public",
+          "\"public\".\"publish_attempt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.publish_attempt.publish_attempt_publicationId_fkey",
+    "label": "Add foreign key \"publish_attempt_publicationId_fkey\" on \"publish_attempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "publish_attempt_publicationId_fkey",
+        "table": "publish_attempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"publish_attempt_publicationId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publish_attempt_publicationId_fkey",
+          "public",
+          "\"public\".\"publish_attempt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"publish_attempt_publicationId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"publish_attempt\"\nADD CONSTRAINT \"publish_attempt_publicationId_fkey\"\nFOREIGN KEY (\"publicationId\")\nREFERENCES \"public\".\"publication\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"publish_attempt_publicationId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publish_attempt_publicationId_fkey",
+          "public",
+          "\"public\".\"publish_attempt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.publishing_connection.publishing_connection_projectId_fkey",
+    "label": "Add foreign key \"publishing_connection_projectId_fkey\" on \"publishing_connection\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "publishing_connection_projectId_fkey",
+        "table": "publishing_connection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"publishing_connection_projectId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publishing_connection_projectId_fkey",
+          "public",
+          "\"public\".\"publishing_connection\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"publishing_connection_projectId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"publishing_connection\"\nADD CONSTRAINT \"publishing_connection_projectId_fkey\"\nFOREIGN KEY (\"projectId\")\nREFERENCES \"public\".\"project\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"publishing_connection_projectId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "publishing_connection_projectId_fkey",
+          "public",
+          "\"public\".\"publishing_connection\""
+        ]
+      }
+    ]
+  }
+]

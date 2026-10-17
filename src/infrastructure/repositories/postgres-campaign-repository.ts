@@ -287,6 +287,17 @@ export class PostgresCampaignRepository implements CampaignRepository {
     return row ? decodeDeliverable(row) : null;
   }
 
+  async getDeliverableForProject(
+    projectId: string,
+    deliverableId: string,
+  ): Promise<CampaignDeliverableRecord | null> {
+    const row = (await this.orm.CampaignDeliverable.where({
+      projectId,
+      id: deliverableId,
+    }).first()) as DeliverableRow | null;
+    return row ? decodeDeliverable(row) : null;
+  }
+
   async listDeliverables(campaignId: string): Promise<CampaignDeliverableRecord[]> {
     const rows = (await this.orm.CampaignDeliverable.where({ campaignId })
       .orderBy([(row) => row.position.asc(), (row) => row.id.asc()])

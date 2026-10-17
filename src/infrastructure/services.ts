@@ -87,3 +87,13 @@ export const localizationService = container.services.localization.service;
 export const localizationRepository = container.services.localization.repository;
 
 export const localizationProviders = container.services.localization.providers;
+
+export const publishingService = container.services.publishing.publishing;
+
+export const analyticsService = container.services.publishing.analytics;
+
+export const optimizationService = container.services.publishing.optimization;
+
+export const publishingRepository = container.services.publishing.repository;
+
+export const publishingProviders = container.services.publishing.providers;

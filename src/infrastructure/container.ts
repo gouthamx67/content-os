@@ -121,6 +121,15 @@ import { WritingSourceAdapter } from "../modules/localization-engine/adapters/wr
 import { EditorSourceAdapter } from "../modules/localization-engine/adapters/editor-source";
 import { AdaptationSourceAdapter } from "../modules/localization-engine/adapters/adaptation-source";
 import { CampaignSourceAdapter } from "../modules/localization-engine/adapters/campaign-source";
+import { PostgresPublishingRepository } from "./repositories/postgres-publishing-repository";
+import { PublishingService } from "../modules/publishing-engine/publishing-service";
+import { AnalyticsService } from "../modules/publishing-engine/analytics-service";
+import { OptimizationService } from "../modules/publishing-engine/optimization-service";
+import { PublicationSourceResolver } from "../modules/publishing-engine/source-resolver";
+import { PublishingWorker } from "../modules/publishing-engine/publishing-worker";
+import { PublishingProviderRegistry } from "../modules/publishing-engine/providers/registry";
+import { MastodonPublishingProvider } from "../modules/publishing-engine/providers/mastodon";
+import { loadPublishingCrypto } from "../modules/publishing-engine/secrets";
 import {
   createCampaignArtifacts,
   createCampaignGroundingProvider,
@@ -164,6 +173,7 @@ const repositories = {
   editor: new PostgresEditorRepository(orm),
   campaigns: new PostgresCampaignRepository(orm),
   localization: new PostgresLocalizationRepository(orm),
+  publishing: new PostgresPublishingRepository(orm),
   jobs: new InMemoryJobRepository(),
 };
 
@@ -910,6 +920,81 @@ const localizationServices = {
   materialization: localizationMaterialization,
 };
 
+/**
+ * CP23 publishing, analytics and optimization.
+ *
+ * The provider registry only contains a provider whose deployment configuration
+ * exists, so an unconfigured deployment reports provider-unavailable states
+ * instead of pretending to publish. Credentials are sealed with
+ * `PUBLISHING_SECRET_KEY` before they touch a column; when that key is missing
+ * the engine reports the exact problem rather than crashing the server.
+ */
+const publishingCrypto = loadPublishingCrypto();
+
+function createPublishingProviders(): PublishingProviderRegistry {
+  const baseUrl = process.env["PUBLISHING_MASTODON_BASE_URL"];
+  const clientId = process.env["PUBLISHING_MASTODON_CLIENT_ID"];
+  const clientSecret = process.env["PUBLISHING_MASTODON_CLIENT_SECRET"];
+  if (!baseUrl || !clientId || !clientSecret) {
+    return new PublishingProviderRegistry();
+  }
+  return new PublishingProviderRegistry([
+    new MastodonPublishingProvider({ baseUrl, clientId, clientSecret }),
+  ]);
+}
+
+const publishingProviders = createPublishingProviders();
+
+const publishingSourceResolver = new PublicationSourceResolver({
+  writing: repositories.writing,
+  campaigns: repositories.campaigns,
+});
+
+const publishingService = new PublishingService({
+  repository: repositories.publishing,
+  providers: publishingProviders,
+  resolver: publishingSourceResolver,
+  authorizeProject: authorizeVisualProject,
+  loadCrypto: () => publishingCrypto,
+  newId: createId,
+  now: () => new Date().toISOString(),
+});
+
+const analyticsService = new AnalyticsService({
+  repository: repositories.publishing,
+  providers: publishingProviders,
+  authorizeProject: authorizeVisualProject,
+  loadCrypto: () => publishingCrypto,
+  newId: createId,
+  now: () => new Date().toISOString(),
+});
+
+const optimizationService = new OptimizationService({
+  repository: repositories.publishing,
+  authorizeProject: authorizeVisualProject,
+  newId: createId,
+  now: () => new Date().toISOString(),
+});
+
+const publishingServices = {
+  publishing: publishingService,
+  analytics: analyticsService,
+  optimization: optimizationService,
+  repository: repositories.publishing,
+  providers: publishingProviders,
+  cryptoProblem: publishingCrypto.problem,
+};
+
+export const publishingWorkerHealth = new RenderWorkerHealth();
+
+export function createPublishingWorker(): PublishingWorker {
+  return new PublishingWorker({
+    repository: repositories.publishing,
+    dispatch: (publication) => publishingService.dispatchClaimed(publication),
+    collectAnalytics: (publication) => analyticsService.collectClaimed(publication),
+    health: publishingWorkerHealth,
+  });
+}
 
 export const adaptationWorkerHealth = new RenderWorkerHealth();
 
@@ -952,5 +1037,6 @@ export const container = {
     editor: editorServices,
     campaign: campaignServices,
     localization: localizationServices,
+    publishing: publishingServices,
   },
 };

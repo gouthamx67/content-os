@@ -165,6 +165,12 @@ model Project {
   adaptationBatches    AdaptationBatch[]
   adaptationJobs       AdaptationJob[]
 
+  publishingConnections       PublishingConnection[]
+  publications                Publication[]
+  publishAttempts             PublishAttempt[]
+  analyticsSnapshots          AnalyticsSnapshot[]
+  optimizationRecommendations OptimizationRecommendation[]
+
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@map("project")
@@ -2838,4 +2844,277 @@ model LocalizationRevision {
   @@unique([jobId, revisionNumber], map: "localization_revision_job_number")
   @@index([jobId, createdAt], map: "localization_revision_job_created_idx")
   @@map("localization_revision")
+}
+
+/// CP23 publishing: how an external destination account is bound to a project.
+///
+/// The row never stores a plaintext credential: `credentialCiphertext` is the
+/// AES-256-GCM envelope sealed by the publishing secret box, and every read
+/// surface (API, UI, logs) exposes only the safe identity fields. Lifecycle:
+/// a successful OAuth exchange creates CONNECTED; a provider 401/403 flips to
+/// AUTH_REQUIRED; a user disconnect wipes the credential and flips to
+/// DISCONNECTED; a provider-side revocation flips to REVOKED. Publishing is
+/// blocked in every state except CONNECTED.
+enum PublishingConnectionStatus {
+  @@type("pg/text@1")
+
+  CONNECTED = "CONNECTED"
+  AUTH_REQUIRED = "AUTH_REQUIRED"
+  REVOKED = "REVOKED"
+  DISCONNECTED = "DISCONNECTED"
+}
+
+model PublishingConnection {
+  id                   String                     @id @default(cuid(2))
+  projectId            String
+  createdById          String
+  providerId           String
+  externalAccountId    String
+  displayName          String
+  scopes               String
+  capabilities         String
+  status               PublishingConnectionStatus @default(CONNECTED)
+  credentialCiphertext String?
+  credentialExpiresAt  TimestamptzString?
+  lastCheckedAt        TimestamptzString?
+  lastErrorCode        String?
+  connectedAt          TimestamptzString?
+  disconnectedAt       TimestamptzString?
+  createdAt            TimestamptzString          @default(now())
+  updatedAt            temporal.updatedAtString()
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  publications Publication[]
+
+  @@unique([projectId, providerId, externalAccountId], map: "publishing_connection_unique_account")
+  @@index([projectId, status], map: "publishing_connection_project_status_idx")
+  @@map("publishing_connection")
+}
+
+/// Which engine produced the content being published.
+///
+/// A WRITING_DOCUMENT is a CP18 document identified by its version. A
+/// CAMPAIGN_DELIVERABLE is a CP21 deliverable — but only one that is approved
+/// and resolves to exactly one linked writing document; the resolver refuses
+/// ambiguous or missing links instead of guessing.
+enum PublicationSourceType {
+  @@type("pg/text@1")
+
+  WRITING_DOCUMENT = "WRITING_DOCUMENT"
+  CAMPAIGN_DELIVERABLE = "CAMPAIGN_DELIVERABLE"
+}
+
+/// The publication state machine.
+///
+/// DRAFT -> READY (validation passed) -> QUEUED (immediate publish) or
+/// SCHEDULED (future time) -> PUBLISHING (atomically claimed by a worker) ->
+/// PUBLISHED. Failures land in FAILED (retryable flag tells retry apart from
+/// permanent), AMBIGUOUS (provider outcome unknown; reconciled with the same
+/// idempotency key before any retry), AUTH_REQUIRED (connection needs a
+/// reconnect) or STALE (the source changed after validation). CANCELLED is a
+/// user action before dispatch; it is not reachable once PUBLISHING.
+enum PublicationStatus {
+  @@type("pg/text@1")
+
+  DRAFT = "DRAFT"
+  READY = "READY"
+  SCHEDULED = "SCHEDULED"
+  QUEUED = "QUEUED"
+  PUBLISHING = "PUBLISHING"
+  PUBLISHED = "PUBLISHED"
+  FAILED = "FAILED"
+  AMBIGUOUS = "AMBIGUOUS"
+  AUTH_REQUIRED = "AUTH_REQUIRED"
+  STALE = "STALE"
+  CANCELLED = "CANCELLED"
+}
+
+/// One intended external post.
+///
+/// `sourceSnapshot` freezes the exact payload (title, content, hash, revision)
+/// validation approved, so a later source edit cannot silently change what a
+/// worker sends: the worker re-resolves the source, and a hash mismatch moves
+/// the row to STALE instead of publishing. `externalPostId`/`externalUrl` are
+/// only ever written from a confirmed provider response. `idempotencyKey` is
+/// stable for the publication's lifetime and is resent on every attempt, so a
+/// retried or reconciled dispatch cannot create a second post.
+model Publication {
+  id                        String              @id @default(cuid(2))
+  projectId                 String
+  createdById               String
+  connectionId              String
+  sourceType                PublicationSourceType
+  sourceId                  String
+  sourceRevision            String
+  sourceHash                String
+  sourceSnapshot            String
+  title                     String
+  content                   String
+  status                    PublicationStatus   @default(DRAFT)
+  idempotencyKey            String              @unique
+  scheduledFor              TimestamptzString?
+  scheduledTimezone         String?
+  validation                String?
+  validatedAt               TimestamptzString?
+  attemptedCount            Int                 @default(0)
+  externalPostId            String?
+  externalUrl               String?
+  externalPublishedAt       TimestamptzString?
+  publishedAt               TimestamptzString?
+  cancelledAt               TimestamptzString?
+  lastErrorCode             String?
+  lastErrorMessage          String?
+  lastErrorRetryable        Boolean?
+  analyticsRequestedAt      TimestamptzString?
+  analyticsClaimedAt        TimestamptzString?
+  analyticsCollectedAt      TimestamptzString?
+  analyticsErrorCode        String?
+  analyticsErrorMessage     String?
+  recommendationId          String?
+  originPublicationId       String?
+  createdAt                 TimestamptzString   @default(now())
+  updatedAt                 temporal.updatedAtString()
+
+  project    Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  connection PublishingConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  attempts   PublishAttempt[]
+  snapshots  AnalyticsSnapshot[]
+
+  @@index([projectId, createdAt], map: "publication_project_created_idx")
+  @@index([projectId, status], map: "publication_project_status_idx")
+  @@index([status, createdAt], map: "publication_status_created_idx")
+  @@index([status, scheduledFor], map: "publication_status_scheduled_idx")
+  @@index([projectId, sourceType, sourceId], map: "publication_project_source_idx")
+  @@index([analyticsRequestedAt], map: "publication_analytics_requested_idx")
+  @@map("publication")
+}
+
+/// Append-only audit of every dispatch the worker performed. Never updated,
+/// never deleted: `outcome` plus the sanitized provider metadata is the record
+/// of what actually happened, including AMBIGUOUS results that triggered no
+/// external post id yet.
+enum PublishAttemptOutcome {
+  @@type("pg/text@1")
+
+  SUCCEEDED = "SUCCEEDED"
+  FAILED = "FAILED"
+  AMBIGUOUS = "AMBIGUOUS"
+}
+
+model PublishAttempt {
+  id                String               @id @default(cuid(2))
+  projectId         String
+  publicationId     String
+  attemptNumber     Int
+  outcome           PublishAttemptOutcome
+  providerRequestId String?
+  errorCode         String?
+  errorMessage      String?
+  retryable         Boolean?
+  metadata          String?
+  startedAt         TimestamptzString
+  finishedAt        TimestamptzString
+  createdAt         TimestamptzString    @default(now())
+
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  publication Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, attemptNumber], map: "publish_attempt_publication_number")
+  @@index([projectId, createdAt], map: "publish_attempt_project_created_idx")
+  @@map("publish_attempt")
+}
+
+/// One provider-reported metric reading for one publication at one collection
+/// instant. Historical readings are never overwritten: the unique key is
+/// (publication, metric, collectedAt), so re-collecting later appends a new
+/// point and the timeline stays intact. A genuine provider zero is stored as
+/// 0; an unavailable metric is not stored at all — absence means "no reading",
+/// never a fabricated zero.
+model AnalyticsSnapshot {
+  id            String            @id @default(cuid(2))
+  projectId     String
+  publicationId String
+  providerId    String
+  metricKey     String
+  value         Int
+  unit          String
+  definition    String
+  windowStart   TimestamptzString
+  windowEnd     TimestamptzString
+  asOf          TimestamptzString
+  collectedAt   TimestamptzString
+  provenance    String
+  completeness  String
+  createdAt     TimestamptzString @default(now())
+
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  publication Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, metricKey, collectedAt], map: "analytics_snapshot_unique_point")
+  @@index([projectId, collectedAt], map: "analytics_snapshot_project_collected_idx")
+  @@index([projectId, metricKey, collectedAt], map: "analytics_snapshot_project_metric_idx")
+  @@map("analytics_snapshot")
+}
+
+/// What kind of observation a recommendation encodes. Every category is
+/// computed from real stored snapshots and names exactly which publications
+/// and readings it compared.
+enum RecommendationCategory {
+  @@type("pg/text@1")
+
+  PERFORMANCE_OUTLIER = "PERFORMANCE_OUTLIER"
+  TIMING_WINDOW = "TIMING_WINDOW"
+}
+
+enum RecommendationConfidence {
+  @@type("pg/text@1")
+
+  LOW = "LOW"
+  MEDIUM = "MEDIUM"
+  HIGH = "HIGH"
+}
+
+enum RecommendationStatus {
+  @@type("pg/text@1")
+
+  OPEN = "OPEN"
+  ACCEPTED = "ACCEPTED"
+  DISMISSED = "DISMISSED"
+}
+
+/// An evidence-linked optimization suggestion.
+///
+/// `evidence` is canonical JSON naming the snapshot ids, values, windows and
+/// the comparison math — the same ids that exist in `analytics_snapshot`, so a
+/// reader can recount every number. `dedupeKey` identifies the finding itself
+/// (for example the outlier publication or the timing window), which keeps
+/// regeneration idempotent and keeps DISMISSED findings dismissed. Accepting
+/// never publishes: it creates a linked DRAFT publication through the normal
+/// publishing services, recorded in `resultPublicationId`.
+model OptimizationRecommendation {
+  id                  String                   @id @default(cuid(2))
+  projectId           String
+  createdById         String
+  category            RecommendationCategory
+  dedupeKey           String
+  title               String
+  explanation         String
+  evidence            String
+  confidence          RecommendationConfidence
+  confidenceRationale String
+  limitations         String
+  suggestedAction     String
+  proposedChanges     String
+  status              RecommendationStatus     @default(OPEN)
+  reviewedById        String?
+  reviewedAt          TimestamptzString?
+  resultPublicationId String?
+  createdAt           TimestamptzString       @default(now())
+  updatedAt           temporal.updatedAtString()
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, dedupeKey], map: "optimization_recommendation_dedupe")
+  @@index([projectId, status], map: "optimization_recommendation_project_status_idx")
+  @@map("optimization_recommendation")
 }

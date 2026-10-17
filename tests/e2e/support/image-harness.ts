@@ -1,5 +1,9 @@
 import { emptyStyle } from "../../../src/modules/editor-engine/domain/types";
 import type { EditorNode } from "../../../src/modules/editor-engine/domain/types";
+import {
+  ensureMastodonStub,
+  type MastodonStubController,
+} from "./mastodon-stub";
 import { spawn, type ChildProcess } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -46,6 +50,15 @@ export const DATABASE_URL =
 export const SESSION_COOKIE =
   process.env["SESSION_COOKIE_NAME"] ?? "content_os_session";
 export const repoRoot = process.cwd();
+
+/**
+ * Every stack is started with a clearly-labeled stub Mastodon as the publishing
+ * provider, so the CP23 browser specs exercise the real OAuth and status
+ * protocol over HTTP without vendor credentials. Deployments without these
+ * variables (including the production smoke) get the honest
+ * "provider unavailable" path instead.
+ */
+const E2E_PUBLISHING_SECRET_KEY = Buffer.alloc(32, 7).toString("base64");
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -131,6 +144,8 @@ export type E2EStack = {
   videoWorker?: ChildProcess;
   writingWorker?: ChildProcess;
   multiformatWorker?: ChildProcess;
+  publishingWorker?: ChildProcess;
+  mastodonStub?: MastodonStubController;
   startedDevServer: boolean;
 };
 
@@ -139,16 +154,43 @@ export type E2EStack = {
  * one-time production build that it then serves — see `ensureProductionBuild`),
  * the CP17 image worker, and (when requested) the CP15 render worker.
  */
+function publishingEnvironment(): Record<string, string> {
+  const stub = process.env["PUBLISHING_MASTODON_BASE_URL"];
+  return {
+    ...(stub ? { PUBLISHING_MASTODON_BASE_URL: stub } : {}),
+    PUBLISHING_MASTODON_CLIENT_ID:
+      process.env["PUBLISHING_MASTODON_CLIENT_ID"] ?? "e2e-client",
+    PUBLISHING_MASTODON_CLIENT_SECRET:
+      process.env["PUBLISHING_MASTODON_CLIENT_SECRET"] ?? "e2e-secret",
+    PUBLISHING_SECRET_KEY:
+      process.env["PUBLISHING_SECRET_KEY"] ?? E2E_PUBLISHING_SECRET_KEY,
+  };
+}
+
+export function spawnPublishingWorker(): ChildProcess {
+  return spawn("npx", ["tsx", "src/scripts/publishing-worker.ts"], {
+    cwd: repoRoot,
+    env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
+    stdio: "ignore",
+  });
+}
+
 export async function startStack(options?: {
   withRenderWorker?: boolean;
   withMultiformatWorker?: boolean;
+  withPublishingWorker?: boolean;
 }): Promise<E2EStack> {
   process.env["DATABASE_URL"] = DATABASE_URL;
+
+  const mastodonStub = await ensureMastodonStub();
+  process.env["PUBLISHING_MASTODON_BASE_URL"] = mastodonStub.baseUrl;
+  Object.assign(process.env, publishingEnvironment());
 
   const stack: E2EStack = {
     reachable: await serverReachable(),
     available: true,
     startedDevServer: false,
+    mastodonStub,
   };
 
   if (!stack.reachable && !process.env["CONTENT_OS_E2E_NO_AUTOSTART"]) {
@@ -204,6 +246,10 @@ export async function startStack(options?: {
     );
   }
 
+  if (options?.withPublishingWorker) {
+    stack.publishingWorker = spawnPublishingWorker();
+  }
+
   stack.executablePath = await resolveChromium();
   if (!stack.executablePath) {
     stack.available = false;
@@ -214,6 +260,7 @@ export async function startStack(options?: {
 }
 
 export function stopStack(stack: E2EStack): void {
+  if (stack.publishingWorker) stack.publishingWorker.kill("SIGTERM");
   if (stack.multiformatWorker) stack.multiformatWorker.kill("SIGTERM");
   if (stack.videoWorker) stack.videoWorker.kill("SIGTERM");
   if (stack.writingWorker) stack.writingWorker.kill("SIGTERM");
@@ -221,6 +268,21 @@ export function stopStack(stack: E2EStack): void {
   if (stack.startedDevServer && stack.devServer) {
     stack.devServer.kill("SIGTERM");
   }
+}
+
+/**
+ * Stops the publishing worker and waits for the process to exit, so a spec can
+ * hold work in a queue without a race while it mutates the source.
+ */
+export async function stopPublishingWorker(stack: E2EStack): Promise<void> {
+  const worker = stack.publishingWorker;
+  if (!worker) return;
+  worker.kill("SIGTERM");
+  await Promise.race([
+    new Promise<void>((resolve) => worker.once("exit", () => resolve())),
+    sleep(5_000),
+  ]);
+  stack.publishingWorker = undefined;
 }
 
 /** A brief the deterministic analyzers turn into real product facts and voice. */
