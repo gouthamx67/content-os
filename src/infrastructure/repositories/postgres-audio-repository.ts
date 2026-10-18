@@ -2,6 +2,11 @@ import type { PublicOrm } from "../../prisma/db";
 import { db } from "../../prisma/db";
 import type { Models } from "../../prisma/contract.d";
 import { pgTimestampToIso } from "../../lib/time";
+import {
+  WORKER_LEASE_EXPIRED_CODE,
+  WORKER_LEASE_EXPIRED_MESSAGE,
+  workerLeaseExpiry,
+} from "../../lib/worker-lease";
 import type {
   AudioRepository,
   CreateAudioArtifactInput,
@@ -414,7 +419,13 @@ export class PostgresAudioRepository implements AudioRepository {
       if (!candidate) return;
 
       const plan = tx.sql.public.audio_render_job
-        .update({ status: "RUNNING", progressPct: 0, startedAt: now, updatedAt: now })
+        .update({
+          status: "RUNNING",
+          progressPct: 0,
+          startedAt: now,
+          updatedAt: now,
+          leaseExpiresAt: workerLeaseExpiry(now),
+        })
         .where((f, fns) => fns.eq(f.id, candidate.id))
         .where((f, fns) => fns.eq(f.status, "QUEUED"))
         .returning("id")
@@ -436,6 +447,7 @@ export class PostgresAudioRepository implements AudioRepository {
     await this.orm.AudioRenderJob.where({ id: audioRenderJobId }).update({
       progressPct: Math.max(0, Math.min(100, Math.round(progressPct))),
       updatedAt,
+      leaseExpiresAt: workerLeaseExpiry(updatedAt),
     });
   }
 
@@ -450,6 +462,7 @@ export class PostgresAudioRepository implements AudioRepository {
       ffmpegVersion: input.ffmpegVersion,
       startedAt: input.startedAt,
       updatedAt: input.updatedAt,
+      leaseExpiresAt: workerLeaseExpiry(input.updatedAt),
     });
   }
 
@@ -458,14 +471,25 @@ export class PostgresAudioRepository implements AudioRepository {
     ffmpegVersion: string | null;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
-    await this.orm.AudioRenderJob.where({ id: input.audioRenderJobId }).update({
-      status: "SUCCEEDED",
-      progressPct: 100,
-      ffmpegVersion: input.ffmpegVersion,
-      finishedAt: input.finishedAt,
-      updatedAt: input.updatedAt,
-    });
+  }): Promise<boolean> {
+    const plan = db.sql.public.audio_render_job
+      .update({
+        status: "SUCCEEDED",
+        progressPct: 100,
+        ffmpegVersion: input.ffmpegVersion,
+        finishedAt: input.finishedAt,
+        updatedAt: input.updatedAt,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.audioRenderJobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
   }
 
   async markFailed(input: {
@@ -474,26 +498,96 @@ export class PostgresAudioRepository implements AudioRepository {
     errorMessage: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
-    await this.orm.AudioRenderJob.where({ id: input.audioRenderJobId }).update({
-      status: "FAILED",
-      errorCode: input.errorCode,
-      errorMessage: input.errorMessage,
-      finishedAt: input.finishedAt,
-      updatedAt: input.updatedAt,
-    });
+  }): Promise<boolean> {
+    const plan = db.sql.public.audio_render_job
+      .update({
+        status: "FAILED",
+        errorCode: input.errorCode,
+        errorMessage: input.errorMessage,
+        finishedAt: input.finishedAt,
+        updatedAt: input.updatedAt,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.audioRenderJobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
   }
 
   async markCancelled(input: {
     audioRenderJobId: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
-    await this.orm.AudioRenderJob.where({ id: input.audioRenderJobId }).update({
-      status: "CANCELLED",
-      finishedAt: input.finishedAt,
-      updatedAt: input.updatedAt,
-    });
+  }): Promise<boolean> {
+    const plan = db.sql.public.audio_render_job
+      .update({
+        status: "CANCELLED",
+        finishedAt: input.finishedAt,
+        updatedAt: input.updatedAt,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.audioRenderJobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
+  }
+
+  async renewLease(jobId: string, nowIso: string): Promise<boolean> {
+    const plan = db.sql.public.audio_render_job
+      .update({ leaseExpiresAt: workerLeaseExpiry(nowIso) })
+      .where((f, fns) => fns.eq(f.id, jobId))
+      .where((f, fns) => fns.eq(f.status, "RUNNING"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
+  }
+
+  async reclaimExpiredLeases(nowIso: string): Promise<{
+    cancelled: number;
+    requeued: number;
+  }> {
+    const cancelPlan = db.sql.public.audio_render_job
+      .update({
+        status: "CANCELLED",
+        finishedAt: nowIso,
+        updatedAt: nowIso,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.status, "CANCEL_REQUESTED"))
+      .where((f, fns) => fns.lt(f.leaseExpiresAt, nowIso))
+      .returning("id")
+      .build();
+
+    const requeuePlan = db.sql.public.audio_render_job
+      .update({
+        status: "QUEUED",
+        progressPct: 0,
+        startedAt: null,
+        errorCode: WORKER_LEASE_EXPIRED_CODE,
+        errorMessage: WORKER_LEASE_EXPIRED_MESSAGE,
+        updatedAt: nowIso,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.status, "RUNNING"))
+      .where((f, fns) => fns.lt(f.leaseExpiresAt, nowIso))
+      .returning("id")
+      .build();
+
+    const cancelled = await db.runtime().query(cancelPlan);
+    const requeued = await db.runtime().query(requeuePlan);
+    return { cancelled: cancelled.length, requeued: requeued.length };
   }
 
   async requestCancel(
@@ -509,7 +603,12 @@ export class PostgresAudioRepository implements AudioRepository {
     const builder =
       job.status === "QUEUED"
         ? update
-            .update({ status: "CANCELLED", finishedAt: now, updatedAt: now })
+            .update({
+              status: "CANCELLED",
+              finishedAt: now,
+              updatedAt: now,
+              leaseExpiresAt: null,
+            })
             .where((f, fns) => fns.eq(f.id, audioRenderJobId))
             .where((f, fns) => fns.eq(f.status, "QUEUED"))
         : update

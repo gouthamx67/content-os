@@ -1,6 +1,6 @@
 import { projectService } from "../../../../../infrastructure/services";
 import { requireUser } from "../../../../../lib/require-auth";
-import { wrapHttpError } from "../../../../../lib/http";
+import { HttpError, isSameOrigin, wrapHttpError } from "../../../../../lib/http";
 
 type RestoreRouteContext = {
   params: Promise<{ id: string }>;
@@ -12,6 +12,9 @@ export async function POST(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id } = await context.params;
 

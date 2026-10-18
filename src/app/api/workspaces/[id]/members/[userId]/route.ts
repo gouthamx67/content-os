@@ -1,9 +1,6 @@
 import { workspaceService } from "../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../lib/require-auth";
-import {
-  parseJsonBody,
-  wrapHttpError,
-} from "../../../../../../lib/http";
+import { HttpError, isSameOrigin, parseJsonBody, wrapHttpError } from "../../../../../../lib/http";
 import type { WorkspaceRole } from "../../../../../../core/domain/auth";
 
 const ROLES: WorkspaceRole[] = ["OWNER", "ADMIN", "MEMBER"];
@@ -18,6 +15,9 @@ export async function PATCH(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id, userId } = await context.params;
 
@@ -48,6 +48,9 @@ export async function DELETE(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id, userId } = await context.params;
 

@@ -1,5 +1,7 @@
 import "dotenv/config";
 import { createAudioWorker, audioWorkerHealth } from "../infrastructure/container";
+import { logEvent, sanitizeError } from "../lib/observability";
+import { runWorkerProcess } from "../infrastructure/worker-runtime";
 
 /**
  * Standalone CP16 audio worker.
@@ -8,29 +10,15 @@ import { createAudioWorker, audioWorkerHealth } from "../infrastructure/containe
  * rather than inside it. The queue lives in Postgres, which is what lets the web
  * app enqueue and this process consume without a message broker between them.
  */
-async function main(): Promise<void> {
-  const worker = createAudioWorker();
-  const controller = new AbortController();
-
-  const shutdown = (signal: string) => {
-    if (controller.signal.aborted) return;
-    console.log(`[audio-worker] ${signal} received, draining`);
-    controller.abort();
-  };
-
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-
-  console.log("[audio-worker] started");
-  await worker.run(controller.signal);
-
-  const health = audioWorkerHealth.snapshot();
-  console.log(
-    `[audio-worker] stopped (processed=${health.processed} succeeded=${health.succeeded} failed=${health.failed} cancelled=${health.cancelled})`,
-  );
-}
-
-main().catch((error: unknown) => {
-  console.error("[audio-worker] crashed", error);
+runWorkerProcess({
+  name: "audio-worker",
+  kind: "audio",
+  health: audioWorkerHealth,
+  run: (signal) => createAudioWorker().run(signal),
+}).catch((error: unknown) => {
+  logEvent("error", "worker.crashed", {
+    worker: "audio-worker",
+    error: sanitizeError(error),
+  });
   process.exitCode = 1;
 });

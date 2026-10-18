@@ -7,7 +7,11 @@ import {
 } from "../../../../../../lib/recommendation-api";
 
 import { requireUser } from "../../../../../../lib/require-auth";
-import { HttpError, isSameOrigin } from "../../../../../../lib/http";
+import {
+  HttpError,
+  isSameOrigin,
+  parseJsonBody,
+} from "../../../../../../lib/http";
 
 type RecommendationRouteContext = {
   params: Promise<{ id: string; recommendationId: string }>;
@@ -56,7 +60,12 @@ export async function PATCH(request: Request, context: RecommendationRouteContex
     const { user } = await requireUser(request);
     const { id, recommendationId } = await context.params;
 
-    const changes = parseUpdateOpportunityRequest(await request.json());
+    const body = await parseJsonBody(request);
+    if (!body) {
+      throw new HttpError(400, "Invalid request body");
+    }
+
+    const changes = parseUpdateOpportunityRequest(body);
 
     const opportunity = await contentRecommendationService.update(
       id,

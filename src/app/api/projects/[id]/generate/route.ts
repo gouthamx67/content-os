@@ -2,7 +2,20 @@ import { NextResponse } from "next/server";
 import {
   generationService,
 } from "../../../../../infrastructure/services";
+import type { ContentCategory } from "../../../../../core/domain/content";
+import { isCreativeMode } from "../../../../../core/domain/creative-direction";
 import { requireUser } from "../../../../../lib/require-auth";
+import {
+  HttpError,
+  isSameOrigin,
+  parseJsonBody,
+  wrapHttpError,
+} from "../../../../../lib/http";
+import {
+  enforceRateLimit,
+  RATE_LIMITS,
+} from "../../../../../lib/rate-limit";
+
 import { projectService } from "../../../../../infrastructure/services";
 
 type RouteContext = {
@@ -10,6 +23,14 @@ type RouteContext = {
     id: string;
   }>;
 };
+
+const CONTENT_CATEGORIES: readonly ContentCategory[] = [
+  "video",
+  "image",
+  "writing",
+  "audio",
+  "campaign",
+];
 
 export async function POST(
   request: Request,
@@ -19,33 +40,59 @@ export async function POST(
 
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     await projectService.getAuthorized(id, user.id);
 
-    const body = await request.json();
+    const body = await parseJsonBody(request);
+    if (!body) {
+      throw new HttpError(400, "Invalid request body");
+    }
+
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.aiGeneration,
+      user.id,
+    );
+    if (limited) return limited;
 
     const job = await generationService.createJob({
       projectId: id,
 
-      type: body?.type ?? "video.product_demo",
+      type: typeof body.type === "string" ? body.type : "video.product_demo",
 
-      category: body?.category ?? "video",
+      category:
+        typeof body.category === "string" &&
+        CONTENT_CATEGORIES.includes(body.category as ContentCategory)
+          ? (body.category as ContentCategory)
+          : "video",
 
-      instruction: body?.instruction,
+      instruction:
+        typeof body.instruction === "string" ? body.instruction : undefined,
 
-      platform: body?.platform,
+      platform: typeof body.platform === "string" ? body.platform : undefined,
 
-      durationSeconds: body?.durationSeconds,
+      durationSeconds:
+        typeof body.durationSeconds === "number"
+          ? body.durationSeconds
+          : undefined,
 
-      aspectRatio: body?.aspectRatio,
+      aspectRatio:
+        typeof body.aspectRatio === "string" ? body.aspectRatio : undefined,
 
-      tone: body?.tone,
+      tone: typeof body.tone === "string" ? body.tone : undefined,
 
-      creativeMode: body?.creativeMode ?? "balanced",
+      creativeMode: isCreativeMode(body.creativeMode)
+        ? (body.creativeMode.toLowerCase() as "balanced" | "guided" | "wild")
+        : "balanced",
 
-      language: body?.language ?? "en",
+      language: typeof body.language === "string" ? body.language : "en",
 
-      options: body?.options,
+      options:
+        body.options !== null && typeof body.options === "object"
+          ? (body.options as Record<string, unknown>)
+          : undefined,
     });
 
     const completedJob =
@@ -60,16 +107,8 @@ export async function POST(
       },
     );
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Generation failed",
-      },
-      {
-        status: 400,
-      },
-    );
+    // HttpError keeps its status and message; anything else is a 500 with a
+    // generic body rather than the internal failure message.
+    return wrapHttpError(error);
   }
 }

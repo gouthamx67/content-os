@@ -1,50 +1,48 @@
 import { NextResponse } from "next/server";
-import { audioWorkerHealth } from "../../../../infrastructure/container";
 import { getFfmpegVersion } from "../../../../modules/video-rendering/ffmpeg/capabilities";
+import { clientIdentity, enforceRateLimit, RATE_LIMITS } from "../../../../lib/rate-limit";
+import { logEvent, requestIdFrom, sanitizeError } from "../../../../lib/observability";
+import { readWorkerLiveness } from "../../../../infrastructure/worker-heartbeat";
 
 /**
  * Reports whether this deployment can actually mix and mux audio.
  *
  * The audio worker shares FFmpeg with the video renderer, so a missing binary
- * is the one failure that can be checked here without doing real work. Worker
- * liveness and counters answer whether a queued job is likely to move.
+ * is the one failure that can be checked here without doing real work. The
+ * response is sanitized for an unauthenticated endpoint: capability booleans
+ * and heartbeat-derived liveness only.
  */
-export async function GET() {
-  const health = audioWorkerHealth.snapshot();
+export async function GET(request: Request) {
+  const requestId = requestIdFrom(request);
+  const limited = await enforceRateLimit(
+    RATE_LIMITS.healthProbe,
+    clientIdentity(request),
+  );
+  if (limited) return limited;
+
+  const liveness = (await readWorkerLiveness()).find(
+    (worker) => worker.kind === "audio",
+  );
 
   try {
-    const version = await getFfmpegVersion();
+    await getFfmpegVersion();
 
     return NextResponse.json({
       ok: true,
-      ffmpeg: { version },
-      worker: {
-        running: health.running,
-        busy: health.currentJobId !== null,
-        startedAt: health.startedAt,
-        lastTickAt: health.lastTickAt,
-        lastSuccessAt: health.lastSuccessAt,
-        lastFailureAt: health.lastFailureAt,
-        processed: health.processed,
-        succeeded: health.succeeded,
-        failed: health.failed,
-        cancelled: health.cancelled,
-      },
+      ffmpeg: { available: true },
+      worker: liveness,
     });
   } catch (error) {
+    logEvent("error", "health.audio_probe_failed", {
+      requestId,
+      error: sanitizeError(error),
+    });
+
     return NextResponse.json(
       {
         ok: false,
-        error:
-          error instanceof Error ? error.message : "Audio health check failed",
-        worker: {
-          running: health.running,
-          busy: health.currentJobId !== null,
-          processed: health.processed,
-          succeeded: health.succeeded,
-          failed: health.failed,
-          cancelled: health.cancelled,
-        },
+        ffmpeg: { available: false },
+        worker: liveness,
       },
       { status: 503 },
     );

@@ -1,6 +1,7 @@
 import { adaptationService } from "../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../lib/require-auth";
-import { HttpError, isSameOrigin } from "../../../../../../lib/http";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../lib/rate-limit";
+import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../../lib/http";
 import {
   adaptationBatchDetailView,
   adaptationBatchView,
@@ -27,6 +28,11 @@ const SOURCE_TYPES: readonly string[] = [
 export async function GET(request: Request, context: RouteContext) {
   try {
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.renderDispatch,
+      user.id,
+    );
+    if (limited) return limited;
     const { id: projectId } = await context.params;
 
     const url = new URL(request.url);
@@ -65,10 +71,7 @@ export async function POST(request: Request, context: RouteContext) {
     const { user } = await requireUser(request);
     const { id: projectId } = await context.params;
 
-    const body = (await request.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
+    const body = (await parseJsonBody(request)) ?? {};
 
     const sourceType = body["sourceType"];
     const sourceId = body["sourceId"];

@@ -347,7 +347,9 @@ function claimPlan(kind: "due" | "ambiguous" | "analytics", nowIso: string, boun
   if (kind === "due") {
     return db.raw.sql`
       UPDATE "public"."publication"
-      SET status = 'PUBLISHING', "updatedAt" = ${nowIso}::timestamptz
+      SET status = 'PUBLISHING',
+          "updatedAt" = ${nowIso}::timestamptz,
+          "leaseExpiresAt" = (${nowIso}::timestamptz + interval '5 minutes')
       WHERE id = (
         SELECT id FROM "public"."publication"
         WHERE status = 'QUEUED'
@@ -366,7 +368,9 @@ function claimPlan(kind: "due" | "ambiguous" | "analytics", nowIso: string, boun
   if (kind === "ambiguous") {
     return db.raw.sql`
       UPDATE "public"."publication"
-      SET status = 'PUBLISHING', "updatedAt" = ${nowIso}::timestamptz
+      SET status = 'PUBLISHING',
+          "updatedAt" = ${nowIso}::timestamptz,
+          "leaseExpiresAt" = (${nowIso}::timestamptz + interval '5 minutes')
       WHERE id = (
         SELECT id FROM "public"."publication"
         WHERE status = 'AMBIGUOUS'
@@ -571,6 +575,44 @@ export class PostgresPublishingRepository implements PublishingRepository {
     return this.claimAndLoad(claimPlan("analytics", nowIso, staleClaimBeforeIso));
   }
 
+
+  async renewPublishingLease(
+    publicationId: string,
+    nowIso: string,
+  ): Promise<boolean> {
+    const plan = db.raw.sql`
+      UPDATE "public"."publication"
+      SET "leaseExpiresAt" = (${nowIso}::timestamptz + interval '5 minutes')
+      WHERE id = ${publicationId} AND status = 'PUBLISHING'
+      RETURNING id
+    `
+      .returnsRow({ id: "pg/text@1" })
+      .build();
+
+    const rows = (await db.runtime().query(plan)) as Array<{ id: string }>;
+    return rows.length === 1;
+  }
+
+  async reclaimStalePublishing(nowIso: string): Promise<number> {
+    const plan = db.raw.sql`
+      UPDATE "public"."publication"
+      SET status = 'AMBIGUOUS',
+          "leaseExpiresAt" = NULL,
+          "lastErrorCode" = 'PUBLISHER_OUTCOME_UNKNOWN',
+          "lastErrorMessage" = 'The publishing worker stopped before recording an outcome; reconciliation will determine whether the post exists.',
+          "lastErrorRetryable" = true,
+          "updatedAt" = ${nowIso}::timestamptz
+      WHERE status = 'PUBLISHING'
+        AND "leaseExpiresAt" IS NOT NULL
+        AND "leaseExpiresAt" < ${nowIso}::timestamptz
+      RETURNING id
+    `
+      .returnsRow({ id: "pg/text@1" })
+      .build();
+
+    const rows = (await db.runtime().query(plan)) as Array<{ id: string }>;
+    return rows.length;
+  }
   async recordAttempt(input: CreateAttemptInput): Promise<PublishAttemptRecord> {
     const row = (await this.orm.PublishAttempt.create({
       id: input.id,
@@ -592,12 +634,14 @@ export class PostgresPublishingRepository implements PublishingRepository {
   async listAttempts(
     projectId: string,
     publicationId: string,
+    limit = 200,
   ): Promise<PublishAttemptRecord[]> {
     const rows = (await this.orm.PublishAttempt.where({
       projectId,
       publicationId,
     })
       .orderBy((row) => row.attemptNumber.asc())
+      .limit(limit)
       .all()) as unknown as AttemptRow[];
     return rows.map(decodeAttempt);
   }
@@ -605,14 +649,11 @@ export class PostgresPublishingRepository implements PublishingRepository {
   async createSnapshots(
     inputs: readonly CreateSnapshotInput[],
   ): Promise<number> {
+    // The unique index on (publicationId, metricKey, collectedAt) does the
+    // dedupe, so an insert that collides is a skip, not a second read. One
+    // round trip per reading instead of a SELECT plus an INSERT.
     let stored = 0;
     for (const input of inputs) {
-      const existing = await this.orm.AnalyticsSnapshot.where({
-        publicationId: input.publicationId,
-        metricKey: input.metricKey,
-        collectedAt: input.collectedAt,
-      }).first();
-      if (existing) continue;
       try {
         await this.orm.AnalyticsSnapshot.create({
           id: input.id,
@@ -641,14 +682,19 @@ export class PostgresPublishingRepository implements PublishingRepository {
   async listSnapshots(
     projectId: string,
     publicationId: string,
+    limit = 1000,
   ): Promise<AnalyticsSnapshotRecord[]> {
+    // Newest-first read capped by `limit`, reversed so callers still see the
+    // ascending series a chart expects. The cap keeps a publication with a
+    // long collection history from shipping its whole history on every view.
     const rows = (await this.orm.AnalyticsSnapshot.where({
       projectId,
       publicationId,
     })
-      .orderBy((row) => row.collectedAt.asc())
+      .orderBy((row) => row.collectedAt.desc())
+      .limit(limit)
       .all()) as unknown as SnapshotRow[];
-    return rows.map(decodeSnapshot);
+    return rows.reverse().map(decodeSnapshot);
   }
 
   async latestSnapshotPoints(
@@ -657,16 +703,55 @@ export class PostgresPublishingRepository implements PublishingRepository {
   ): Promise<AnalyticsSnapshotRecord[]> {
     if (publicationIds.length === 0) return [];
     const wanted = new Set(publicationIds);
-    const rows = (await this.orm.AnalyticsSnapshot.where({ projectId })
-      .orderBy((row) => row.collectedAt.asc())
-      .all()) as unknown as SnapshotRow[];
-    const latest = new Map<string, AnalyticsSnapshotRecord>();
-    for (const row of rows) {
-      if (!wanted.has(row.publicationId)) continue;
-      const record = decodeSnapshot(row);
-      latest.set(`${record.publicationId}:${record.metricKey}`, record);
-    }
-    return [...latest.values()];
+
+    // DISTINCT ON reduces the whole history to the latest reading per metric
+    // inside Postgres; the earlier shape shipped every snapshot of every post
+    // to Node just to pick one row each.
+    const plan = db.raw.sql`
+      SELECT DISTINCT ON ("publicationId", "metricKey")
+        id,
+        "projectId",
+        "publicationId",
+        "providerId",
+        "metricKey",
+        value,
+        unit,
+        definition,
+        "windowStart",
+        "windowEnd",
+        "asOf",
+        "collectedAt",
+        provenance,
+        completeness,
+        "createdAt"
+      FROM "public"."analytics_snapshot"
+      WHERE "projectId" = ${projectId}
+      ORDER BY "publicationId" ASC, "metricKey" ASC, "collectedAt" DESC
+    `
+      .returnsRow({
+        id: "pg/text@1",
+        projectId: "pg/text@1",
+        publicationId: "pg/text@1",
+        providerId: "pg/text@1",
+        metricKey: "pg/text@1",
+        value: "pg/int4@1",
+        unit: "pg/text@1",
+        definition: "pg/text@1",
+        windowStart: "pg/timestamptz-string@1",
+        windowEnd: "pg/timestamptz-string@1",
+        asOf: "pg/timestamptz-string@1",
+        collectedAt: "pg/timestamptz-string@1",
+        provenance: "pg/text@1",
+        completeness: "pg/text@1",
+        createdAt: "pg/timestamptz-string@1",
+      })
+      .build();
+
+    const rows = (await db.runtime().query(plan)) as SnapshotRow[];
+
+    return rows
+      .filter((row) => wanted.has(row.publicationId))
+      .map(decodeSnapshot);
   }
 
   async createRecommendation(

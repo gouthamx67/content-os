@@ -103,12 +103,23 @@ export class AnalyticsService {
     let engagementTotal = 0;
     let lastCollectedAt: string | null = null;
 
+    // One read for every publication's latest-per-metric reading instead of a
+    // full history read per publication inside the loop.
+    const latestPoints = await this.deps.repository.latestSnapshotPoints(
+      projectId,
+      publications.map((publication) => publication.id),
+    );
+    const latestByPublication = new Map<string, AnalyticsSnapshotRecord[]>();
+    for (const snapshot of latestPoints) {
+      const list = latestByPublication.get(snapshot.publicationId) ?? [];
+      list.push(snapshot);
+      latestByPublication.set(snapshot.publicationId, list);
+    }
+
     for (const publication of publications) {
-      const snapshots = await this.deps.repository.listSnapshots(
-        projectId,
-        publication.id,
+      const latest = latestByMetric(
+        latestByPublication.get(publication.id) ?? [],
       );
-      const latest = latestByMetric(snapshots);
       const metrics: AnalyticsMetricView[] = [...latest.values()].map((snapshot) => ({
         snapshotId: snapshot.id,
         metricKey: snapshot.metricKey,

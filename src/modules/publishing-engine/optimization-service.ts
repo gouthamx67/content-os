@@ -74,9 +74,9 @@ export class OptimizationService {
     const samples: MetricsSample[] = [];
     for (const publication of publications) {
       if (!publication.publishedAt) continue;
-      const snapshots = await this.deps.repository.listSnapshots(
+      const snapshots = await this.deps.repository.latestSnapshotPoints(
         projectId,
-        publication.id,
+        [publication.id],
       );
       const latest = latestByMetric(snapshots);
       samples.push({

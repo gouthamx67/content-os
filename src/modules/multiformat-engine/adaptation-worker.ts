@@ -1,4 +1,9 @@
 import type { AdaptSucceededOutput, AdaptationRepository } from "../../core/ports/adaptation-repository";
+import { logEvent, sanitizeError } from "../../lib/observability";
+import {
+  reclaimAbandonedWork,
+  startLeaseRenewal,
+} from "../../lib/worker-lease-runtime";
 import type { RenderJobService } from "../video-rendering/render-job-service";
 import { RenderWorkerHealth } from "../video-rendering/worker-health";
 import { verifyRenderArtifact } from "../video-rendering/artifact/verify-render-artifact";
@@ -155,6 +160,11 @@ export class AdaptationWorker {
 
       result.processed += 1;
       this.health.markJobStarted(job.id);
+      const stopLeaseRenewal = startLeaseRenewal(
+        this.repository,
+        "adaptation",
+        job.id,
+      );
 
       try {
         const outcome = await this.process(job);
@@ -175,6 +185,8 @@ export class AdaptationWorker {
         result.failed += 1;
         await this.fail(job, error);
         this.health.markJobFinished("FAILED");
+      } finally {
+        stopLeaseRenewal();
       }
     }
 
@@ -194,24 +206,31 @@ export class AdaptationWorker {
 
     try {
       while (!signal?.aborted) {
-        this.health.markTick();
+        try {
+          this.health.markTick();
+          await reclaimAbandonedWork(this.repository, "adaptation");
 
-        const result = await this.runOnce(ADAPTATION_WORKER_BATCH_SIZE);
+          const result = await this.runOnce(ADAPTATION_WORKER_BATCH_SIZE);
 
-        if (result.processed === 0) {
-          await this.reconcileWaitingRenders();
-          await this.settleCancelRequested();
+          if (result.processed === 0) {
+            await this.reconcileWaitingRenders();
+            await this.settleCancelRequested();
 
-          if ((await this.sweepAbandonedJobs()) > 0) continue;
+            if ((await this.sweepAbandonedJobs()) > 0) continue;
+          }
+
+          await waitOrAbort(ADAPTATION_WORKER_POLL_MS, signal);
+        } catch (error) {
+          this.health.markError(
+            error instanceof Error ? error.message : String(error),
+          );
+          logEvent("error", "worker.tick_failed", {
+            worker: "adaptation",
+            error: sanitizeError(error),
+          });
+          await waitOrAbort(ADAPTATION_WORKER_POLL_MS, signal);
         }
-
-        await waitOrAbort(ADAPTATION_WORKER_POLL_MS, signal);
       }
-    } catch (error) {
-      this.health.markError(
-        error instanceof Error ? error.message : String(error),
-      );
-      throw error;
     } finally {
       this.health.markStopped();
     }

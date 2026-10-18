@@ -1,3 +1,4 @@
+import { llmFetch, readBoundedJson } from "../../../lib/llm-http";
 import { WritingError } from "../errors";
 import type { WritingCandidate } from "../domain/types";
 import type {
@@ -82,7 +83,7 @@ export function createRemoteLlmProvider(
 
       let response: Response;
       try {
-        response = await fetch(`${config.baseUrl}/chat/completions`, {
+        response = await llmFetch(`${config.baseUrl}/chat/completions`, {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -120,7 +121,18 @@ export function createRemoteLlmProvider(
         );
       }
 
-      const payload = (await response.json()) as ChatCompletionResponse;
+      const payload = (await readBoundedJson(
+        response,
+      )) as ChatCompletionResponse | null;
+
+      if (!payload) {
+        throw new WritingError(
+          "WRITING_GENERATION_FAILED",
+          "Remote provider returned an unreadable response",
+          502,
+        );
+      }
+
       const content = payload.choices?.[0]?.message?.content ?? "";
       const candidates = parseVariants(content, request.variantCount);
 

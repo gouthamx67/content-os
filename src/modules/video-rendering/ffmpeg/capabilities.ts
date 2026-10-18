@@ -43,11 +43,24 @@ export function defaultFontFile(): string | null {
   return FONT_CANDIDATES.find((candidate) => existsSync(candidate)) ?? null;
 }
 
+const CAPABILITY_PROBE_TIMEOUT_MS = 10_000;
+
 function run(command: string, args: string[]): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
+    let settled = false;
+
+    // A hung binary must not hang readiness or a render worker's startup
+    // capability check; the timeout is generous for `-filters` on slow hosts.
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      child.kill("SIGKILL");
+      reject(new Error(`${command} timed out after ${CAPABILITY_PROBE_TIMEOUT_MS}ms`));
+    }, CAPABILITY_PROBE_TIMEOUT_MS);
+    timer.unref?.();
 
     child.stdout.on("data", (chunk: Buffer) => {
       stdout += chunk.toString();
@@ -55,8 +68,18 @@ function run(command: string, args: string[]): Promise<{ stdout: string; stderr:
     child.stderr.on("data", (chunk: Buffer) => {
       stderr += chunk.toString();
     });
-    child.on("error", (error) => reject(error));
-    child.on("close", (code) => resolve({ stdout, stderr, code: code ?? 1 }));
+    child.on("error", (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on("close", (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve({ stdout, stderr, code: code ?? 1 });
+    });
   });
 }
 

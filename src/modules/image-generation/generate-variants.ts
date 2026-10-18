@@ -2,7 +2,9 @@ import type {
   GraphicTemplateType,
   ImageGenerationJobRecord,
 } from "./domain/types";
+import { ImageGenerationError } from "./errors";
 import type { ImageGenerationService } from "./generation-service";
+import { IMAGE_GENERATION_LIMITS } from "./generation-limits";
 import { DEFAULT_IMAGE_VARIANTS, type ImageVariantSpec } from "./variants";
 
 export type ImageVariantServiceDeps = {
@@ -25,6 +27,17 @@ export class ImageVariantService {
     variants?: readonly ImageVariantSpec[];
   }): Promise<ImageGenerationJobRecord[]> {
     const specs = args.variants ?? DEFAULT_IMAGE_VARIANTS;
+
+    // A caller-supplied list is capped before any job is created; the limit is
+    // shared with the single-job validator so both paths agree on the ceiling.
+    if (specs.length > IMAGE_GENERATION_LIMITS.maxVariants) {
+      throw new ImageGenerationError(
+        "IMAGE_VARIANT_LIMIT_EXCEEDED",
+        `At most ${IMAGE_GENERATION_LIMITS.maxVariants} variants can be generated at once`,
+        400,
+      );
+    }
+
     const jobs: ImageGenerationJobRecord[] = [];
 
     for (const spec of specs) {

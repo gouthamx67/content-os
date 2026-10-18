@@ -1,6 +1,6 @@
 import { assetService } from "../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../lib/require-auth";
-import { wrapHttpError } from "../../../../../../lib/http";
+import { HttpError, isSameOrigin, wrapHttpError } from "../../../../../../lib/http";
 
 type AssetRouteContext = {
   params: Promise<{ id: string; assetId: string }>;
@@ -12,6 +12,9 @@ export async function DELETE(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id, assetId } = await context.params;
 

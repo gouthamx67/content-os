@@ -5,6 +5,7 @@ import {
   wrapIntelligenceHttpError,
 } from "../../../../../../lib/intelligence-api";
 import { requireUser } from "../../../../../../lib/require-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../lib/rate-limit";
 
 export const maxDuration = 300;
 
@@ -18,6 +19,11 @@ export async function POST(request: Request, context: AnalyzeRouteContext) {
       throw new HttpError(403, "Cross-origin requests are not allowed");
     }
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.aiGeneration,
+      user.id,
+    );
+    if (limited) return limited;
     const { id } = await context.params;
     const body = (await parseJsonBody(request)) ?? {};
     const sourceIds = parseSourceIds(body);

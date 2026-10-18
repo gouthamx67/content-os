@@ -3,6 +3,8 @@ import {
   createAdaptationWorker,
   adaptationWorkerHealth,
 } from "../infrastructure/container";
+import { logEvent, sanitizeError } from "../lib/observability";
+import { runWorkerProcess } from "../infrastructure/worker-runtime";
 
 /**
  * Standalone CP19 multi-format adaptation worker.
@@ -14,29 +16,15 @@ import {
  * Video variants are parked on CP15 rather than encoded here: this worker hands
  * CP15 a re-framed scene and reconciles the render when it lands.
  */
-async function main(): Promise<void> {
-  const worker = createAdaptationWorker();
-  const controller = new AbortController();
-
-  const shutdown = (signal: string) => {
-    if (controller.signal.aborted) return;
-    console.log(`[multiformat-worker] ${signal} received, draining`);
-    controller.abort();
-  };
-
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-
-  console.log("[multiformat-worker] started");
-  await worker.run(controller.signal);
-
-  const health = adaptationWorkerHealth.snapshot();
-  console.log(
-    `[multiformat-worker] stopped (processed=${health.processed} succeeded=${health.succeeded} failed=${health.failed} cancelled=${health.cancelled})`,
-  );
-}
-
-main().catch((error: unknown) => {
-  console.error("[multiformat-worker] crashed", error);
+runWorkerProcess({
+  name: "multiformat-worker",
+  kind: "adaptation",
+  health: adaptationWorkerHealth,
+  run: (signal) => createAdaptationWorker().run(signal),
+}).catch((error: unknown) => {
+  logEvent("error", "worker.crashed", {
+    worker: "multiformat-worker",
+    error: sanitizeError(error),
+  });
   process.exitCode = 1;
 });

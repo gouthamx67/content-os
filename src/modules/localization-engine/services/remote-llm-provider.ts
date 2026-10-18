@@ -1,3 +1,4 @@
+import { llmFetch, readBoundedJson } from "../../../lib/llm-http";
 import { LocalizationError } from "../errors";
 import { parseProviderOutput } from "../domain/schema";
 import type {
@@ -152,7 +153,7 @@ export function createRemoteLlmLocalizationProvider(
 
       let response: Response;
       try {
-        response = await fetch(`${config.baseUrl}/chat/completions`, {
+        response = await llmFetch(`${config.baseUrl}/chat/completions`, {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -190,9 +191,9 @@ export function createRemoteLlmLocalizationProvider(
         );
       }
 
-      const payload = (await response
-        .json()
-        .catch(() => null)) as ChatCompletionResponse | null;
+      const payload = (await readBoundedJson(
+        response,
+      )) as ChatCompletionResponse | null;
       const content = payload?.choices?.[0]?.message?.content ?? "";
 
       return {

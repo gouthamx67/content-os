@@ -1,5 +1,7 @@
 import { campaignService } from "../../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../../lib/require-auth";
+import { isSameOrigin, HttpError } from "../../../../../../../lib/http";
+
 import { campaignErrorResponse } from "../../../../../../../lib/campaign-http";
 
 type RouteContext = {
@@ -9,6 +11,9 @@ type RouteContext = {
 export async function POST(request: Request, context: RouteContext) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
     const { id, campaignId } = await context.params;
 
     const readiness = await campaignService.readiness(user.id, id, campaignId);

@@ -1,6 +1,7 @@
 import { captureService } from "../../../../../../../../infrastructure/services";
 import { HttpError, isSameOrigin } from "../../../../../../../../lib/http";
 import { requireUser } from "../../../../../../../../lib/require-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../../../lib/rate-limit";
 import { MAX_CAPTURE_BYTES } from "../../../../../../../../modules/capture-engine/capture-validation";
 import { isCaptureMode } from "../../../../../../../../modules/capture-engine/capture-types";
 import { captureErrorResponse as captureError } from "../../../../../../../../lib/capture-http";
@@ -27,6 +28,11 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.captureUpload,
+      user.id,
+    );
+    if (limited) return limited;
     const { id, sessionId } = await context.params;
 
     const declaredLength = Number(request.headers.get("content-length") ?? "");

@@ -221,6 +221,17 @@ export interface PublishingRepository {
   claimNextDue(nowIso: string): Promise<PublicationRecord | null>;
   /** Atomically claims an AMBIGUOUS publication older than the cooldown. */
   claimNextAmbiguous(coolDownBeforeIso: string): Promise<PublicationRecord | null>;
+
+  /** Extends the dispatch lease while a PUBLISHING row is still owned. */
+  renewPublishingLease(publicationId: string, nowIso: string): Promise<boolean>;
+
+  /**
+   * Reclaims PUBLISHING rows whose worker stopped before recording an
+   * outcome. They become AMBIGUOUS, never requeued: whether an external post
+   * exists is unknown, and reconciliation must decide by replaying the same
+   * idempotency key.
+   */
+  reclaimStalePublishing(nowIso: string): Promise<number>;
   /** Atomically claims a pending analytics refresh, stamping the claim time. */
   claimNextAnalytics(
     nowIso: string,
@@ -228,16 +239,20 @@ export interface PublishingRepository {
   ): Promise<PublicationRecord | null>;
 
   recordAttempt(input: CreateAttemptInput): Promise<PublishAttemptRecord>;
+  /** Ascending by attempt number, capped so a poisoned post cannot flood a read. */
   listAttempts(
     projectId: string,
     publicationId: string,
+    limit?: number,
   ): Promise<PublishAttemptRecord[]>;
 
   /** Inserts readings, skipping ones already stored for the same instant. */
   createSnapshots(inputs: readonly CreateSnapshotInput[]): Promise<number>;
+  /** Ascending series, newest `limit` readings kept when the history is long. */
   listSnapshots(
     projectId: string,
     publicationId: string,
+    limit?: number,
   ): Promise<AnalyticsSnapshotRecord[]>;
   /** Latest reading per (publicationId, metricKey) across the given posts. */
   latestSnapshotPoints(

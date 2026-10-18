@@ -7,6 +7,7 @@ import {
 } from "../../../../../../lib/recommendation-api";
 
 import { requireUser } from "../../../../../../lib/require-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../lib/rate-limit";
 import { HttpError, isSameOrigin } from "../../../../../../lib/http";
 
 type RecommendationRouteContext = {
@@ -28,6 +29,11 @@ export async function POST(request: Request, context: RecommendationRouteContext
     }
 
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.aiGeneration,
+      user.id,
+    );
+    if (limited) return limited;
     const { id } = await context.params;
 
     const text = await request.text();

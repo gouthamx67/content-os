@@ -2,6 +2,7 @@ import { captureService } from "../../../../../../infrastructure/services";
 import { captureErrorResponse as captureError } from "../../../../../../lib/capture-http";
 import { HttpError, isSameOrigin } from "../../../../../../lib/http";
 import { requireUser } from "../../../../../../lib/require-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../lib/rate-limit";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -21,6 +22,11 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.captureUpload,
+      user.id,
+    );
+    if (limited) return limited;
     const { id } = await context.params;
 
     const text = await request.text();

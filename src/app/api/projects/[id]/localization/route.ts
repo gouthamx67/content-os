@@ -1,5 +1,6 @@
 import { localizationService } from "../../../../../infrastructure/services";
 import { requireUser } from "../../../../../lib/require-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../lib/rate-limit";
 import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../lib/http";
 import {
   localizationErrorResponse,
@@ -26,6 +27,11 @@ const STRATEGIES: readonly LocalizationStrategy[] = ["TRANSLATE", "TRANSCREATE"]
 export async function GET(request: Request, context: RouteContext) {
   try {
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.localizationProcess,
+      user.id,
+    );
+    if (limited) return limited;
     const { id } = await context.params;
 
     const jobs = await localizationService.listJobs(user.id, id);

@@ -1,10 +1,7 @@
 import { assetService, projectService, sourceService } from "../../../../infrastructure/services";
 import { requireUser } from "../../../../lib/require-auth";
 import { serializeSource } from "../../../../lib/input-api";
-import {
-  parseJsonBody,
-  wrapHttpError,
-} from "../../../../lib/http";
+import { HttpError, isSameOrigin, parseJsonBody, wrapHttpError } from "../../../../lib/http";
 
 type RouteContext = {
   params: Promise<{
@@ -18,6 +15,9 @@ export async function GET(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id } = await context.params;
 
@@ -45,6 +45,9 @@ export async function PATCH(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id } = await context.params;
 

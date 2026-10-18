@@ -1765,6 +1765,10 @@ model RenderJob {
   createdAt       TimestamptzString  @default(now())
   startedAt       TimestamptzString?
   finishedAt      TimestamptzString?
+  // CP24: while a worker owns this job it renews this deadline; a RUNNING row
+  // whose lease has expired is reclaimed by the next worker instead of
+  // remaining stuck forever after a crash.
+  leaseExpiresAt  TimestamptzString?
   updatedAt       temporal.updatedAtString()
 
   composition     VisualComposition  @relation(fields: [compositionId], references: [id], onDelete: Cascade)
@@ -1773,6 +1777,8 @@ model RenderJob {
   @@index([projectId, createdAt], map: "render_job_project_created_idx")
   @@index([projectId, status, createdAt], map: "render_job_project_status_created_idx")
   @@index([compositionId, createdAt], map: "render_job_composition_created_idx")
+  @@index([status, createdAt], map: "render_job_status_created_idx")
+  @@index([status, leaseExpiresAt], map: "render_job_status_lease_idx")
   @@map("render_job")
 }
 
@@ -1937,6 +1943,7 @@ model AudioRenderJob {
   createdAt          TimestamptzString @default(now())
   startedAt          TimestamptzString?
   finishedAt         TimestamptzString?
+  leaseExpiresAt     TimestamptzString?
   updatedAt          temporal.updatedAtString()
 
   audioComposition   AudioComposition  @relation(fields: [audioCompositionId], references: [id], onDelete: Cascade)
@@ -1946,6 +1953,8 @@ model AudioRenderJob {
   @@index([projectId, createdAt], map: "audio_render_job_project_created_idx")
   @@index([projectId, status, createdAt], map: "audio_render_job_project_status_created_idx")
   @@index([audioCompositionId, createdAt], map: "audio_render_job_composition_created_idx")
+  @@index([status, createdAt], map: "audio_render_job_status_created_idx")
+  @@index([status, leaseExpiresAt], map: "audio_render_job_status_lease_idx")
   @@map("audio_render_job")
 }
 
@@ -2079,6 +2088,7 @@ model ImageGenerationJob {
   createdAt         TimestamptzString       @default(now())
   startedAt         TimestamptzString?
   finishedAt        TimestamptzString?
+  leaseExpiresAt    TimestamptzString?
   updatedAt         temporal.updatedAtString()
 
   project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -2088,6 +2098,8 @@ model ImageGenerationJob {
   @@index([projectId, createdAt], map: "image_generation_job_project_created_idx")
   @@index([projectId, status, createdAt], map: "image_generation_job_project_status_created_idx")
   @@index([graphicDocumentId, createdAt], map: "image_generation_job_document_created_idx")
+  @@index([status, createdAt], map: "image_generation_job_status_created_idx")
+  @@index([status, leaseExpiresAt], map: "image_generation_job_status_lease_idx")
   @@map("image_generation_job")
 }
 
@@ -2275,6 +2287,7 @@ model WritingGenerationJob {
   createdAt         TimestamptzString @default(now())
   startedAt         TimestamptzString?
   finishedAt        TimestamptzString?
+  leaseExpiresAt    TimestamptzString?
   updatedAt         temporal.updatedAtString()
 
   project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -2283,6 +2296,8 @@ model WritingGenerationJob {
   @@index([projectId, createdAt], map: "writing_generation_job_project_created_idx")
   @@index([projectId, status, createdAt], map: "writing_generation_job_project_status_created_idx")
   @@index([documentId, createdAt], map: "writing_generation_job_document_created_idx")
+  @@index([status, createdAt], map: "writing_generation_job_status_created_idx")
+  @@index([status, leaseExpiresAt], map: "writing_generation_job_status_lease_idx")
   @@map("writing_generation_job")
 }
 
@@ -2420,6 +2435,7 @@ model AdaptationJob {
   createdAt             TimestamptzString  @default(now())
   startedAt             TimestamptzString?
   finishedAt            TimestamptzString?
+  leaseExpiresAt        TimestamptzString?
   updatedAt             temporal.updatedAtString()
 
   batch                 AdaptationBatch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
@@ -2430,6 +2446,8 @@ model AdaptationJob {
   @@index([batchId, status], map: "adaptation_job_batch_status_idx")
   @@index([projectId, status, createdAt], map: "adaptation_job_project_status_created_idx")
   @@index([renderJobId], map: "adaptation_job_render_idx")
+  @@index([status, createdAt], map: "adaptation_job_status_created_idx")
+  @@index([status, leaseExpiresAt], map: "adaptation_job_status_lease_idx")
   @@map("adaptation_job")
 }
 
@@ -2972,6 +2990,10 @@ model Publication {
   analyticsErrorMessage     String?
   recommendationId          String?
   originPublicationId       String?
+  // CP24: the dispatch lease. A PUBLISHING row whose lease expires without a
+  // recorded outcome is reclaimed to AMBIGUOUS, never silently requeued, so
+  // reconciliation still decides whether an external post exists.
+  leaseExpiresAt            TimestamptzString?
   createdAt                 TimestamptzString   @default(now())
   updatedAt                 temporal.updatedAtString()
 
@@ -2986,6 +3008,7 @@ model Publication {
   @@index([status, scheduledFor], map: "publication_status_scheduled_idx")
   @@index([projectId, sourceType, sourceId], map: "publication_project_source_idx")
   @@index([analyticsRequestedAt], map: "publication_analytics_requested_idx")
+  @@index([status, leaseExpiresAt], map: "publication_status_lease_idx")
   @@map("publication")
 }
 
@@ -3117,4 +3140,43 @@ model OptimizationRecommendation {
   @@unique([projectId, dedupeKey], map: "optimization_recommendation_dedupe")
   @@index([projectId, status], map: "optimization_recommendation_project_status_idx")
   @@map("optimization_recommendation")
+}
+
+// ---------------------------------------------------------------------------
+// CP24 — Production hardening
+// ---------------------------------------------------------------------------
+
+/// One row per rate-limit request. Enforcement counts committed rows inside
+/// the fixed window: the row is written before the decision, so rejected
+/// attempts also consume the window and hammering cannot outrun the limiter.
+/// Old rows are removed by the cleanup runbook.
+model RateLimitEvent {
+  id         String            @id @default(cuid(2))
+  bucketKey  String
+  createdAt  TimestamptzString @default(now())
+
+  @@index([bucketKey, createdAt], map: "rate_limit_event_bucket_created_idx")
+  @@index([createdAt], map: "rate_limit_event_created_idx")
+  @@map("rate_limit_event")
+}
+
+/// A worker process writes its own liveness heartbeat here. The web process
+/// runs in a different OS process, so this table is the only honest way for
+/// /api/health to tell a live worker from a dead one.
+model WorkerHeartbeat {
+  workerId   String            @id
+  kind       String
+  status     String
+  startedAt  TimestamptzString
+  lastTickAt TimestamptzString
+  processed  Int               @default(0)
+  succeeded  Int               @default(0)
+  failed     Int               @default(0)
+  cancelled  Int               @default(0)
+  lastEvent  String?
+  updatedAt  temporal.updatedAtString()
+
+  @@index([kind], map: "worker_heartbeat_kind_idx")
+  @@index([lastTickAt], map: "worker_heartbeat_last_tick_idx")
+  @@map("worker_heartbeat")
 }

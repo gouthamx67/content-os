@@ -1,4 +1,9 @@
 import { createId } from "../../lib/id";
+import { logEvent, sanitizeError } from "../../lib/observability";
+import {
+  reclaimAbandonedWork,
+  startLeaseRenewal,
+} from "../../lib/worker-lease-runtime";
 import type { ImageGenerationRepository } from "../../core/ports/image-generation-repository";
 import { RenderWorkerHealth } from "../video-rendering/worker-health";
 import { sanitizeMessage } from "../video-rendering/render-worker";
@@ -67,6 +72,7 @@ export class ImageGenerationWorker {
 
   async tick(): Promise<boolean> {
     this.health.markTick();
+    await reclaimAbandonedWork(this.repository, "image");
     await this.finalizeOrphanedCancellations();
 
     const job = await this.repository.claimNext();
@@ -81,8 +87,19 @@ export class ImageGenerationWorker {
 
     try {
       while (!signal?.aborted) {
-        const worked = await this.tick();
-        if (!worked) await this.sleep(this.pollIntervalMs, signal);
+        try {
+          const worked = await this.tick();
+          if (!worked) await this.sleep(this.pollIntervalMs, signal);
+        } catch (error) {
+          this.health.markError(
+            error instanceof Error ? error.message : "Worker tick failed",
+          );
+          logEvent("error", "worker.tick_failed", {
+            worker: "image",
+            error: sanitizeError(error),
+          });
+          await this.sleep(this.pollIntervalMs, signal);
+        }
       }
     } finally {
       this.health.markStopped();
@@ -99,6 +116,8 @@ export class ImageGenerationWorker {
       void this.checkCancelled(job, controller);
     }, this.cancelPollIntervalMs);
     cancelTimer.unref?.();
+
+    const stopLeaseRenewal = startLeaseRenewal(this.repository, "image", job.id);
 
     try {
       const recipe = parseGenerationRecipe(job.generationRecipe);
@@ -207,6 +226,7 @@ export class ImageGenerationWorker {
       }
     } finally {
       clearInterval(cancelTimer);
+      stopLeaseRenewal();
     }
   }
 

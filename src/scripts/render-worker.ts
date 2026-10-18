@@ -1,5 +1,10 @@
 import "dotenv/config";
-import { createRenderWorker, renderWorkerHealth } from "../infrastructure/container";
+import {
+  createRenderWorker,
+  renderWorkerHealth,
+} from "../infrastructure/container";
+import { logEvent, sanitizeError } from "../lib/observability";
+import { runWorkerProcess } from "../infrastructure/worker-runtime";
 
 /**
  * Standalone render worker.
@@ -9,29 +14,15 @@ import { createRenderWorker, renderWorkerHealth } from "../infrastructure/contai
  * what lets the web app enqueue and this process consume without a message
  * broker between them.
  */
-async function main(): Promise<void> {
-  const worker = createRenderWorker();
-  const controller = new AbortController();
-
-  const shutdown = (signal: string) => {
-    if (controller.signal.aborted) return;
-    console.log(`[render-worker] ${signal} received, draining`);
-    controller.abort();
-  };
-
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-
-  console.log("[render-worker] started");
-  await worker.run(controller.signal);
-
-  const health = renderWorkerHealth.snapshot();
-  console.log(
-    `[render-worker] stopped (processed=${health.processed} succeeded=${health.succeeded} failed=${health.failed} cancelled=${health.cancelled})`,
-  );
-}
-
-main().catch((error: unknown) => {
-  console.error("[render-worker] crashed", error);
+runWorkerProcess({
+  name: "render-worker",
+  kind: "render",
+  health: renderWorkerHealth,
+  run: (signal) => createRenderWorker().run(signal),
+}).catch((error: unknown) => {
+  logEvent("error", "worker.crashed", {
+    worker: "render-worker",
+    error: sanitizeError(error),
+  });
   process.exitCode = 1;
 });

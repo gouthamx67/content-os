@@ -2,6 +2,11 @@ import type { PublicOrm } from "../../prisma/db";
 import { db } from "../../prisma/db";
 import type { Models } from "../../prisma/contract.d";
 import { pgTimestampToIso } from "../../lib/time";
+import {
+  WORKER_LEASE_EXPIRED_CODE,
+  WORKER_LEASE_EXPIRED_MESSAGE,
+  workerLeaseExpiry,
+} from "../../lib/worker-lease";
 import type {
   CreateRenderArtifactInput,
   CreateRenderJobInput,
@@ -127,7 +132,13 @@ export class PostgresRenderJobRepository implements RenderJobRepository {
       if (!candidate) return;
 
       const plan = tx.sql.public.render_job
-        .update({ status: "RUNNING", progressPct: 0, startedAt: now, updatedAt: now })
+        .update({
+          status: "RUNNING",
+          progressPct: 0,
+          startedAt: now,
+          updatedAt: now,
+          leaseExpiresAt: workerLeaseExpiry(now),
+        })
         .where((f, fns) => fns.eq(f.id, candidate.id))
         .where((f, fns) => fns.eq(f.status, "QUEUED"))
         .returning("id")
@@ -149,6 +160,7 @@ export class PostgresRenderJobRepository implements RenderJobRepository {
     await this.orm.RenderJob.where({ id: renderJobId }).update({
       progressPct: Math.max(0, Math.min(100, Math.round(progressPct))),
       updatedAt,
+      leaseExpiresAt: workerLeaseExpiry(updatedAt),
     });
   }
 
@@ -163,22 +175,52 @@ export class PostgresRenderJobRepository implements RenderJobRepository {
       ffmpegVersion: input.ffmpegVersion,
       startedAt: input.startedAt,
       updatedAt: input.updatedAt,
+      leaseExpiresAt: workerLeaseExpiry(input.updatedAt),
     });
   }
 
+  async renewLease(renderJobId: string, nowIso: string): Promise<boolean> {
+    const plan = db.sql.public.render_job
+      .update({ leaseExpiresAt: workerLeaseExpiry(nowIso) })
+      .where((f, fns) => fns.eq(f.id, renderJobId))
+      .where((f, fns) => fns.eq(f.status, "RUNNING"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
+  }
+
+  /**
+   * Terminal writes are guarded: a row that is already finished is never
+   * overwritten, and finishing clears the lease so a later sweep cannot
+   * mistake it for abandoned work. Returns false when another finalizer won
+   * the race (for example a cancel that landed first).
+   */
   async markSucceeded(input: {
     renderJobId: string;
     ffmpegVersion: string | null;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
-    await this.orm.RenderJob.where({ id: input.renderJobId }).update({
-      status: "SUCCEEDED",
-      progressPct: 100,
-      ffmpegVersion: input.ffmpegVersion,
-      finishedAt: input.finishedAt,
-      updatedAt: input.updatedAt,
-    });
+  }): Promise<boolean> {
+    const plan = db.sql.public.render_job
+      .update({
+        status: "SUCCEEDED",
+        progressPct: 100,
+        ffmpegVersion: input.ffmpegVersion,
+        finishedAt: input.finishedAt,
+        updatedAt: input.updatedAt,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.renderJobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
   }
 
   async markFailed(input: {
@@ -187,26 +229,91 @@ export class PostgresRenderJobRepository implements RenderJobRepository {
     errorMessage: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
-    await this.orm.RenderJob.where({ id: input.renderJobId }).update({
-      status: "FAILED",
-      errorCode: input.errorCode,
-      errorMessage: input.errorMessage,
-      finishedAt: input.finishedAt,
-      updatedAt: input.updatedAt,
-    });
+  }): Promise<boolean> {
+    const plan = db.sql.public.render_job
+      .update({
+        status: "FAILED",
+        errorCode: input.errorCode,
+        errorMessage: input.errorMessage,
+        finishedAt: input.finishedAt,
+        updatedAt: input.updatedAt,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.renderJobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
   }
 
   async markCancelled(input: {
     renderJobId: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
-    await this.orm.RenderJob.where({ id: input.renderJobId }).update({
-      status: "CANCELLED",
-      finishedAt: input.finishedAt,
-      updatedAt: input.updatedAt,
-    });
+  }): Promise<boolean> {
+    const plan = db.sql.public.render_job
+      .update({
+        status: "CANCELLED",
+        finishedAt: input.finishedAt,
+        updatedAt: input.updatedAt,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.renderJobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
+  }
+
+  /**
+   * Finalizes cancels and requeues runs abandoned by a dead worker.
+   *
+   * CANCEL_REQUESTED rows whose owner vanished are finished as CANCELLED;
+   * RUNNING rows whose lease expired are put back on the queue with an
+   * explicit error code so the retry is visible rather than silent.
+   */
+  async reclaimExpiredLeases(nowIso: string): Promise<{
+    cancelled: number;
+    requeued: number;
+  }> {
+    const cancelPlan = db.sql.public.render_job
+      .update({
+        status: "CANCELLED",
+        finishedAt: nowIso,
+        updatedAt: nowIso,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.status, "CANCEL_REQUESTED"))
+      .where((f, fns) => fns.lt(f.leaseExpiresAt, nowIso))
+      .returning("id")
+      .build();
+
+    const requeuePlan = db.sql.public.render_job
+      .update({
+        status: "QUEUED",
+        progressPct: 0,
+        startedAt: null,
+        errorCode: WORKER_LEASE_EXPIRED_CODE,
+        errorMessage: WORKER_LEASE_EXPIRED_MESSAGE,
+        updatedAt: nowIso,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.status, "RUNNING"))
+      .where((f, fns) => fns.lt(f.leaseExpiresAt, nowIso))
+      .returning("id")
+      .build();
+
+    const cancelled = await db.runtime().query(cancelPlan);
+    const requeued = await db.runtime().query(requeuePlan);
+    return { cancelled: cancelled.length, requeued: requeued.length };
   }
 
   async requestCancel(projectId: string, renderJobId: string): Promise<boolean> {
@@ -219,7 +326,12 @@ export class PostgresRenderJobRepository implements RenderJobRepository {
     const builder =
       job.status === "QUEUED"
         ? update
-            .update({ status: "CANCELLED", finishedAt: now, updatedAt: now })
+            .update({
+              status: "CANCELLED",
+              finishedAt: now,
+              updatedAt: now,
+              leaseExpiresAt: null,
+            })
             .where((f, fns) => fns.eq(f.id, renderJobId))
             .where((f, fns) => fns.eq(f.status, "QUEUED"))
         : update

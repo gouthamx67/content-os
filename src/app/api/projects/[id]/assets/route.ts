@@ -1,10 +1,6 @@
 import { assetService } from "../../../../../infrastructure/services";
 import { requireUser } from "../../../../../lib/require-auth";
-import {
-  HttpError,
-  parseJsonBody,
-  wrapHttpError,
-} from "../../../../../lib/http";
+import { HttpError, isSameOrigin, parseJsonBody, wrapHttpError } from "../../../../../lib/http";
 import { isAssetType } from "../../../../../lib/enums";
 import { normalizeMetadata } from "../../../../../lib/metadata";
 
@@ -18,6 +14,9 @@ export async function GET(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id } = await context.params;
 
@@ -35,6 +34,9 @@ export async function POST(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id } = await context.params;
 

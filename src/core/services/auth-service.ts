@@ -25,6 +25,14 @@ export const SESSION_LIFETIME_SECONDS =
 
 export const MIN_PASSWORD_LENGTH = 8;
 
+let cachedDummyHash: Promise<string> | null = null;
+
+/** One scrypt hash shared by every unknown-email login in this process. */
+function dummyPasswordHash(): Promise<string> {
+  cachedDummyHash ??= hashPassword("content-os-timing-equalizer");
+  return cachedDummyHash;
+}
+
 export type RegisterInput = {
   email: string;
   password: string;
@@ -164,6 +172,10 @@ export class AuthService {
     const user = await this.users.findByEmail(email);
 
     if (!user) {
+      // Run the same scrypt work as a real verification so the response time
+      // for an unknown email matches the time for a wrong password and does
+      // not reveal which emails exist.
+      await verifyPassword(input.password ?? "", await dummyPasswordHash());
       throw new HttpError(401, "Invalid email or password");
     }
 

@@ -1,6 +1,6 @@
 import { writingGenerationService } from "../../../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../../../lib/require-auth";
-import { HttpError, isSameOrigin } from "../../../../../../../../lib/http";
+import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../../../../lib/http";
 import {
   writingErrorResponse,
   writingVariantView,
@@ -20,10 +20,7 @@ export async function POST(request: Request, context: RouteContext) {
     const { user } = await requireUser(request);
     const { id, documentId } = await context.params;
 
-    const body = (await request.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
+    const body = (await parseJsonBody(request)) ?? {};
 
     const variant = await writingGenerationService.selectVariant({
       projectId: id,

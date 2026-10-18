@@ -3,7 +3,8 @@ import {
   audioRenderJobService,
 } from "../../../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../../../lib/require-auth";
-import { HttpError, isSameOrigin } from "../../../../../../../../lib/http";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../../../lib/rate-limit";
+import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../../../../lib/http";
 import {
   audioErrorResponse,
   audioRenderJobView,
@@ -27,6 +28,11 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.renderDispatch,
+      user.id,
+    );
+    if (limited) return limited;
     const { id, compositionId } = await context.params;
 
     const composition = await audioCompositionService.getByVisual(
@@ -35,10 +41,7 @@ export async function POST(request: Request, context: RouteContext) {
       user.id,
     );
 
-    const body = (await request.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
+    const body = (await parseJsonBody(request)) ?? {};
 
     const videoRenderJobId =
       typeof body["videoRenderJobId"] === "string"

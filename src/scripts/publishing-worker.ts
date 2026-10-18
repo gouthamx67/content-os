@@ -3,6 +3,8 @@ import {
   createPublishingWorker,
   publishingWorkerHealth,
 } from "../infrastructure/container";
+import { logEvent, sanitizeError } from "../lib/observability";
+import { runWorkerProcess } from "../infrastructure/worker-runtime";
 
 /**
  * Standalone CP23 publishing worker.
@@ -12,29 +14,15 @@ import {
  * The worker tolerates an unconfigured provider registry: it then reports
  * provider-unavailable states honestly rather than pretending to publish.
  */
-async function main(): Promise<void> {
-  const worker = createPublishingWorker();
-  const controller = new AbortController();
-
-  const shutdown = (signal: string) => {
-    if (controller.signal.aborted) return;
-    console.log(`[publishing-worker] ${signal} received, draining`);
-    controller.abort();
-  };
-
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-
-  console.log("[publishing-worker] started");
-  await worker.run(controller.signal);
-
-  const health = publishingWorkerHealth.snapshot();
-  console.log(
-    `[publishing-worker] stopped (processed=${health.processed} succeeded=${health.succeeded} failed=${health.failed})`,
-  );
-}
-
-main().catch((error: unknown) => {
-  console.error("[publishing-worker] crashed", error);
+runWorkerProcess({
+  name: "publishing-worker",
+  kind: "publishing",
+  health: publishingWorkerHealth,
+  run: (signal) => createPublishingWorker().run(signal),
+}).catch((error: unknown) => {
+  logEvent("error", "worker.crashed", {
+    worker: "publishing-worker",
+    error: sanitizeError(error),
+  });
   process.exitCode = 1;
 });

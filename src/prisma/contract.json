@@ -244,6 +244,10 @@
       "model": "PublishingConnection",
       "namespace": "public"
     },
+    "rate_limit_event": {
+      "model": "RateLimitEvent",
+      "namespace": "public"
+    },
     "render_artifact": {
       "model": "RenderArtifact",
       "namespace": "public"
@@ -286,6 +290,10 @@
     },
     "visual_layer": {
       "model": "VisualLayer",
+      "namespace": "public"
+    },
+    "worker_heartbeat": {
+      "model": "WorkerHeartbeat",
       "namespace": "public"
     },
     "workspace": {
@@ -2922,6 +2930,13 @@
                   "plane": "domain"
                 }
               },
+              "leaseExpiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "outputByteSize": {
                 "nullable": true,
                 "type": {
@@ -3107,6 +3122,9 @@
                 },
                 "kind": {
                   "column": "kind"
+                },
+                "leaseExpiresAt": {
+                  "column": "leaseExpiresAt"
                 },
                 "outputByteSize": {
                   "column": "outputByteSize"
@@ -3965,6 +3983,13 @@
                   "kind": "scalar"
                 }
               },
+              "leaseExpiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "outputFormat": {
                 "nullable": false,
                 "type": {
@@ -4128,6 +4153,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "leaseExpiresAt": {
+                  "column": "leaseExpiresAt"
                 },
                 "outputFormat": {
                   "column": "outputFormat"
@@ -9790,6 +9818,13 @@
                   "kind": "scalar"
                 }
               },
+              "leaseExpiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "outputFormat": {
                 "nullable": false,
                 "type": {
@@ -9988,6 +10023,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "leaseExpiresAt": {
+                  "column": "leaseExpiresAt"
                 },
                 "outputFormat": {
                   "column": "outputFormat"
@@ -14705,6 +14743,13 @@
                   "kind": "scalar"
                 }
               },
+              "leaseExpiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "originPublicationId": {
                 "nullable": true,
                 "type": {
@@ -14952,6 +14997,9 @@
                 },
                 "lastErrorRetryable": {
                   "column": "lastErrorRetryable"
+                },
+                "leaseExpiresAt": {
+                  "column": "leaseExpiresAt"
                 },
                 "originPublicationId": {
                   "column": "originPublicationId"
@@ -15405,6 +15453,47 @@
               "table": "publishing_connection"
             }
           },
+          "RateLimitEvent": {
+            "fields": {
+              "bucketKey": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "bucketKey": {
+                  "column": "bucketKey"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                }
+              },
+              "namespaceId": "public",
+              "table": "rate_limit_event"
+            }
+          },
           "RenderArtifact": {
             "fields": {
               "byteSize": {
@@ -15592,6 +15681,13 @@
                   "kind": "scalar"
                 }
               },
+              "leaseExpiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "outputFormat": {
                 "nullable": false,
                 "type": {
@@ -15743,6 +15839,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "leaseExpiresAt": {
+                  "column": "leaseExpiresAt"
                 },
                 "outputFormat": {
                   "column": "outputFormat"
@@ -17419,6 +17518,127 @@
               "table": "visual_layer"
             }
           },
+          "WorkerHeartbeat": {
+            "fields": {
+              "cancelled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "failed": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "kind": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "lastEvent": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "lastTickAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "processed": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "succeeded": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "workerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "cancelled": {
+                  "column": "cancelled"
+                },
+                "failed": {
+                  "column": "failed"
+                },
+                "kind": {
+                  "column": "kind"
+                },
+                "lastEvent": {
+                  "column": "lastEvent"
+                },
+                "lastTickAt": {
+                  "column": "lastTickAt"
+                },
+                "processed": {
+                  "column": "processed"
+                },
+                "startedAt": {
+                  "column": "startedAt"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "succeeded": {
+                  "column": "succeeded"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "workerId": {
+                  "column": "workerId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "worker_heartbeat"
+            }
+          },
           "Workspace": {
             "fields": {
               "createdAt": {
@@ -18181,6 +18401,13 @@
                   "kind": "scalar"
                 }
               },
+              "leaseExpiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "length": {
                 "nullable": false,
                 "type": {
@@ -18389,6 +18616,9 @@
                 },
                 "language": {
                   "column": "language"
+                },
+                "leaseExpiresAt": {
+                  "column": "leaseExpiresAt"
                 },
                 "length": {
                   "column": "length"
@@ -18816,6 +19046,11 @@
                     "plane": "storage"
                   }
                 },
+                "leaseExpiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "outputByteSize": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
@@ -18999,6 +19234,22 @@
                     "renderJobId"
                   ],
                   "name": "adaptation_job_render_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "adaptation_job_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "leaseExpiresAt"
+                  ],
+                  "name": "adaptation_job_status_lease_idx",
                   "unique": false
                 }
               ],
@@ -19711,6 +19962,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "leaseExpiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "outputFormat": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -19828,6 +20084,22 @@
                     "createdAt"
                   ],
                   "name": "audio_render_job_project_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "audio_render_job_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "leaseExpiresAt"
+                  ],
+                  "name": "audio_render_job_status_lease_idx",
                   "unique": false
                 }
               ],
@@ -24703,6 +24975,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "leaseExpiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "outputFormat": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -24885,6 +25162,22 @@
                     "createdAt"
                   ],
                   "name": "image_generation_job_project_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "image_generation_job_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "leaseExpiresAt"
+                  ],
+                  "name": "image_generation_job_status_lease_idx",
                   "unique": false
                 }
               ],
@@ -28772,6 +29065,11 @@
                   "nativeType": "bool",
                   "nullable": true
                 },
+                "leaseExpiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "originPublicationId": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -28960,6 +29258,14 @@
                     "createdAt"
                   ],
                   "name": "publication_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "leaseExpiresAt"
+                  ],
+                  "name": "publication_status_lease_idx",
                   "unique": false
                 },
                 {
@@ -29308,6 +29614,53 @@
                 }
               ]
             },
+            "rate_limit_event": {
+              "columns": {
+                "bucketKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "bucketKey",
+                    "createdAt"
+                  ],
+                  "name": "rate_limit_event_bucket_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "createdAt"
+                  ],
+                  "name": "rate_limit_event_created_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "render_artifact": {
               "columns": {
                 "byteSize": {
@@ -29470,6 +29823,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "leaseExpiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "outputFormat": {
                   "codecId": "pg/text@1",
                   "default": {
@@ -29596,6 +29954,22 @@
                     "createdAt"
                   ],
                   "name": "render_job_project_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "render_job_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "leaseExpiresAt"
+                  ],
+                  "name": "render_job_status_lease_idx",
                   "unique": false
                 }
               ],
@@ -30854,6 +31228,104 @@
               },
               "uniques": []
             },
+            "worker_heartbeat": {
+              "columns": {
+                "cancelled": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "failed": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "kind": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "lastEvent": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "lastTickAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "processed": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "succeeded": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 0
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "workerId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "kind"
+                  ],
+                  "name": "worker_heartbeat_kind_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "lastTickAt"
+                  ],
+                  "name": "worker_heartbeat_last_tick_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "workerId"
+                ]
+              },
+              "uniques": []
+            },
             "workspace": {
               "columns": {
                 "createdAt": {
@@ -31487,6 +31959,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "leaseExpiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "length": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -31676,6 +32153,22 @@
                     "createdAt"
                   ],
                   "name": "writing_generation_job_project_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "createdAt"
+                  ],
+                  "name": "writing_generation_job_status_created_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "status",
+                    "leaseExpiresAt"
+                  ],
+                  "name": "writing_generation_job_status_lease_idx",
                   "unique": false
                 }
               ],
@@ -32724,10 +33217,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "338846283391f49bc3968302c8edac2643e21a5d80ccf4cfebf4f68af5b1306e"
+    "storageHash": "770fc360e70d4287860c215b26c3eed4bdf2ee40199daa3ea9082cb51cefec7d"
   },
   "execution": {
-    "executionHash": "9ececd8120c98f1497ea2bdd33161539ec8817baedae7034e98a80701ba52403",
+    "executionHash": "7acae9a8e222dd07f77f465d2513dc174f69ffa17f43949e534c75d5ec071253",
     "mutations": {
       "defaults": [
         {
@@ -34043,6 +34536,17 @@
           "ref": {
             "column": "id",
             "namespace": "public",
+            "table": "rate_limit_event"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "cuid2",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
             "table": "render_artifact"
           }
         },
@@ -34289,6 +34793,21 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "visual_layer"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "worker_heartbeat"
           }
         },
         {

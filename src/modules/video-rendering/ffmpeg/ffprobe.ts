@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import { RenderExecutionError } from "../errors";
 
+const FFPROBE_TIMEOUT_MS = 10_000;
+
 export type ProbedMedia = {
   formatName: string;
   durationMs: number;
@@ -49,6 +51,15 @@ export async function probeMedia(filePath: string): Promise<ProbedMedia> {
     const child = spawn("ffprobe", args, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      child.kill("SIGKILL");
+      reject(new RenderExecutionError("ffprobe timed out"));
+    }, FFPROBE_TIMEOUT_MS);
+    timer.unref?.();
 
     child.stdout.on("data", (chunk: Buffer) => {
       stdout += chunk.toString();
@@ -56,8 +67,16 @@ export async function probeMedia(filePath: string): Promise<ProbedMedia> {
     child.stderr.on("data", (chunk: Buffer) => {
       stderr += chunk.toString();
     });
-    child.on("error", (error) => reject(error));
+    child.on("error", (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error);
+    });
     child.on("close", (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       if (code === 0) resolve(stdout);
       else reject(new RenderExecutionError(stderr.trim() || "ffprobe failed"));
     });

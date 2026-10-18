@@ -2,6 +2,7 @@ import { browserService, sourceService } from "../../../../../../infrastructure/
 import { parseRunRequest, serializeSession, wrapBrowserHttpError } from "../../../../../../lib/browser-api";
 import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../../lib/http";
 import { requireUser } from "../../../../../../lib/require-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../lib/rate-limit";
 
 export const maxDuration = 300;
 
@@ -24,6 +25,11 @@ export async function POST(request: Request, context: RunRouteContext) {
       throw new HttpError(403, "Cross-origin requests are not allowed");
     }
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.browserRun,
+      user.id,
+    );
+    if (limited) return limited;
     const { id } = await context.params;
     const body = parseRunRequest((await parseJsonBody(request)) ?? {});
 

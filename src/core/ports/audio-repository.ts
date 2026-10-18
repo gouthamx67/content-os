@@ -186,12 +186,13 @@ export interface AudioRepository {
     updatedAt: string;
   }): Promise<void>;
 
+  /** Returns false when the row was already finished by another transition. */
   markSucceeded(input: {
     audioRenderJobId: string;
     ffmpegVersion: string | null;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void>;
+  }): Promise<boolean>;
 
   markFailed(input: {
     audioRenderJobId: string;
@@ -199,13 +200,25 @@ export interface AudioRepository {
     errorMessage: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void>;
+  }): Promise<boolean>;
 
   markCancelled(input: {
     audioRenderJobId: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void>;
+  }): Promise<boolean>;
+
+  /** Extends the claim lease while the job is still RUNNING. */
+  renewLease(jobId: string, nowIso: string): Promise<boolean>;
+
+  /**
+   * Recovery sweep: finishes cancels and requeues RUNNING jobs whose worker
+   * stopped refreshing the lease.
+   */
+  reclaimExpiredLeases(nowIso: string): Promise<{
+    cancelled: number;
+    requeued: number;
+  }>;
 
   requestCancel(projectId: string, audioRenderJobId: string): Promise<boolean>;
 

@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import { AudioExecutionError } from "../errors";
 
+const FFPROBE_TIMEOUT_MS = 10_000;
+
 export type ProbedAudio = {
   formatName: string;
   durationMs: number;
@@ -38,6 +40,15 @@ async function runFfprobe(filePath: string): Promise<string> {
     const child = spawn("ffprobe", args, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      child.kill("SIGKILL");
+      reject(new AudioExecutionError("ffprobe timed out"));
+    }, FFPROBE_TIMEOUT_MS);
+    timer.unref?.();
 
     child.stdout.on("data", (chunk: Buffer) => {
       stdout += chunk.toString();
@@ -45,8 +56,16 @@ async function runFfprobe(filePath: string): Promise<string> {
     child.stderr.on("data", (chunk: Buffer) => {
       stderr += chunk.toString();
     });
-    child.on("error", (error) => reject(error));
+    child.on("error", (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(error);
+    });
     child.on("close", (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       if (code === 0) resolve(stdout);
       else reject(new AudioExecutionError(stderr.trim() || "ffprobe failed"));
     });

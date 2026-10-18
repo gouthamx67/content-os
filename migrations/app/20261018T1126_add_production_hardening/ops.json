@@ -1,0 +1,917 @@
+[
+  {
+    "id": "table.rate_limit_event",
+    "label": "Create table \"rate_limit_event\"",
+    "summary": "Creates table \"rate_limit_event\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "rate_limit_event"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"rate_limit_event\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_event\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"rate_limit_event\"",
+        "sql": "CREATE TABLE \"public\".\"rate_limit_event\" (\n  \"bucketKey\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"rate_limit_event\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_event\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.worker_heartbeat",
+    "label": "Create table \"worker_heartbeat\"",
+    "summary": "Creates table \"worker_heartbeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "worker_heartbeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"worker_heartbeat\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"worker_heartbeat\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"worker_heartbeat\"",
+        "sql": "CREATE TABLE \"public\".\"worker_heartbeat\" (\n  \"cancelled\" int4 DEFAULT 0 NOT NULL,\n  \"failed\" int4 DEFAULT 0 NOT NULL,\n  \"kind\" text NOT NULL,\n  \"lastEvent\" text,\n  \"lastTickAt\" timestamptz NOT NULL,\n  \"processed\" int4 DEFAULT 0 NOT NULL,\n  \"startedAt\" timestamptz NOT NULL,\n  \"status\" text NOT NULL,\n  \"succeeded\" int4 DEFAULT 0 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"workerId\" text NOT NULL,\n  PRIMARY KEY (\"workerId\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"worker_heartbeat\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"worker_heartbeat\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.adaptation_job.leaseExpiresAt",
+    "label": "Add column \"leaseExpiresAt\" to \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "leaseExpiresAt",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"leaseExpiresAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "adaptation_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"leaseExpiresAt\"",
+        "sql": "ALTER TABLE \"public\".\"adaptation_job\" ADD COLUMN \"leaseExpiresAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"leaseExpiresAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "adaptation_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.audio_render_job.leaseExpiresAt",
+    "label": "Add column \"leaseExpiresAt\" to \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "leaseExpiresAt",
+        "table": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"leaseExpiresAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "audio_render_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"leaseExpiresAt\"",
+        "sql": "ALTER TABLE \"public\".\"audio_render_job\" ADD COLUMN \"leaseExpiresAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"leaseExpiresAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "audio_render_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.image_generation_job.leaseExpiresAt",
+    "label": "Add column \"leaseExpiresAt\" to \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "leaseExpiresAt",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"leaseExpiresAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "image_generation_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"leaseExpiresAt\"",
+        "sql": "ALTER TABLE \"public\".\"image_generation_job\" ADD COLUMN \"leaseExpiresAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"leaseExpiresAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "image_generation_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.publication.leaseExpiresAt",
+    "label": "Add column \"leaseExpiresAt\" to \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "leaseExpiresAt",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"leaseExpiresAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "publication",
+          "leaseExpiresAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"leaseExpiresAt\"",
+        "sql": "ALTER TABLE \"public\".\"publication\" ADD COLUMN \"leaseExpiresAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"leaseExpiresAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "publication",
+          "leaseExpiresAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.render_job.leaseExpiresAt",
+    "label": "Add column \"leaseExpiresAt\" to \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "leaseExpiresAt",
+        "table": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"leaseExpiresAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "render_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"leaseExpiresAt\"",
+        "sql": "ALTER TABLE \"public\".\"render_job\" ADD COLUMN \"leaseExpiresAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"leaseExpiresAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "render_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.writing_generation_job.leaseExpiresAt",
+    "label": "Add column \"leaseExpiresAt\" to \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "leaseExpiresAt",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"leaseExpiresAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "writing_generation_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"leaseExpiresAt\"",
+        "sql": "ALTER TABLE \"public\".\"writing_generation_job\" ADD COLUMN \"leaseExpiresAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"leaseExpiresAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "writing_generation_job",
+          "leaseExpiresAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_job.adaptation_job_status_created_idx",
+    "label": "Create index \"adaptation_job_status_created_idx\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_job_status_created_idx",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_job_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_job_status_created_idx\"",
+        "sql": "CREATE INDEX \"adaptation_job_status_created_idx\" ON \"public\".\"adaptation_job\" (\"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_job_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.adaptation_job.adaptation_job_status_lease_idx",
+    "label": "Create index \"adaptation_job_status_lease_idx\" on \"adaptation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "adaptation_job_status_lease_idx",
+        "table": "adaptation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"adaptation_job_status_lease_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_status_lease_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"adaptation_job_status_lease_idx\"",
+        "sql": "CREATE INDEX \"adaptation_job_status_lease_idx\" ON \"public\".\"adaptation_job\" (\"status\", \"leaseExpiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"adaptation_job_status_lease_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"adaptation_job_status_lease_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_render_job.audio_render_job_status_created_idx",
+    "label": "Create index \"audio_render_job_status_created_idx\" on \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_render_job_status_created_idx",
+        "table": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_render_job_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_render_job_status_created_idx\"",
+        "sql": "CREATE INDEX \"audio_render_job_status_created_idx\" ON \"public\".\"audio_render_job\" (\"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_render_job_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audio_render_job.audio_render_job_status_lease_idx",
+    "label": "Create index \"audio_render_job_status_lease_idx\" on \"audio_render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "audio_render_job_status_lease_idx",
+        "table": "audio_render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audio_render_job_status_lease_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_status_lease_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audio_render_job_status_lease_idx\"",
+        "sql": "CREATE INDEX \"audio_render_job_status_lease_idx\" ON \"public\".\"audio_render_job\" (\"status\", \"leaseExpiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audio_render_job_status_lease_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"audio_render_job_status_lease_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.image_generation_job.image_generation_job_status_created_idx",
+    "label": "Create index \"image_generation_job_status_created_idx\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "image_generation_job_status_created_idx",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"image_generation_job_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"image_generation_job_status_created_idx\"",
+        "sql": "CREATE INDEX \"image_generation_job_status_created_idx\" ON \"public\".\"image_generation_job\" (\"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"image_generation_job_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.image_generation_job.image_generation_job_status_lease_idx",
+    "label": "Create index \"image_generation_job_status_lease_idx\" on \"image_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "image_generation_job_status_lease_idx",
+        "table": "image_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"image_generation_job_status_lease_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_status_lease_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"image_generation_job_status_lease_idx\"",
+        "sql": "CREATE INDEX \"image_generation_job_status_lease_idx\" ON \"public\".\"image_generation_job\" (\"status\", \"leaseExpiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"image_generation_job_status_lease_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"image_generation_job_status_lease_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.publication.publication_status_lease_idx",
+    "label": "Create index \"publication_status_lease_idx\" on \"publication\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "publication_status_lease_idx",
+        "table": "publication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"publication_status_lease_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_status_lease_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"publication_status_lease_idx\"",
+        "sql": "CREATE INDEX \"publication_status_lease_idx\" ON \"public\".\"publication\" (\"status\", \"leaseExpiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"publication_status_lease_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"publication_status_lease_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rate_limit_event.rate_limit_event_bucket_created_idx",
+    "label": "Create index \"rate_limit_event_bucket_created_idx\" on \"rate_limit_event\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rate_limit_event_bucket_created_idx",
+        "table": "rate_limit_event"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rate_limit_event_bucket_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_event_bucket_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rate_limit_event_bucket_created_idx\"",
+        "sql": "CREATE INDEX \"rate_limit_event_bucket_created_idx\" ON \"public\".\"rate_limit_event\" (\"bucketKey\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rate_limit_event_bucket_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_event_bucket_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rate_limit_event.rate_limit_event_created_idx",
+    "label": "Create index \"rate_limit_event_created_idx\" on \"rate_limit_event\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rate_limit_event_created_idx",
+        "table": "rate_limit_event"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rate_limit_event_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_event_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rate_limit_event_created_idx\"",
+        "sql": "CREATE INDEX \"rate_limit_event_created_idx\" ON \"public\".\"rate_limit_event\" (\"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rate_limit_event_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_event_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.render_job.render_job_status_created_idx",
+    "label": "Create index \"render_job_status_created_idx\" on \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "render_job_status_created_idx",
+        "table": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"render_job_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"render_job_status_created_idx\"",
+        "sql": "CREATE INDEX \"render_job_status_created_idx\" ON \"public\".\"render_job\" (\"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"render_job_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.render_job.render_job_status_lease_idx",
+    "label": "Create index \"render_job_status_lease_idx\" on \"render_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "render_job_status_lease_idx",
+        "table": "render_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"render_job_status_lease_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_status_lease_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"render_job_status_lease_idx\"",
+        "sql": "CREATE INDEX \"render_job_status_lease_idx\" ON \"public\".\"render_job\" (\"status\", \"leaseExpiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"render_job_status_lease_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"render_job_status_lease_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.worker_heartbeat.worker_heartbeat_kind_idx",
+    "label": "Create index \"worker_heartbeat_kind_idx\" on \"worker_heartbeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "worker_heartbeat_kind_idx",
+        "table": "worker_heartbeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"worker_heartbeat_kind_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"worker_heartbeat_kind_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"worker_heartbeat_kind_idx\"",
+        "sql": "CREATE INDEX \"worker_heartbeat_kind_idx\" ON \"public\".\"worker_heartbeat\" (\"kind\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"worker_heartbeat_kind_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"worker_heartbeat_kind_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.worker_heartbeat.worker_heartbeat_last_tick_idx",
+    "label": "Create index \"worker_heartbeat_last_tick_idx\" on \"worker_heartbeat\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "worker_heartbeat_last_tick_idx",
+        "table": "worker_heartbeat"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"worker_heartbeat_last_tick_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"worker_heartbeat_last_tick_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"worker_heartbeat_last_tick_idx\"",
+        "sql": "CREATE INDEX \"worker_heartbeat_last_tick_idx\" ON \"public\".\"worker_heartbeat\" (\"lastTickAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"worker_heartbeat_last_tick_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"worker_heartbeat_last_tick_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_generation_job.writing_generation_job_status_created_idx",
+    "label": "Create index \"writing_generation_job_status_created_idx\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_generation_job_status_created_idx",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_generation_job_status_created_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_status_created_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_generation_job_status_created_idx\"",
+        "sql": "CREATE INDEX \"writing_generation_job_status_created_idx\" ON \"public\".\"writing_generation_job\" (\"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_generation_job_status_created_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_status_created_idx\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.writing_generation_job.writing_generation_job_status_lease_idx",
+    "label": "Create index \"writing_generation_job_status_lease_idx\" on \"writing_generation_job\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "writing_generation_job_status_lease_idx",
+        "table": "writing_generation_job"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"writing_generation_job_status_lease_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_status_lease_idx\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"writing_generation_job_status_lease_idx\"",
+        "sql": "CREATE INDEX \"writing_generation_job_status_lease_idx\" ON \"public\".\"writing_generation_job\" (\"status\", \"leaseExpiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"writing_generation_job_status_lease_idx\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"writing_generation_job_status_lease_idx\""
+        ]
+      }
+    ]
+  }
+]

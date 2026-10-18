@@ -1,6 +1,11 @@
 import { db } from "../../prisma/db";
 import type { PublicOrm } from "../../prisma/db";
 import { pgTimestampToIso } from "../../lib/time";
+import {
+  WORKER_LEASE_EXPIRED_CODE,
+  WORKER_LEASE_EXPIRED_MESSAGE,
+  workerLeaseExpiry,
+} from "../../lib/worker-lease";
 import type {
   AdaptSucceededOutput,
   AdaptationRepository,
@@ -270,6 +275,7 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
           progressPct: 0,
           startedAt: now,
           updatedAt: now,
+          leaseExpiresAt: workerLeaseExpiry(now),
         })
         .where((f, fns) => fns.eq(f.id, candidate.id))
         .where((f, fns) => fns.eq(f.status, "QUEUED"))
@@ -292,6 +298,7 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
     await this.orm.AdaptationJob.where({ id: jobId }).update({
       progressPct: Math.max(0, Math.min(100, Math.round(progressPct))),
       updatedAt,
+      leaseExpiresAt: workerLeaseExpiry(updatedAt),
     });
   }
 
@@ -304,6 +311,7 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
       status: "RUNNING",
       startedAt: input.startedAt,
       updatedAt: input.updatedAt,
+      leaseExpiresAt: workerLeaseExpiry(input.updatedAt),
     });
   }
 
@@ -321,6 +329,7 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
         Math.min(99, Math.round(input.progressPct)),
       ),
       updatedAt: input.updatedAt,
+      leaseExpiresAt: null,
     });
   }
 
@@ -329,10 +338,11 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
     output: AdaptSucceededOutput;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
+  }): Promise<boolean> {
     const output = input.output;
 
-    await this.orm.AdaptationJob.where({ id: input.jobId }).update({
+    const plan = db.sql.public.adaptation_job
+      .update({
       status: "SUCCEEDED",
       progressPct: 100,
       outputText: output.outputText ?? null,
@@ -345,7 +355,17 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
       renderJobId: output.renderJobId ?? null,
       finishedAt: input.finishedAt,
       updatedAt: input.updatedAt,
-    });
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.jobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
   }
 
   async markFailed(input: {
@@ -354,26 +374,96 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
     errorMessage: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
-    await this.orm.AdaptationJob.where({ id: input.jobId }).update({
+  }): Promise<boolean> {
+    const plan = db.sql.public.adaptation_job
+      .update({
       status: "FAILED",
       errorCode: input.errorCode,
       errorMessage: input.errorMessage,
       finishedAt: input.finishedAt,
       updatedAt: input.updatedAt,
-    });
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.jobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
   }
 
   async markCancelled(input: {
     jobId: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void> {
-    await this.orm.AdaptationJob.where({ id: input.jobId }).update({
+  }): Promise<boolean> {
+    const plan = db.sql.public.adaptation_job
+      .update({
       status: "CANCELLED",
       finishedAt: input.finishedAt,
       updatedAt: input.updatedAt,
-    });
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.id, input.jobId))
+      .where((f, fns) => fns.ne(f.status, "SUCCEEDED"))
+      .where((f, fns) => fns.ne(f.status, "FAILED"))
+      .where((f, fns) => fns.ne(f.status, "CANCELLED"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
+  }
+
+  async renewLease(jobId: string, nowIso: string): Promise<boolean> {
+    const plan = db.sql.public.adaptation_job
+      .update({ leaseExpiresAt: workerLeaseExpiry(nowIso) })
+      .where((f, fns) => fns.eq(f.id, jobId))
+      .where((f, fns) => fns.eq(f.status, "RUNNING"))
+      .returning("id")
+      .build();
+
+    const rows = await db.runtime().query(plan);
+    return rows.length === 1;
+  }
+
+  async reclaimExpiredLeases(nowIso: string): Promise<{
+    cancelled: number;
+    requeued: number;
+  }> {
+    const cancelPlan = db.sql.public.adaptation_job
+      .update({
+        status: "CANCELLED",
+        finishedAt: nowIso,
+        updatedAt: nowIso,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.status, "CANCEL_REQUESTED"))
+      .where((f, fns) => fns.lt(f.leaseExpiresAt, nowIso))
+      .returning("id")
+      .build();
+
+    const requeuePlan = db.sql.public.adaptation_job
+      .update({
+        status: "QUEUED",
+        progressPct: 0,
+        startedAt: null,
+        errorCode: WORKER_LEASE_EXPIRED_CODE,
+        errorMessage: WORKER_LEASE_EXPIRED_MESSAGE,
+        updatedAt: nowIso,
+        leaseExpiresAt: null,
+      })
+      .where((f, fns) => fns.eq(f.status, "RUNNING"))
+      .where((f, fns) => fns.lt(f.leaseExpiresAt, nowIso))
+      .returning("id")
+      .build();
+
+    const cancelled = await db.runtime().query(cancelPlan);
+    const requeued = await db.runtime().query(requeuePlan);
+    return { cancelled: cancelled.length, requeued: requeued.length };
   }
 
   async requestCancelBatch(input: {
@@ -401,6 +491,7 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
             status: "CANCELLED",
             finishedAt: input.finishedAt,
             updatedAt: input.finishedAt,
+            leaseExpiresAt: null,
           })
           .where((f, fns) => fns.eq(f.batchId, batch.id))
           .where((f, fns) => fns.eq(f.status, "QUEUED"))
@@ -445,6 +536,7 @@ export class PostgresAdaptationRepository implements AdaptationRepository {
           status: "CANCELLED",
           finishedAt: input.finishedAt,
           updatedAt: input.finishedAt,
+          leaseExpiresAt: null,
         })
         .where((f, fns) => fns.eq(f.id, input.jobId))
         .where((f, fns) => fns.eq(f.status, "QUEUED"))

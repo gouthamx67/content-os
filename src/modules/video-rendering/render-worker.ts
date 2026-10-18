@@ -1,4 +1,9 @@
 import { createId } from "../../lib/id";
+import { logEvent, sanitizeError } from "../../lib/observability";
+import {
+  reclaimAbandonedWork,
+  startLeaseRenewal,
+} from "../../lib/worker-lease-runtime";
 import type { RenderJobRepository } from "../../core/ports/render-job-repository";
 import type { RenderJobRecord } from "./domain/types";
 import { RenderError, RenderCancelledError } from "./errors";
@@ -64,6 +69,7 @@ export class RenderWorker {
   /** Processes at most one queued job. Returns true if work was done. */
   async tick(): Promise<boolean> {
     this.health.markTick();
+    await reclaimAbandonedWork(this.repository, "render");
     await this.finalizeOrphanedCancellations();
 
     const job = await this.repository.claimNext();
@@ -73,14 +79,29 @@ export class RenderWorker {
     return true;
   }
 
-  /** Runs until the signal aborts, sleeping between empty polls. */
+  /**
+   * Runs until the signal aborts, sleeping between empty polls. A failed tick
+   * (for example a database blip) is logged and retried after the poll delay;
+   * the worker process stays alive instead of exiting on the first error.
+   */
   async run(signal?: AbortSignal): Promise<void> {
     this.health.markStarted();
 
     try {
       while (!signal?.aborted) {
-        const worked = await this.tick();
-        if (!worked) await this.sleep(this.pollIntervalMs, signal);
+        try {
+          const worked = await this.tick();
+          if (!worked) await this.sleep(this.pollIntervalMs, signal);
+        } catch (error) {
+          this.health.markError(
+            error instanceof Error ? error.message : "Worker tick failed",
+          );
+          logEvent("error", "worker.tick_failed", {
+            worker: "render",
+            error: sanitizeError(error),
+          });
+          await this.sleep(this.pollIntervalMs, signal);
+        }
       }
     } finally {
       this.health.markStopped();
@@ -95,6 +116,8 @@ export class RenderWorker {
       void this.checkCancelled(job, controller);
     }, this.cancelPollIntervalMs);
     cancelTimer.unref?.();
+
+    const stopLeaseRenewal = startLeaseRenewal(this.repository, "render", job.id);
 
     let dispose: (() => Promise<void>) | null = null;
 
@@ -181,6 +204,7 @@ export class RenderWorker {
       }
     } finally {
       clearInterval(cancelTimer);
+      stopLeaseRenewal();
       if (dispose) await dispose().catch(() => undefined);
     }
   }

@@ -1,5 +1,7 @@
 import { sanitizeMessage } from "../video-rendering/render-worker";
 import { RenderWorkerHealth } from "../video-rendering/worker-health";
+import { logEvent, sanitizeError } from "../../lib/observability";
+import { LEASE_RENEW_MS } from "../../lib/worker-lease-runtime";
 import type { PublishingRepository } from "../../core/ports/publishing-repository";
 import type { PublicationRecord } from "./domain/types";
 
@@ -55,6 +57,8 @@ export class PublishingWorker {
     const now = new Date();
     const nowIso = now.toISOString();
 
+    await this.reclaimStalePublishing(nowIso);
+
     const due = await this.repository.claimNextDue(nowIso);
     if (due) {
       await this.process(due, "PUBLISH");
@@ -85,11 +89,39 @@ export class PublishingWorker {
     this.health.markStarted();
     try {
       while (!signal?.aborted) {
-        const worked = await this.tick();
-        if (!worked) await this.sleep(this.pollIntervalMs, signal);
+        try {
+          const worked = await this.tick();
+          if (!worked) await this.sleep(this.pollIntervalMs, signal);
+        } catch (error) {
+          this.health.markError(
+            error instanceof Error ? error.message : "Worker tick failed",
+          );
+          logEvent("error", "worker.tick_failed", {
+            worker: "publishing",
+            error: sanitizeError(error),
+          });
+          await this.sleep(this.pollIntervalMs, signal);
+        }
       }
     } finally {
       this.health.markStopped();
+    }
+  }
+
+  private async reclaimStalePublishing(nowIso: string): Promise<void> {
+    try {
+      const reclaimed = await this.repository.reclaimStalePublishing(nowIso);
+      if (reclaimed > 0) {
+        logEvent("warn", "worker.publishing_lease_reclaimed", {
+          worker: "publishing",
+          reclaimed,
+        });
+      }
+    } catch (error) {
+      logEvent("warn", "worker.lease_reclaim_failed", {
+        worker: "publishing",
+        error: sanitizeError(error),
+      });
     }
   }
 
@@ -98,6 +130,11 @@ export class PublishingWorker {
     kind: "PUBLISH" | "RECONCILE" | "ANALYTICS",
   ): Promise<void> {
     this.health.markJobStarted(publication.id);
+    const stopLeaseRenewal =
+      kind === "ANALYTICS"
+        ? () => undefined
+        : this.startPublicationLeaseRenewal(publication.id);
+
     try {
       const result =
         kind === "ANALYTICS"
@@ -115,7 +152,33 @@ export class PublishingWorker {
         ),
       );
       this.health.markJobFinished("FAILED");
+    } finally {
+      stopLeaseRenewal();
     }
+  }
+
+  private startPublicationLeaseRenewal(publicationId: string): () => void {
+    const timer = setInterval(() => {
+      void this.repository
+        .renewPublishingLease(publicationId, new Date().toISOString())
+        .then((renewed) => {
+          if (!renewed) {
+            logEvent("warn", "worker.lease_lost", {
+              worker: "publishing",
+              jobId: publicationId,
+            });
+          }
+        })
+        .catch((error) => {
+          logEvent("warn", "worker.lease_renew_failed", {
+            worker: "publishing",
+            jobId: publicationId,
+            error: sanitizeError(error),
+          });
+        });
+    }, LEASE_RENEW_MS);
+    timer.unref?.();
+    return () => clearInterval(timer);
   }
 
   private sleep(ms: number, signal?: AbortSignal): Promise<void> {

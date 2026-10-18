@@ -1,5 +1,6 @@
 import { publishingService } from "../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../lib/require-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../lib/rate-limit";
 import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../../lib/http";
 import {
   publishingErrorResponse,
@@ -23,6 +24,11 @@ const SOURCE_TYPES: readonly PublicationSourceType[] = [
 export async function GET(request: Request, context: RouteContext) {
   try {
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.publishingMutation,
+      user.id,
+    );
+    if (limited) return limited;
     const { id } = await context.params;
     const url = new URL(request.url);
     const status = url.searchParams.get("status");

@@ -7,6 +7,7 @@ import {
   wrapCreativeHttpError,
 } from "../../../../../../lib/creative-direction-api";
 import { requireUser } from "../../../../../../lib/require-auth";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../lib/rate-limit";
 import { HttpError, parseJsonBody } from "../../../../../../lib/http";
 
 export const maxDuration = 90;
@@ -26,6 +27,11 @@ export async function POST(request: Request, context: CreativeRouteContext) {
     }
 
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.aiGeneration,
+      user.id,
+    );
+    if (limited) return limited;
     const { id } = await context.params;
     const body = await parseJsonBody(request);
     if (!body) {

@@ -1,6 +1,6 @@
 import { graphicDocumentService } from "../../../../../infrastructure/services";
 import { requireUser } from "../../../../../lib/require-auth";
-import { HttpError, isSameOrigin } from "../../../../../lib/http";
+import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../lib/http";
 import {
   graphicDocumentView,
   imageErrorResponse,
@@ -30,10 +30,7 @@ export async function POST(request: Request, context: RouteContext) {
     const { user } = await requireUser(request);
     const { id } = await context.params;
 
-    const body = (await request.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
+    const body = (await parseJsonBody(request)) ?? {};
 
     const document = await graphicDocumentService.create({
       projectId: id,

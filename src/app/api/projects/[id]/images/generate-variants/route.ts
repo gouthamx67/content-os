@@ -1,6 +1,7 @@
 import { imageVariantService } from "../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../lib/require-auth";
-import { HttpError, isSameOrigin } from "../../../../../../lib/http";
+import { enforceRateLimit, RATE_LIMITS } from "../../../../../../lib/rate-limit";
+import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../../lib/http";
 import {
   imageErrorResponse,
   imageGenerationJobView,
@@ -24,12 +25,14 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const { user } = await requireUser(request);
+    const limited = await enforceRateLimit(
+      RATE_LIMITS.aiGeneration,
+      user.id,
+    );
+    if (limited) return limited;
     const { id } = await context.params;
 
-    const body = (await request.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
+    const body = (await parseJsonBody(request)) ?? {};
 
     const jobs = await imageVariantService.enqueueVariants({
       projectId: id,

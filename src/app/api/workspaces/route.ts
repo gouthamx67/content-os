@@ -1,13 +1,13 @@
 import { workspaceService } from "../../../infrastructure/services";
 import { requireUser } from "../../../lib/require-auth";
-import {
-  parseJsonBody,
-  wrapHttpError,
-} from "../../../lib/http";
+import { HttpError, isSameOrigin, parseJsonBody, wrapHttpError } from "../../../lib/http";
 
 export async function GET(request: Request) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const workspaces = await workspaceService.listForUser(
       user.id,
@@ -22,6 +22,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const body = await parseJsonBody(request);
 

@@ -1,10 +1,6 @@
 import { projectService, sourceService } from "../../../../../infrastructure/services";
 import { requireUser } from "../../../../../lib/require-auth";
-import {
-  HttpError,
-  parseJsonBody,
-  wrapHttpError,
-} from "../../../../../lib/http";
+import { HttpError, isSameOrigin, parseJsonBody, wrapHttpError } from "../../../../../lib/http";
 import { isSourceType } from "../../../../../lib/enums";
 import { serializeSource } from "../../../../../lib/input-api";
 import { normalizeMetadata } from "../../../../../lib/metadata";
@@ -19,6 +15,9 @@ export async function GET(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id } = await context.params;
 
@@ -36,6 +35,9 @@ export async function POST(
 ) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
 
     const { id } = await context.params;
     await projectService.getAuthorized(id, user.id);

@@ -16,6 +16,7 @@ import type { SourceRepository } from "../ports/source-repository";
 import type { SourceStorageCoordinator } from "../ports/source-storage-coordinator";
 import type { StorageProvider } from "../ports/storage-provider";
 import { createId } from "../../lib/id";
+import { logEvent, sanitizeError } from "../../lib/observability";
 import type { ProjectService } from "./project-service";
 
 export interface InputServiceDependencies {
@@ -287,7 +288,11 @@ export class InputService {
         try {
           await this.cleanupUnreferencedStorage(source.id, attemptedStorageKey);
         } catch (cleanupError) {
-          console.error("Failed to clean up input storage", cleanupError);
+          logEvent("warn", "input.storage_cleanup_failed", {
+            sourceId: source.id,
+            storageKey: attemptedStorageKey,
+            ...sanitizeError(cleanupError),
+          });
         }
       }
       const failure = toInputError(error, input);
@@ -298,7 +303,10 @@ export class InputService {
           errorMessage: failure.message.slice(0, 1_000),
         });
       } catch (failureUpdateError) {
-        console.error("Failed to persist input failure", failureUpdateError);
+        logEvent("error", "input.failure_persist_failed", {
+          sourceId: source.id,
+          ...sanitizeError(failureUpdateError),
+        });
       }
     }
   }

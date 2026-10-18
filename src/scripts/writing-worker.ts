@@ -3,6 +3,8 @@ import {
   createWritingWorker,
   writingWorkerHealth,
 } from "../infrastructure/container";
+import { logEvent, sanitizeError } from "../lib/observability";
+import { runWorkerProcess } from "../infrastructure/worker-runtime";
 
 /**
  * Standalone CP18 writing generation worker.
@@ -12,29 +14,15 @@ import {
  * each job's frozen context, so a project edit during a run cannot change what
  * the job writes.
  */
-async function main(): Promise<void> {
-  const worker = createWritingWorker();
-  const controller = new AbortController();
-
-  const shutdown = (signal: string) => {
-    if (controller.signal.aborted) return;
-    console.log(`[writing-worker] ${signal} received, draining`);
-    controller.abort();
-  };
-
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-
-  console.log("[writing-worker] started");
-  await worker.run(controller.signal);
-
-  const health = writingWorkerHealth.snapshot();
-  console.log(
-    `[writing-worker] stopped (processed=${health.processed} succeeded=${health.succeeded} failed=${health.failed} cancelled=${health.cancelled})`,
-  );
-}
-
-main().catch((error: unknown) => {
-  console.error("[writing-worker] crashed", error);
+runWorkerProcess({
+  name: "writing-worker",
+  kind: "writing",
+  health: writingWorkerHealth,
+  run: (signal) => createWritingWorker().run(signal),
+}).catch((error: unknown) => {
+  logEvent("error", "worker.crashed", {
+    worker: "writing-worker",
+    error: sanitizeError(error),
+  });
   process.exitCode = 1;
 });

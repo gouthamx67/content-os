@@ -1,5 +1,7 @@
 import { audioCompositionService } from "../../../../../../../../../../infrastructure/services";
 import { requireUser } from "../../../../../../../../../../lib/require-auth";
+import { HttpError, isSameOrigin, parseJsonBody } from "../../../../../../../../../../lib/http";
+
 import {
   audioAutomationView,
   audioErrorResponse,
@@ -19,6 +21,9 @@ type RouteContext = {
 export async function POST(request: Request, context: RouteContext) {
   try {
     const { user } = await requireUser(request);
+    if (!isSameOrigin(request)) {
+      throw new HttpError(403, "Cross-origin request");
+    }
     const { id, compositionId, trackId } = await context.params;
 
     const composition = await audioCompositionService.getByVisual(
@@ -27,10 +32,7 @@ export async function POST(request: Request, context: RouteContext) {
       user.id,
     );
 
-    const body = (await request.json().catch(() => ({}))) as Record<
-      string,
-      unknown
-    >;
+    const body = (await parseJsonBody(request)) ?? {};
 
     const point = await audioCompositionService.upsertAutomation({
       projectId: id,

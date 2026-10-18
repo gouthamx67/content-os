@@ -73,26 +73,41 @@ export interface RenderJobRepository {
     updatedAt: string;
   }): Promise<void>;
 
+  /** Returns false when the row was already finished by another transition. */
   markSucceeded(input: {
     renderJobId: string;
     ffmpegVersion: string | null;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void>;
+  }): Promise<boolean>;
 
+  /** Returns false when the row was already finished by another transition. */
   markFailed(input: {
     renderJobId: string;
     errorCode: string;
     errorMessage: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void>;
+  }): Promise<boolean>;
 
+  /** Returns false when the row was already finished by another transition. */
   markCancelled(input: {
     renderJobId: string;
     finishedAt: string;
     updatedAt: string;
-  }): Promise<void>;
+  }): Promise<boolean>;
+
+  /** Extends the claim lease while the job is still RUNNING. */
+  renewLease(renderJobId: string, nowIso: string): Promise<boolean>;
+
+  /**
+   * Recovery sweep: finishes cancels and requeues RUNNING jobs whose worker
+   * stopped refreshing the lease.
+   */
+  reclaimExpiredLeases(nowIso: string): Promise<{
+    cancelled: number;
+    requeued: number;
+  }>;
 
   /** Transitions QUEUED/RUNNING to CANCEL_REQUESTED. Returns false if not cancellable. */
   requestCancel(projectId: string, renderJobId: string): Promise<boolean>;
