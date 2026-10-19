@@ -1,7 +1,12 @@
 import { join } from "node:path";
 import { db } from "../prisma/db";
 import { InMemoryJobRepository } from "./repositories/in-memory-job-repository";
-import { MockAIProvider } from "./ai/mock-ai-provider";
+import {
+  createRemoteAiProvider,
+  remoteAiConfigFromEnv,
+  remoteAiFallbackChainFromEnv,
+} from "./ai/remote-ai-provider";
+import { createUnconfiguredAIProvider } from "./ai/unconfigured-ai-provider";
 import { MockRendererProvider } from "./rendering/mock-renderer-provider";
 import { PostgresUserRepository } from "./repositories/postgres-user-repository";
 import { PostgresSessionRepository } from "./repositories/postgres-session-repository";
@@ -104,6 +109,7 @@ import { createLocalRulesProvider } from "../modules/writing-engine/providers/lo
 import {
   createRemoteLlmProvider,
   remoteLlmConfigFromEnv,
+  remoteLlmFallbackChainFromEnv,
 } from "../modules/writing-engine/providers/remote-llm-provider";
 import { PostgresAdaptationRepository } from "./repositories/postgres-adaptation-repository";
 import { PostgresEditorRepository } from "./repositories/postgres-editor-repository";
@@ -116,6 +122,7 @@ import { createLocalizationProviderRegistry } from "../modules/localization-engi
 import {
   createRemoteLlmLocalizationProvider,
   localizationLlmConfigFromEnv,
+  localizationLlmFallbackChainFromEnv,
 } from "../modules/localization-engine/services/remote-llm-provider";
 import { WritingSourceAdapter } from "../modules/localization-engine/adapters/writing-source";
 import { EditorSourceAdapter } from "../modules/localization-engine/adapters/editor-source";
@@ -137,6 +144,7 @@ import {
 } from "./campaign-integrations";
 import { CampaignService } from "../modules/campaign-engine/campaign-service";
 import { createId } from "../lib/id";
+import { logEvent } from "../lib/observability";
 import { EditorService } from "../modules/editor-engine/editor-service";
 import { EditorAIService } from "../modules/editor-engine/ai/ai-service";
 import { EditorImportService } from "../modules/editor-engine/integrations/imports";
@@ -184,8 +192,19 @@ const storage = new LocalStorageProvider(
   process.env["CONTENT_OS_STORAGE_PATH"] ?? join(process.cwd(), ".content-os", "storage"),
 );
 
+/**
+ * The `AIProvider` port is served by the real remote provider whenever a model
+ * endpoint is configured (`CONTENT_OS_AI_*`, or the `WRITING_LLM_*` names it
+ * inherits when the seam has none). Without configuration the port is served
+ * by an explicit unconfigured boundary that fails with an actionable error
+ * rather than a canned response.
+ */
+const remoteAiConfig = remoteAiConfigFromEnv();
+
 const providers = {
-  ai: new MockAIProvider(),
+  ai: remoteAiConfig
+    ? createRemoteAiProvider(remoteAiConfig, remoteAiFallbackChainFromEnv())
+    : createUnconfiguredAIProvider(),
   renderer: new MockRendererProvider(),
   http,
   storage,
@@ -200,14 +219,30 @@ const providers = {
 };
 
 /**
- * The only AI provider wired today is a mock whose output can never satisfy
- * intelligence validation, so interpretation stays off until a real provider is
- * configured. Analysis still runs deterministically either way.
+ * Model-assisted interpretation is opt-in (`CONTENT_OS_AI_INTERPRETATION=1`)
+ * and requires a configured model endpoint. With a provider, the real request
+ * runs and its output must pass the seam's strict validation; without one, the
+ * seam stays off and analysis is deterministic. A gate that is set with no
+ * provider is a configuration mistake and is reported at startup rather than
+ * silently degraded.
  */
-const intelligenceInterpretation =
-  process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
-    ? new AiIntelligenceInterpretationProvider(providers.ai)
-    : null;
+const aiInterpretationRequested =
+  process.env["CONTENT_OS_AI_INTERPRETATION"] === "1";
+const aiBrowserRequested = process.env["CONTENT_OS_AI_BROWSER"] === "1";
+
+if ((aiInterpretationRequested || aiBrowserRequested) && !remoteAiConfig) {
+  logEvent("warn", "startup.ai_gate_without_provider", {
+    interpretation: aiInterpretationRequested,
+    browser: aiBrowserRequested,
+  });
+}
+
+const aiInterpretationEnabled = aiInterpretationRequested && remoteAiConfig !== null;
+const aiBrowserEnabled = aiBrowserRequested && remoteAiConfig !== null;
+
+const intelligenceInterpretation = aiInterpretationEnabled
+  ? new AiIntelligenceInterpretationProvider(providers.ai)
+  : null;
 
 const workspaceService = new WorkspaceService(
   repositories.workspaces,
@@ -310,7 +345,7 @@ const browserRuntime = new PlaywrightBrowserRuntime({
 });
 
 const browserPlanner =
-  process.env["CONTENT_OS_AI_BROWSER"] === "1"
+  aiBrowserEnabled
     ? new AiBrowserPlanner(providers.ai, {
         checkUrl: (url) => checkBrowserUrl(url, DEFAULT_BROWSER_NAVIGATION_POLICY),
       })
@@ -349,7 +384,7 @@ const brandAnalyzers = new BrandAnalyzerRegistry([
 ]);
 
 const brandInterpretation =
-  process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+  aiInterpretationEnabled
     ? new AiBrandInterpretationProvider(providers.ai)
     : null;
 
@@ -371,7 +406,7 @@ const brandService = new BrandIntelligenceService({
  * cannot read is asked about rather than guessed at.
  */
 const contentIntentInterpretation =
-  process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+  aiInterpretationEnabled
     ? new AiContentIntentInterpreter(providers.ai)
     : null;
 
@@ -390,7 +425,7 @@ const contentIntentService = new ContentIntentService({
  * through to the styles rather than leaving the project with nothing.
  */
 const creativeDirectors = [
-  ...(process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+  ...(aiInterpretationEnabled
     ? [new AiCreativeDirector(providers.ai)]
     : []),
   new DeterministicCreativeDirector(),
@@ -421,7 +456,7 @@ const storyboardService = new StoryboardService({
   brandRepository: repositories.brand,
   assetRepository: repositories.assets,
   browserSessionRepository: repositories.browserSessions,
-  planners: process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+  planners: aiInterpretationEnabled
     ? [new AiStoryboardPlanner(providers.ai)]
     : [],
 });
@@ -447,7 +482,7 @@ const contentRecommendationService = new ContentRecommendationService({
   validator: new ContentRecommendationValidator(),
   providers: [
     new DeterministicContentRecommenderProvider(),
-    ...(process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+    ...(aiInterpretationEnabled
       ? [new AiContentRecommendationRefiner(providers.ai)]
       : []),
   ],
@@ -707,7 +742,12 @@ const remoteWritingConfig = remoteLlmConfigFromEnv();
 const writingProviderRegistry = createWritingProviderRegistry({
   local: createLocalRulesProvider(),
   ...(remoteWritingConfig
-    ? { remote: createRemoteLlmProvider(remoteWritingConfig) }
+    ? {
+        remote: createRemoteLlmProvider(
+          remoteWritingConfig,
+          remoteLlmFallbackChainFromEnv(),
+        ),
+      }
     : {}),
 });
 
@@ -825,7 +865,7 @@ const editorAIService = new EditorAIService({
   editor: editorService,
   writing: repositories.writing,
   remote:
-    process.env["CONTENT_OS_AI_INTERPRETATION"] === "1"
+    aiInterpretationEnabled
       ? { provider: providers.ai }
       : null,
 });
@@ -898,7 +938,12 @@ const localizationExtractor = new SourceExtractor([
 const localizationLlmConfig = localizationLlmConfigFromEnv();
 const localizationProviders = createLocalizationProviderRegistry(
   localizationLlmConfig
-    ? [createRemoteLlmLocalizationProvider(localizationLlmConfig)]
+    ? [
+        createRemoteLlmLocalizationProvider(
+          localizationLlmConfig,
+          localizationLlmFallbackChainFromEnv(),
+        ),
+      ]
     : [],
 );
 const localizationMaterialization = new MaterializationService();

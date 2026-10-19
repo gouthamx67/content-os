@@ -15,7 +15,12 @@
     "multiformat:worker": "tsx src/scripts/multiformat-worker.ts",
     "publishing:worker": "tsx src/scripts/publishing-worker.ts",
     "postinstall": "prisma skills sync || exit 0",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "backup": "bash scripts/backup.sh",
+    "restore:drill": "bash scripts/restore-drill.sh",
+    "cleanup": "tsx scripts/cleanup.ts",
+    "load:test": "node scripts/load-test.mjs",
+    "ai:smoke": "tsx scripts/ai-live-smoke.ts"
   },
   "dependencies": {
     "@prisma/orm-postgres": "^8.0.0-rc.11",

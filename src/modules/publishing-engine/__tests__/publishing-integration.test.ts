@@ -308,6 +308,23 @@ describe("publishing engine against the real database", () => {
     const favourites = latest.find((snapshot) => snapshot.metricKey === "favourites");
     expect(favourites?.value).toBe(7);
     expect(latest).toHaveLength(2);
+
+    const foreign = await context.services.publishingRepository.latestSnapshotPoints(
+      created.projectId,
+      ["publication-does-not-exist"],
+    );
+    expect(foreign).toEqual([]);
+
+    // The capped read keeps the newest readings and still returns them oldest-first.
+    const capped = await context.services.publishingRepository.listSnapshots(
+      created.projectId,
+      publication.id,
+      2,
+    );
+    expect(capped.map((snapshot) => snapshot.metricKey)).toEqual([
+      "reblogs",
+      "favourites",
+    ]);
   });
 
   it("refuses unresolvable sources with a structured error", async () => {

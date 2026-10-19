@@ -56,6 +56,35 @@ const PUBLISHING_MASTODON_KEYS = [
   "PUBLISHING_MASTODON_CLIENT_SECRET",
 ] as const;
 
+/**
+ * Every OpenAI-compatible endpoint the runtime can be pointed at: each
+ * domain's primary plus its three numbered fallback slots.
+ */
+const LLM_ENDPOINT_PREFIXES = [
+  "WRITING_LLM",
+  "WRITING_LLM_FALLBACK",
+  "WRITING_LLM_FALLBACK_2",
+  "WRITING_LLM_FALLBACK_3",
+  "LOCALIZATION_LLM",
+  "LOCALIZATION_LLM_FALLBACK",
+  "LOCALIZATION_LLM_FALLBACK_2",
+  "LOCALIZATION_LLM_FALLBACK_3",
+  "CONTENT_OS_AI",
+  "CONTENT_OS_AI_FALLBACK",
+  "CONTENT_OS_AI_FALLBACK_2",
+  "CONTENT_OS_AI_FALLBACK_3",
+  "IMAGE_LLM",
+] as const;
+
+function endpointConfigured(
+  env: Record<string, string | undefined>,
+  prefix: string,
+): boolean {
+  const baseUrl = env[`${prefix}_BASE_URL`];
+  const model = env[`${prefix}_MODEL`];
+  return Boolean(baseUrl && baseUrl !== "" && model && model !== "");
+}
+
 export const KNOWN_NODE_ENVS = ["development", "test", "production"] as const;
 
 export function collectServerConfigIssues(
@@ -141,17 +170,52 @@ export function collectServerConfigIssues(
     });
   }
 
-  for (const key of ["WRITING_LLM_BASE_URL", "LOCALIZATION_LLM_BASE_URL"] as const) {
-    const value = env[key];
-    if (value !== undefined && value !== "" && !isHttpUrl(value)) {
-      issues.push({ key, problem: "must be an absolute http(s) URL" });
+  for (const prefix of LLM_ENDPOINT_PREFIXES) {
+    const baseUrl = env[`${prefix}_BASE_URL`];
+    const model = env[`${prefix}_MODEL`];
+    const baseUrlSet = baseUrl !== undefined && baseUrl !== "";
+    const modelSet = model !== undefined && model !== "";
+    if (baseUrlSet && !isHttpUrl(baseUrl)) {
+      issues.push({
+        key: `${prefix}_BASE_URL`,
+        problem: "must be an absolute http(s) URL",
+      });
+    }
+    if (baseUrlSet !== modelSet) {
+      issues.push({
+        key: `${prefix}_BASE_URL/${prefix}_MODEL`,
+        problem: `incomplete endpoint: set both ${prefix}_BASE_URL and ${prefix}_MODEL, or neither`,
+      });
+    }
+    const timeout = env[`${prefix}_TIMEOUT_MS`];
+    if (timeout !== undefined && timeout !== "" && !isPositiveIntegerString(timeout)) {
+      issues.push({
+        key: `${prefix}_TIMEOUT_MS`,
+        problem: "must be a positive integer number of milliseconds",
+      });
     }
   }
 
-  for (const key of ["WRITING_LLM_TIMEOUT_MS", "LOCALIZATION_LLM_TIMEOUT_MS"] as const) {
-    const value = env[key];
-    if (value !== undefined && value !== "" && !isPositiveIntegerString(value)) {
-      issues.push({ key, problem: "must be a positive integer number of milliseconds" });
+  const aiEndpointConfigured =
+    endpointConfigured(env, "CONTENT_OS_AI") ||
+    endpointConfigured(env, "WRITING_LLM");
+
+  for (const gate of ["CONTENT_OS_AI_INTERPRETATION", "CONTENT_OS_AI_BROWSER"] as const) {
+    const value = env[gate];
+    if (value === undefined || value === "") continue;
+    if (value !== "1") {
+      issues.push({
+        key: gate,
+        problem: 'must be exactly "1" to enable the model-assisted path',
+      });
+      continue;
+    }
+    if (!aiEndpointConfigured) {
+      issues.push({
+        key: gate,
+        problem:
+          "requires a configured model endpoint: set CONTENT_OS_AI_BASE_URL/CONTENT_OS_AI_MODEL (or WRITING_LLM_BASE_URL/WRITING_LLM_MODEL)",
+      });
     }
   }
 
@@ -188,6 +252,9 @@ export type FeatureCapability = {
 
 export type FeatureCapabilities = {
   publishing: FeatureCapability & { provider: string | null };
+  aiProvider: FeatureCapability;
+  aiInterpretation: FeatureCapability;
+  aiBrowser: FeatureCapability;
   writingProvider: FeatureCapability;
   localizationProvider: FeatureCapability;
 };
@@ -207,6 +274,26 @@ export function describeFeatureCapabilities(
   const publishingKeyPresent =
     env["PUBLISHING_SECRET_KEY"] !== undefined && env["PUBLISHING_SECRET_KEY"] !== "";
 
+  const aiConfigured =
+    endpointConfigured(env, "CONTENT_OS_AI") ||
+    endpointConfigured(env, "WRITING_LLM");
+  const interpretationEnabled = env["CONTENT_OS_AI_INTERPRETATION"] === "1";
+  const browserEnabled = env["CONTENT_OS_AI_BROWSER"] === "1";
+  const writingConfigured = endpointConfigured(env, "WRITING_LLM");
+  const localizationConfigured =
+    endpointConfigured(env, "LOCALIZATION_LLM") || writingConfigured;
+
+  // Slot N is configured if any prefix allowed for that slot is complete; the
+  // prefix lists mirror each factory's precedence (localization and the AI seam
+  // inherit the writing chain when their own slots are absent).
+  const FALLBACK_SUFFIXES = ["", "_2", "_3"] as const;
+  const fallbackCount = (prefixes: readonly string[]): number =>
+    FALLBACK_SUFFIXES.filter((suffix) =>
+      prefixes.some((prefix) => endpointConfigured(env, `${prefix}${suffix}`)),
+    ).length;
+  const endpointDetail = (count: number): string =>
+    count > 0 ? `configured with ${count} fallback endpoint(s)` : "configured";
+
   return {
     publishing: {
       available: mastodonConfigured && publishingKeyPresent,
@@ -217,20 +304,43 @@ export function describeFeatureCapabilities(
           : "PUBLISHING_SECRET_KEY is not configured"
         : "no publishing provider is configured",
     },
+    aiProvider: {
+      available: aiConfigured,
+      detail: aiConfigured
+        ? endpointDetail(
+            fallbackCount(["CONTENT_OS_AI_FALLBACK", "WRITING_LLM_FALLBACK"]),
+          )
+        : "no model endpoint is configured",
+    },
+    aiInterpretation: {
+      available: interpretationEnabled && aiConfigured,
+      detail: !aiConfigured
+        ? "no model endpoint is configured"
+        : interpretationEnabled
+          ? "enabled with a configured model endpoint"
+          : "disabled (set CONTENT_OS_AI_INTERPRETATION=1 to enable)",
+    },
+    aiBrowser: {
+      available: browserEnabled && aiConfigured,
+      detail: !aiConfigured
+        ? "no model endpoint is configured"
+        : browserEnabled
+          ? "enabled with a configured model endpoint"
+          : "disabled (set CONTENT_OS_AI_BROWSER=1 to enable)",
+    },
     writingProvider: {
-      available: Boolean(env["WRITING_LLM_BASE_URL"]),
-      detail: env["WRITING_LLM_BASE_URL"]
-        ? "configured"
+      available: writingConfigured,
+      detail: writingConfigured
+        ? endpointDetail(fallbackCount(["WRITING_LLM_FALLBACK"]))
         : "rules-based provider only",
     },
     localizationProvider: {
-      available: Boolean(
-        env["LOCALIZATION_LLM_BASE_URL"] ?? env["WRITING_LLM_BASE_URL"],
-      ),
-      detail:
-        env["LOCALIZATION_LLM_BASE_URL"] ?? env["WRITING_LLM_BASE_URL"]
-          ? "configured"
-          : "local-rules substitution provider only",
+      available: localizationConfigured,
+      detail: localizationConfigured
+        ? endpointDetail(
+            fallbackCount(["LOCALIZATION_LLM_FALLBACK", "WRITING_LLM_FALLBACK"]),
+          )
+        : "local-rules substitution provider only",
     },
   };
 }

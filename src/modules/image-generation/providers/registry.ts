@@ -2,8 +2,16 @@ import type { ImageGenerationProvider } from "../domain/types";
 import { ImageGenerationError } from "../errors";
 import { localGraphicProvider } from "./local-graphic-provider";
 import type { ImageProviderAdapter } from "./provider";
-import { remoteImageProvider } from "./remote-image-provider";
+import {
+  getRemoteImageProvider,
+  remoteImageProvider,
+} from "./remote-image-provider";
 
+/**
+ * The default adapters. REMOTE_IMAGE appears here as the unconfigured hole;
+ * `getImageProvider` swaps in the real remote adapter when an image endpoint
+ * is configured. The map stays total over the enum either way.
+ */
 export const IMAGE_PROVIDERS: Record<
   ImageGenerationProvider,
   ImageProviderAdapter
@@ -20,6 +28,10 @@ export const IMAGE_PROVIDERS: Record<
 export function getImageProvider(
   provider: ImageGenerationProvider,
 ): ImageProviderAdapter {
+  if (provider === "REMOTE_IMAGE") {
+    return getRemoteImageProvider();
+  }
+
   const adapter = IMAGE_PROVIDERS[provider];
   if (!adapter) {
     throw new ImageGenerationError(

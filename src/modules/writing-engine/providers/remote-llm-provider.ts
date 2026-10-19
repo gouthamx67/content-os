@@ -1,4 +1,8 @@
-import { llmFetch, readBoundedJson } from "../../../lib/llm-http";
+import {
+  llmEndpointLabel,
+  requestChatCompletion,
+  type LlmEndpoint,
+} from "../../../lib/llm-chat";
 import { WritingError } from "../errors";
 import type { WritingCandidate } from "../domain/types";
 import type {
@@ -20,7 +24,7 @@ export type RemoteLlmConfig = {
  * is what lets the registry honestly refuse a `REMOTE_LLM` request.
  */
 export function remoteLlmConfigFromEnv(
-  env: NodeJS.ProcessEnv = process.env,
+  env: Record<string, string | undefined> = process.env,
 ): RemoteLlmConfig | null {
   const baseUrl = env["WRITING_LLM_BASE_URL"]?.trim();
   const model = env["WRITING_LLM_MODEL"]?.trim();
@@ -34,10 +38,65 @@ export function remoteLlmConfigFromEnv(
   };
 }
 
-type ChatCompletionResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
-  model?: string;
-};
+/**
+ * Fallback endpoints, in order. A deployment that names fallbacks (for
+ * example OpenAI primary, Groq then NVIDIA then OpenRouter behind it) gets one
+ * bounded failover attempt per endpoint when a failure is one a different
+ * endpoint could plausibly fix — unreachable, rate limited, expired
+ * credentials — which is what keeps a single expired key from taking writing
+ * offline. Slot 1 uses the original unnumbered names; later slots add `_2_`,
+ * `_3_`. The transport caps the whole chain (see `MAX_ENDPOINTS`).
+ */
+const MAX_WRITING_LLM_FALLBACKS = 3;
+
+function fallbackConfigAt(
+  env: Record<string, string | undefined>,
+  index: number,
+): RemoteLlmConfig | null {
+  const suffix = index === 1 ? "" : `_${index}`;
+  const baseUrl = env[`WRITING_LLM_FALLBACK${suffix}_BASE_URL`]?.trim();
+  const model = env[`WRITING_LLM_FALLBACK${suffix}_MODEL`]?.trim();
+  if (!baseUrl || !model) return null;
+  const timeoutRaw = Number.parseInt(
+    env[`WRITING_LLM_FALLBACK${suffix}_TIMEOUT_MS`] ?? "",
+    10,
+  );
+  return {
+    baseUrl: baseUrl.replace(/\/+$/, ""),
+    apiKey: env[`WRITING_LLM_FALLBACK${suffix}_API_KEY`]?.trim() ?? null,
+    model,
+    timeoutMs: Number.isFinite(timeoutRaw) && timeoutRaw > 0 ? timeoutRaw : 30_000,
+  };
+}
+
+/** The first fallback endpoint, for callers that want exactly one. */
+export function remoteLlmFallbackFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): RemoteLlmConfig | null {
+  return fallbackConfigAt(env, 1);
+}
+
+/** The ordered fallback list the container hands to the provider factory. */
+export function remoteLlmFallbackChainFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): RemoteLlmConfig[] {
+  const chain: RemoteLlmConfig[] = [];
+  for (let index = 1; index <= MAX_WRITING_LLM_FALLBACKS; index += 1) {
+    const config = fallbackConfigAt(env, index);
+    if (config) chain.push(config);
+  }
+  return chain;
+}
+
+function toEndpoint(config: RemoteLlmConfig): LlmEndpoint {
+  return {
+    label: llmEndpointLabel(config.baseUrl),
+    baseUrl: config.baseUrl,
+    model: config.model,
+    apiKey: config.apiKey,
+    timeoutMs: config.timeoutMs,
+  };
+}
 
 function groundingBlock(request: WritingProviderRequest): string {
   const lines = request.context.facts
@@ -69,93 +128,88 @@ function buildPrompt(request: WritingProviderRequest): string {
  * The explicit remote boundary. It is only constructed when `remoteLlmConfigFromEnv`
  * found a base URL and a model, so its mere existence means the engine is allowed
  * to spend an external call. A network or parse failure raises rather than
- * returning fabricated copy.
+ * returning fabricated copy. The optional fallback endpoint is used only for
+ * retryable transport failures (see the shared transport for the exact list).
  */
 export function createRemoteLlmProvider(
   config: RemoteLlmConfig,
+  fallbacks: readonly RemoteLlmConfig[] = [],
 ): WritingTextProvider {
+  const endpoints = [toEndpoint(config), ...fallbacks.map(toEndpoint)];
+
   return {
     id: "REMOTE_LLM",
 
     async generate(request: WritingProviderRequest): Promise<WritingProviderResult> {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), config.timeoutMs);
-
-      let response: Response;
+      let completion;
       try {
-        response = await llmFetch(`${config.baseUrl}/chat/completions`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            ...(config.apiKey ? { authorization: `Bearer ${config.apiKey}` } : {}),
-          },
-          body: JSON.stringify({
-            model: config.model,
-            temperature: 0.7,
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a grounded marketing copywriter. You only state what the provided project facts support.",
-              },
-              { role: "user", content: buildPrompt(request) },
-            ],
-          }),
-          signal: controller.signal,
-        });
+        completion = await requestChatCompletion(
+          endpoints,
+          [
+            {
+              role: "system",
+              content:
+                "You are a grounded marketing copywriter. You only state what the provided project facts support.",
+            },
+            { role: "user", content: buildPrompt(request) },
+          ],
+          { temperature: 0.7 },
+        );
       } catch (error) {
         throw new WritingError(
           "WRITING_GENERATION_FAILED",
           `Remote provider request failed: ${(error as Error).message}`,
           502,
         );
-      } finally {
-        clearTimeout(timer);
       }
 
-      if (!response.ok) {
-        throw new WritingError(
-          "WRITING_GENERATION_FAILED",
-          `Remote provider returned ${response.status}`,
-          502,
-        );
-      }
-
-      const payload = (await readBoundedJson(
-        response,
-      )) as ChatCompletionResponse | null;
-
-      if (!payload) {
-        throw new WritingError(
-          "WRITING_GENERATION_FAILED",
-          "Remote provider returned an unreadable response",
-          502,
-        );
-      }
-
-      const content = payload.choices?.[0]?.message?.content ?? "";
-      const candidates = parseVariants(content, request.variantCount);
+      const candidates = parseVariants(completion.content, request.variantCount);
 
       return {
         candidates,
-        providerModel: payload.model ?? config.model,
+        providerModel: completion.model,
         providerVersion: "remote-llm",
       };
     },
   };
 }
 
-function parseVariants(content: string, limit: number): WritingCandidate[] {
-  let parsed: unknown;
+/**
+ * Models wrap JSON in markdown fences or a sentence of preamble more often
+ * than they should, so the first JSON object or array in the response is read
+ * the same way the localization parser reads its segments. A response with
+ * nothing parseable is still an error, not an empty variant list.
+ */
+function extractVariantsJson(content: string): unknown {
+  const trimmed = content.trim();
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(trimmed);
+  const body = fenced ? fenced[1].trim() : trimmed;
+
   try {
-    parsed = JSON.parse(content);
+    return JSON.parse(body);
   } catch {
-    throw new WritingError(
-      "WRITING_GENERATION_FAILED",
-      "Remote provider did not return JSON",
-      502,
-    );
+    // fall through to the bracket scan
   }
+
+  const objectStart = body.indexOf("{");
+  const objectEnd = body.lastIndexOf("}");
+  if (objectStart !== -1 && objectEnd > objectStart) {
+    try {
+      return JSON.parse(body.slice(objectStart, objectEnd + 1));
+    } catch {
+      // fall through to the structured error below
+    }
+  }
+
+  throw new WritingError(
+    "WRITING_GENERATION_FAILED",
+    "Remote provider did not return JSON",
+    502,
+  );
+}
+
+function parseVariants(content: string, limit: number): WritingCandidate[] {
+  const parsed = extractVariantsJson(content);
 
   const variants =
     parsed && typeof parsed === "object" && Array.isArray((parsed as { variants?: unknown }).variants)

@@ -179,12 +179,25 @@ export async function startStack(options?: {
   withRenderWorker?: boolean;
   withMultiformatWorker?: boolean;
   withPublishingWorker?: boolean;
+  /**
+   * The production smoke needs the honest "no provider configured" path, so it
+   * asks for a stack where no publishing variables are set at all. Every other
+   * spec runs against the stub provider.
+   */
+  withoutPublishingConfig?: boolean;
 }): Promise<E2EStack> {
   process.env["DATABASE_URL"] = DATABASE_URL;
 
   const mastodonStub = await ensureMastodonStub();
-  process.env["PUBLISHING_MASTODON_BASE_URL"] = mastodonStub.baseUrl;
-  Object.assign(process.env, publishingEnvironment());
+  if (options?.withoutPublishingConfig) {
+    delete process.env["PUBLISHING_MASTODON_BASE_URL"];
+    delete process.env["PUBLISHING_MASTODON_CLIENT_ID"];
+    delete process.env["PUBLISHING_MASTODON_CLIENT_SECRET"];
+    delete process.env["PUBLISHING_SECRET_KEY"];
+  } else {
+    process.env["PUBLISHING_MASTODON_BASE_URL"] = mastodonStub.baseUrl;
+    Object.assign(process.env, publishingEnvironment());
+  }
 
   const stack: E2EStack = {
     reachable: await serverReachable(),
@@ -268,6 +281,32 @@ export function stopStack(stack: E2EStack): void {
   if (stack.startedDevServer && stack.devServer) {
     stack.devServer.kill("SIGTERM");
   }
+}
+
+/**
+ * Restarts the auto-started web server and waits for it to serve again. Only
+ * meaningful when the harness started the server itself; if the operator ran
+ * the server by hand this is a no-op that reports the current reachability, so
+ * a smoke run never kills a process it does not own.
+ */
+export async function restartServer(stack: E2EStack): Promise<boolean> {
+  if (!stack.startedDevServer || !stack.devServer) return stack.reachable;
+
+  const previous = stack.devServer;
+  previous.kill("SIGTERM");
+  await Promise.race([
+    new Promise<void>((resolve) => previous.once("exit", () => resolve())),
+    sleep(10_000),
+  ]);
+
+  stack.reachable = false;
+  stack.devServer = spawn("npm", ["run", "start"], {
+    cwd: repoRoot,
+    env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
+    stdio: "ignore",
+  });
+  stack.reachable = await waitForServer(90_000);
+  return stack.reachable;
 }
 
 /**

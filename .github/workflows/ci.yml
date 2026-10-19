@@ -1,0 +1,124 @@
+name: CI
+
+# The contract, the type system, lint, the unit/integration suite, and the
+# production build must all pass before anything is considered mergeable. The
+# browser end-to-end suite runs in a second job because it needs Chromium and
+# FFmpeg, which are slow to provision.
+#
+# NOTE: these jobs were authored and linted locally but not executed on GitHub
+# from the development environment that produced them. Treat the first run as a
+# smoke of the workflow itself.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://contentos:contentos@localhost:5433/content_os_test
+
+jobs:
+  build-and-test:
+    name: Build, lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: contentos
+          POSTGRES_PASSWORD: contentos
+          POSTGRES_DB: content_os_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U contentos"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Emit contract from PSL
+        run: npx prisma contract emit
+
+      - name: Apply migrations to the test database
+        run: npx prisma db migrate
+
+      - name: Verify the test database matches the contract
+        run: npx prisma db verify
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npx eslint . --no-cache
+
+      - name: Unit and integration tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+  e2e:
+    name: Browser end-to-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: build-and-test
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: contentos
+          POSTGRES_PASSWORD: contentos
+          POSTGRES_DB: content_os
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U contentos"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql://contentos:contentos@localhost:5433/content_os
+      SESSION_COOKIE_NAME: content_os_session
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium for playwright-core
+        run: npx -y playwright@1.56.0 install --with-deps chromium
+
+      - name: Apply migrations
+        run: npx prisma db migrate
+
+      - name: Browser end-to-end tests
+        run: npm run test:e2e
