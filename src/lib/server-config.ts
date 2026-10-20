@@ -196,6 +196,50 @@ export function collectServerConfigIssues(
     }
   }
 
+  // AI Horde needs an origin, not a model: the volunteer fleet chooses the
+  // checkpoint. Validate what is required, not a shape it does not have.
+  const hordeBase = env["IMAGE_HORDE_BASE_URL"];
+  if (hordeBase !== undefined && hordeBase !== "" && !isHttpUrl(hordeBase)) {
+    issues.push({
+      key: "IMAGE_HORDE_BASE_URL",
+      problem: "must be an absolute http(s) URL",
+    });
+  }
+  const hordeTimeout = env["IMAGE_HORDE_TIMEOUT_MS"];
+  if (
+    hordeTimeout !== undefined &&
+    hordeTimeout !== "" &&
+    !isPositiveIntegerString(hordeTimeout)
+  ) {
+    issues.push({
+      key: "IMAGE_HORDE_TIMEOUT_MS",
+      problem: "must be a positive integer number of milliseconds",
+    });
+  }
+
+  const pollinationsBase = env["IMAGE_POLLINATIONS_BASE_URL"];
+  if (
+    pollinationsBase !== undefined &&
+    pollinationsBase !== "" &&
+    !isHttpUrl(pollinationsBase)
+  ) {
+    issues.push({
+      key: "IMAGE_POLLINATIONS_BASE_URL",
+      problem: "must be an absolute http(s) URL",
+    });
+  }
+  const pollinationsTimeout = env["IMAGE_POLLINATIONS_TIMEOUT_MS"];
+  if (
+    pollinationsTimeout !== undefined &&
+    pollinationsTimeout !== "" &&
+    !isPositiveIntegerString(pollinationsTimeout)
+  ) {
+    issues.push({
+      key: "IMAGE_POLLINATIONS_TIMEOUT_MS",
+      problem: "must be a positive integer number of milliseconds",
+    });
+  }
+
   const aiEndpointConfigured =
     endpointConfigured(env, "CONTENT_OS_AI") ||
     endpointConfigured(env, "WRITING_LLM");

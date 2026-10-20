@@ -307,7 +307,7 @@ afterAll(async () => {
       () => undefined,
     );
   }
-  if (stack) stopStack(stack);
+  if (stack) await stopStack(stack);
   if (stub) stub.reset();
 });
 

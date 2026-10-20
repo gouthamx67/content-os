@@ -1,5 +1,7 @@
 import { container } from "./container";
 
+export const storage = container.providers.storage;
+
 export const projectService = container.services.projects;
 
 export const generationService = container.services.generation;

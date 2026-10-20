@@ -1,5 +1,6 @@
 import { ContentIntentError } from "../../core/domain/content-intent";
 import type { ContentIntentInterpretationRequest } from "../../core/ports/content-intent-interpreter";
+import { INTENT_PURPOSES } from "../../lib/intent-lexicon";
 
 export const CONTENT_INTENT_SYSTEM_PROMPT = [
   "You resolve what a user asked for. You do not decide what to make creatively.",
@@ -58,6 +59,8 @@ export function buildContentIntentPrompt(
           `- ${contentType.id} (${contentType.channel}) ${contentType.name}: ${contentType.description}`,
       )
       .join("\n") || "- (none)",
+    "",
+    `Allowed purposes (use one of these exactly, or omit the field): ${INTENT_PURPOSES.join("|")}`,
     "",
     "Available platforms (use these ids exactly):",
     request.platforms

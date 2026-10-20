@@ -89,7 +89,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (browser) await browser.close();
-  stopStack(stack);
+  await stopStack(stack);
   if (user) await cleanupE2EUser(email, user.workspaceId, projectIds);
 });
 

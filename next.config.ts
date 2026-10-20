@@ -32,7 +32,10 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   poweredByHeader: false,
   async headers() {
-    const isDev = process.env.NODE_ENV === "development";
+    // Any non-production run serves React's development build, which needs
+    // eval() for debugging; test runners set NODE_ENV=test and spawned dev
+    // servers inherit it, so only production may drop 'unsafe-eval'.
+    const isDev = process.env.NODE_ENV !== "production";
 
     const headers = [
       { key: "X-Content-Type-Options", value: "nosniff" },

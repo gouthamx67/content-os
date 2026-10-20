@@ -4,8 +4,9 @@ import {
   ensureMastodonStub,
   type MastodonStubController,
 } from "./mastodon-stub";
-import { spawn, type ChildProcess } from "node:child_process";
-import { readdir, stat } from "node:fs/promises";
+import type { ChildProcess } from "node:child_process";
+import { spawnDetached, stopDetached } from "./process-control";
+import { readdir, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { execFile as execFileCb } from "node:child_process";
@@ -35,9 +36,13 @@ let buildPromise: Promise<void> | undefined;
 
 async function ensureProductionBuild(): Promise<void> {
   if (!buildPromise) {
-    buildPromise = execFile("npm", ["run", "build"], {
-      cwd: repoRoot,
-    }).then(() => undefined);
+    buildPromise = (async () => {
+      if (await exists(buildSentinel)) return;
+      await execFile("npm", ["run", "build"], { cwd: repoRoot });
+      await writeFile(buildSentinel, new Date().toISOString(), "utf8").catch(
+        () => undefined,
+      );
+    })();
   }
   await buildPromise;
 }
@@ -50,6 +55,7 @@ export const DATABASE_URL =
 export const SESSION_COOKIE =
   process.env["SESSION_COOKIE_NAME"] ?? "content_os_session";
 export const repoRoot = process.cwd();
+const buildSentinel = path.join(repoRoot, ".next", "e2e-build-ready");
 
 /**
  * Every stack is started with a clearly-labeled stub Mastodon as the publishing
@@ -168,10 +174,9 @@ function publishingEnvironment(): Record<string, string> {
 }
 
 export function spawnPublishingWorker(): ChildProcess {
-  return spawn("npx", ["tsx", "src/scripts/publishing-worker.ts"], {
+  return spawnDetached("npx", ["tsx", "src/scripts/publishing-worker.ts"], {
     cwd: repoRoot,
     env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
-    stdio: "ignore",
   });
 }
 
@@ -208,10 +213,9 @@ export async function startStack(options?: {
 
   if (!stack.reachable && !process.env["CONTENT_OS_E2E_NO_AUTOSTART"]) {
     await ensureProductionBuild();
-    stack.devServer = spawn("npm", ["run", "start"], {
+    stack.devServer = spawnDetached("npm", ["run", "start"], {
       cwd: repoRoot,
       env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
-      stdio: "ignore",
     });
     stack.startedDevServer = true;
     stack.reachable = await waitForServer(90_000);
@@ -219,42 +223,38 @@ export async function startStack(options?: {
 
   if (!stack.reachable) return stack;
 
-  stack.imageWorker = spawn(
+  stack.imageWorker = spawnDetached(
     "npx",
     ["tsx", "src/scripts/image-generation-worker.ts"],
     {
       cwd: repoRoot,
       env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
-      stdio: "ignore",
     },
   );
 
-  stack.writingWorker = spawn(
+  stack.writingWorker = spawnDetached(
     "npx",
     ["tsx", "src/scripts/writing-worker.ts"],
     {
       cwd: repoRoot,
       env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
-      stdio: "ignore",
     },
   );
 
   if (options?.withRenderWorker) {
-    stack.videoWorker = spawn("npx", ["tsx", "src/scripts/render-worker.ts"], {
+    stack.videoWorker = spawnDetached("npx", ["tsx", "src/scripts/render-worker.ts"], {
       cwd: repoRoot,
       env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
-      stdio: "ignore",
     });
   }
 
   if (options?.withMultiformatWorker) {
-    stack.multiformatWorker = spawn(
+    stack.multiformatWorker = spawnDetached(
       "npx",
       ["tsx", "src/scripts/multiformat-worker.ts"],
       {
         cwd: repoRoot,
         env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
-        stdio: "ignore",
       },
     );
   }
@@ -272,15 +272,15 @@ export async function startStack(options?: {
   return stack;
 }
 
-export function stopStack(stack: E2EStack): void {
-  if (stack.publishingWorker) stack.publishingWorker.kill("SIGTERM");
-  if (stack.multiformatWorker) stack.multiformatWorker.kill("SIGTERM");
-  if (stack.videoWorker) stack.videoWorker.kill("SIGTERM");
-  if (stack.writingWorker) stack.writingWorker.kill("SIGTERM");
-  if (stack.imageWorker) stack.imageWorker.kill("SIGTERM");
-  if (stack.startedDevServer && stack.devServer) {
-    stack.devServer.kill("SIGTERM");
-  }
+export async function stopStack(stack: E2EStack): Promise<void> {
+  await Promise.all([
+    stopDetached(stack.publishingWorker),
+    stopDetached(stack.multiformatWorker),
+    stopDetached(stack.videoWorker),
+    stopDetached(stack.writingWorker),
+    stopDetached(stack.imageWorker),
+    stack.startedDevServer ? stopDetached(stack.devServer) : Promise.resolve(),
+  ]);
 }
 
 /**
@@ -292,18 +292,12 @@ export function stopStack(stack: E2EStack): void {
 export async function restartServer(stack: E2EStack): Promise<boolean> {
   if (!stack.startedDevServer || !stack.devServer) return stack.reachable;
 
-  const previous = stack.devServer;
-  previous.kill("SIGTERM");
-  await Promise.race([
-    new Promise<void>((resolve) => previous.once("exit", () => resolve())),
-    sleep(10_000),
-  ]);
+  await stopDetached(stack.devServer);
 
   stack.reachable = false;
-  stack.devServer = spawn("npm", ["run", "start"], {
+  stack.devServer = spawnDetached("npm", ["run", "start"], {
     cwd: repoRoot,
     env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
-    stdio: "ignore",
   });
   stack.reachable = await waitForServer(90_000);
   return stack.reachable;
@@ -316,11 +310,7 @@ export async function restartServer(stack: E2EStack): Promise<boolean> {
 export async function stopPublishingWorker(stack: E2EStack): Promise<void> {
   const worker = stack.publishingWorker;
   if (!worker) return;
-  worker.kill("SIGTERM");
-  await Promise.race([
-    new Promise<void>((resolve) => worker.once("exit", () => resolve())),
-    sleep(5_000),
-  ]);
+  await stopDetached(worker);
   stack.publishingWorker = undefined;
 }
 

@@ -133,6 +133,40 @@ describe("collectServerConfigIssues", () => {
     expect(keys(issues)).toContain("LOCALIZATION_LLM_FALLBACK_TIMEOUT_MS");
   });
 
+  it("validates the AI Horde origin without requiring a model", () => {
+    expect(
+      collectServerConfigIssues({
+        DATABASE_URL: VALID_DATABASE_URL,
+        IMAGE_HORDE_BASE_URL: "https://aihorde.net",
+      }),
+    ).toEqual([]);
+
+    const bad = collectServerConfigIssues({
+      DATABASE_URL: VALID_DATABASE_URL,
+      IMAGE_HORDE_BASE_URL: "ftp://horde.example.com",
+      IMAGE_HORDE_TIMEOUT_MS: "0",
+    });
+    expect(keys(bad)).toContain("IMAGE_HORDE_BASE_URL");
+    expect(keys(bad)).toContain("IMAGE_HORDE_TIMEOUT_MS");
+  });
+
+  it("validates the keyless Pollinations origin without requiring a model", () => {
+    expect(
+      collectServerConfigIssues({
+        DATABASE_URL: VALID_DATABASE_URL,
+        IMAGE_POLLINATIONS_BASE_URL: "https://image.pollinations.ai",
+      }),
+    ).toEqual([]);
+
+    const bad = collectServerConfigIssues({
+      DATABASE_URL: VALID_DATABASE_URL,
+      IMAGE_POLLINATIONS_BASE_URL: "not-a-url",
+      IMAGE_POLLINATIONS_TIMEOUT_MS: "-1",
+    });
+    expect(keys(bad)).toContain("IMAGE_POLLINATIONS_BASE_URL");
+    expect(keys(bad)).toContain("IMAGE_POLLINATIONS_TIMEOUT_MS");
+  });
+
   it("accepts a complete writing endpoint with fallbacks", () => {
     expect(
       collectServerConfigIssues({

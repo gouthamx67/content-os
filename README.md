@@ -1,20 +1,29 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Run the full app locally
 
-First, run the development server:
+Requires Postgres on `localhost:5433` and a `.env` with `DATABASE_URL` plus any
+providers you want to use. Then:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx prisma db migrate   # apply contract migrations
+npm run demo            # web + writing, image, audio, render, multiformat, publishing
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000), register, create a project,
+add a brief, and generate. The web process only enqueues jobs; the workers
+consume them. `npm run demo` enables the interpretation seams by default; set
+`CONTENT_OS_AI_INTERPRETATION=0` explicitly for deterministic-only behavior.
+Ctrl+C stops every process group.
+
+Text and image providers are optional for deterministic flows, and free or
+community endpoints work: Groq, NVIDIA and OpenRouter for text; AI Horde and
+Pollinations for images. Without a writing or image provider, those jobs fail
+with an explicit unconfigured error rather than fabricating output.
+
+For a web-only development server, run `npm run dev` and start the workers you
+need (`npm run writing:worker`, `npm run image:worker`, etc.) in separate
+terminals.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

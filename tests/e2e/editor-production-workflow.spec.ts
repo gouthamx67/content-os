@@ -223,7 +223,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (browser) await browser.close();
-  if (stack) stopStack(stack);
+  if (stack) await stopStack(stack);
   if (user) await cleanupE2EUser(email, user.workspaceId, projectIds);
 });
 

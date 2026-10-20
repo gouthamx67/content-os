@@ -1,4 +1,5 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
+import { spawnDetached, stopDetached } from "./support/process-control";
 import { readdir, rm, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -131,7 +132,7 @@ beforeAll(async () => {
 
   reachable = await serverReachable();
   if (!reachable && !process.env["CONTENT_OS_E2E_NO_AUTOSTART"]) {
-    devServer = spawn("npm", ["run", "dev"], {
+    devServer = spawnDetached("npm", ["run", "start"], {
       cwd: repoRoot,
       env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
       stdio: "ignore",
@@ -223,7 +224,7 @@ afterAll(async () => {
     await browser.close();
   }
 
-  if (startedDevServer && devServer) devServer.kill("SIGTERM");
+  if (startedDevServer) await stopDetached(devServer);
 
   if (reachable && projectId && services) {
     const { db } = await import("../../src/prisma/db");

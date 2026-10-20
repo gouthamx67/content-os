@@ -138,10 +138,11 @@ type ImagesResponse = {
   data?: Array<{ b64_json?: string; url?: string }>;
 };
 
-async function fetchImageBytes(
+export async function fetchImageBytes(
   url: string,
   timeoutMs: number,
   callerSignal: AbortSignal | undefined,
+  label = "Remote image provider",
 ): Promise<Buffer> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -152,26 +153,26 @@ async function fetchImageBytes(
     if (!response.ok) {
       await response.body?.cancel().catch(() => undefined);
       throw new ImageExecutionError(
-        `Remote image provider download failed (HTTP ${response.status})`,
+        `${label} download failed (HTTP ${response.status})`,
       );
     }
     const buffer = Buffer.from(await response.arrayBuffer());
     if (buffer.byteLength === 0 || buffer.byteLength > IMAGE_RESPONSE_MAX_BYTES) {
       throw new ImageExecutionError(
-        "Remote image provider download was empty or oversized",
+        `${label} download was empty or oversized`,
       );
     }
     return buffer;
   } catch (error) {
     if (error instanceof ImageGenerationError) throw error;
-    throw new ImageExecutionError("Remote image provider download failed");
+    throw new ImageExecutionError(`${label} download failed`);
   } finally {
     clearTimeout(timer);
     callerSignal?.removeEventListener("abort", onCallerAbort);
   }
 }
 
-async function normalizeImage(
+export async function normalizeImage(
   input: ProviderGenerationInput,
   raw: Buffer,
 ): Promise<{ bytes: Buffer; width: number; height: number }> {

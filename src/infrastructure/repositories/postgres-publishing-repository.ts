@@ -691,7 +691,12 @@ export class PostgresPublishingRepository implements PublishingRepository {
       projectId,
       publicationId,
     })
-      .orderBy((row) => row.collectedAt.desc())
+      // Readings collected in the same instant tie on collectedAt; id is the
+      // append-only tiebreaker, so the series order is stable across reads.
+      .orderBy([
+        (row) => row.collectedAt.desc(),
+        (row) => row.id.desc(),
+      ])
       .limit(limit)
       .all()) as unknown as SnapshotRow[];
     return rows.reverse().map(decodeSnapshot);

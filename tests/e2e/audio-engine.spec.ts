@@ -1,4 +1,5 @@
-import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { execFileSync, type ChildProcess } from "node:child_process";
+import { spawnDetached, stopDetached } from "./support/process-control";
 import { mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
@@ -131,7 +132,7 @@ beforeAll(async () => {
 
   reachable = await serverReachable();
   if (!reachable && !process.env["CONTENT_OS_E2E_NO_AUTOSTART"]) {
-    devServer = spawn("npm", ["run", "dev"], {
+    devServer = spawnDetached("npm", ["run", "start"], {
       cwd: repoRoot,
       env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
       stdio: "ignore",
@@ -142,12 +143,12 @@ beforeAll(async () => {
 
   if (!reachable) return;
 
-  videoWorker = spawn("npx", ["tsx", "src/scripts/render-worker.ts"], {
+  videoWorker = spawnDetached("npx", ["tsx", "src/scripts/render-worker.ts"], {
     cwd: repoRoot,
     env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
     stdio: "ignore",
   });
-  audioWorker = spawn("npx", ["tsx", "src/scripts/audio-worker.ts"], {
+  audioWorker = spawnDetached("npx", ["tsx", "src/scripts/audio-worker.ts"], {
     cwd: repoRoot,
     env: { ...process.env, DATABASE_URL, SESSION_COOKIE_NAME: SESSION_COOKIE },
     stdio: "ignore",
@@ -268,9 +269,9 @@ beforeAll(async () => {
 afterAll(async () => {
   if (browser) await browser.close();
 
-  if (audioWorker) audioWorker.kill("SIGTERM");
-  if (videoWorker) videoWorker.kill("SIGTERM");
-  if (startedDevServer && devServer) devServer.kill("SIGTERM");
+  await stopDetached(audioWorker);
+  await stopDetached(videoWorker);
+  if (startedDevServer) await stopDetached(devServer);
 
   if (sourceTempDir) {
     await rm(sourceTempDir, { recursive: true, force: true }).catch(

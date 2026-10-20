@@ -199,7 +199,7 @@ afterAll(async () => {
       otherProjectId,
     ]).catch(() => undefined);
   }
-  if (stack) stopStack(stack);
+  if (stack) await stopStack(stack);
   if (translationStub) {
     const stub = translationStub;
     await new Promise<void>((resolve) => stub.server.close(() => resolve()));

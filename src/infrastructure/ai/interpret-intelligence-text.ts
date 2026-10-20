@@ -14,6 +14,7 @@ import type { DraftEvidence } from "../../core/domain/intelligence-draft";
 import { collectDraftEntityTypes } from "../../core/domain/intelligence-draft";
 import {
   parseIntelligenceInterpretation,
+  RELATIONSHIP_ENDPOINTS,
   type IntelligenceInterpretationContext,
 } from "../../core/domain/intelligence-validation";
 import type {
@@ -81,6 +82,18 @@ export function buildUserPrompt(request: IntelligenceInterpretationRequest): str
     `audienceSignals[].kind: ${AUDIENCE_SIGNAL_KINDS.join("|")}`,
     `brandSignals[].kind: ${BRAND_SIGNAL_KINDS.join("|")}`,
     `relationships[].type: ${INTELLIGENCE_RELATIONSHIP_TYPES.join("|")}`,
+    `relationships[].fromType/toType (must match the type's endpoints): ${Object.entries(
+      RELATIONSHIP_ENDPOINTS,
+    )
+      .map(([type, endpoints]) => `${type}=${endpoints.from}>${endpoints.to}`)
+      .join("; ")}`,
+    "Reference rules (fromRef/toRef must name an entity you emit):",
+    "- FEATURE, WORKFLOW, PROBLEM, BENEFIT, ASSET: the exact name you emitted.",
+    "- CLAIM: the exact claim text.",
+    "- AUDIENCE_SIGNAL: the exact segment.",
+    '- BRAND_SIGNAL: "<kind>-<label>" exactly as emitted, e.g. "voice-plainspoken".',
+    '- PRODUCT: "product".',
+    "- EVIDENCE: the evidence key.",
     "",
     "Response shape:",
     "{",

@@ -56,6 +56,18 @@ type DirectoryInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 const inputClassName =
   "w-full rounded-lg border border-[#30343c] bg-[#15171c] px-3 py-2.5 text-sm text-white outline-none placeholder:text-[#62666f] focus:border-white/40";
 
+function assetAccept(type: string): string {
+  if (type === "VIDEO") return "video/mp4,video/webm,video/quicktime";
+  if (type === "AUDIO") {
+    return "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/webm,audio/ogg";
+  }
+  if (type === "DOCUMENT") return ".pdf,.txt,.md,.doc,.docx";
+  if (type === "OTHER") {
+    return "image/png,image/jpeg,image/webp,image/gif,application/pdf,text/plain,video/mp4,video/webm";
+  }
+  return "image/png,image/jpeg,image/webp,image/gif";
+}
+
 function emptyDraft(id: string): InputDraft {
   return {
     id,
@@ -103,6 +115,9 @@ export function SourceAssetForms({
   const [nextDraftId, setNextDraftId] = useState(2);
   const [assetName, setAssetName] = useState("");
   const [assetUri, setAssetUri] = useState("");
+  const [assetType, setAssetType] = useState("IMAGE");
+  const [assetMode, setAssetMode] = useState<"url" | "file">("url");
+  const [assetFile, setAssetFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -247,17 +262,38 @@ export function SourceAssetForms({
   async function addAsset(event: FormEvent) {
     event.preventDefault();
     setError(null);
+
+    if (assetMode === "file" && !assetFile) {
+      setError("Choose a file to upload");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch(`/api/projects/${projectId}/assets`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "IMAGE",
-          name: assetName.trim() || "Asset",
-          uri: assetUri.trim() || "",
-        }),
-      });
+      let response: Response;
+
+      if (assetMode === "file" && assetFile) {
+        const form = new FormData();
+        form.set("file", assetFile);
+        form.set("type", assetType);
+        if (assetName.trim()) form.set("name", assetName.trim());
+
+        response = await fetch(`/api/projects/${projectId}/assets/upload`, {
+          method: "POST",
+          body: form,
+        });
+      } else {
+        response = await fetch(`/api/projects/${projectId}/assets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: assetType,
+            name: assetName.trim() || "Asset",
+            uri: assetUri.trim() || "",
+          }),
+        });
+      }
+
       const data = (await response.json()) as { error?: string; message?: string };
       if (!response.ok) {
         setError(data.message ?? data.error ?? "Unable to add asset");
@@ -265,6 +301,7 @@ export function SourceAssetForms({
       }
       setAssetName("");
       setAssetUri("");
+      setAssetFile(null);
       router.refresh();
     } catch {
       setError("Unable to add asset");
@@ -558,26 +595,90 @@ export function SourceAssetForms({
           )}
         </ul>
         <form onSubmit={addAsset} className="mt-4 space-y-2">
-          <input
-            type="text"
-            value={assetName}
-            onChange={(event) => setAssetName(event.target.value)}
-            className={inputClassName}
-            placeholder="Asset name"
-          />
-          <div className="flex gap-2">
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_180px]">
             <input
-              type="url"
-              value={assetUri}
-              onChange={(event) => setAssetUri(event.target.value)}
+              type="text"
+              value={assetName}
+              onChange={(event) => setAssetName(event.target.value)}
               className={inputClassName}
-              placeholder="https://…/image.png"
+              placeholder="Asset name"
             />
+            <select
+              value={assetType}
+              onChange={(event) => setAssetType(event.target.value)}
+              className={inputClassName}
+              aria-label="Asset type"
+            >
+              <option value="IMAGE">Image</option>
+              <option value="SCREENSHOT">Screenshot</option>
+              <option value="UI_CAPTURE">UI capture</option>
+              <option value="VIDEO">Video</option>
+              <option value="LOGO">Logo</option>
+              <option value="DOCUMENT">Document</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div
+            className="inline-flex rounded-lg border border-[#30343c] p-1"
+            role="group"
+            aria-label="Asset source"
+          >
+            <button
+              type="button"
+              onClick={() => setAssetMode("url")}
+              aria-pressed={assetMode === "url"}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                assetMode === "url"
+                  ? "bg-white text-black"
+                  : "text-[#a1a6af] hover:text-white"
+              }`}
+            >
+              From link
+            </button>
+            <button
+              type="button"
+              onClick={() => setAssetMode("file")}
+              aria-pressed={assetMode === "file"}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                assetMode === "file"
+                  ? "bg-white text-black"
+                  : "text-[#a1a6af] hover:text-white"
+              }`}
+            >
+              From device
+            </button>
+          </div>
+          <div className="flex gap-2">
+            {assetMode === "url" ? (
+              <input
+                key="asset-url"
+                type="url"
+                value={assetUri}
+                onChange={(event) => setAssetUri(event.target.value)}
+                className={inputClassName}
+                placeholder="https://…/image.png"
+              />
+            ) : (
+              <input
+                key="asset-file"
+                type="file"
+                accept={assetAccept(assetType)}
+                onChange={(event) =>
+                  setAssetFile(event.target.files?.[0] ?? null)
+                }
+                className={inputClassName}
+                aria-label="Asset file"
+              />
+            )}
             <Button type="submit" disabled={loading}>
               <Plus size={14} />
               Add
             </Button>
           </div>
+          <p className="text-xs text-[#777b84]">
+            Screenshot and UI capture assets let Guided mode show the real
+            product interface. Uploads are limited to 10 MB.
+          </p>
         </form>
       </section>
 

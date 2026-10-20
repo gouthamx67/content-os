@@ -70,7 +70,7 @@ afterAll(async () => {
   if (browser) await browser.close();
   if (stack?.reachable) {
     await cleanupE2EUser(email, user?.workspaceId ?? "", []);
-    stopStack(stack);
+    await stopStack(stack);
   }
 });
 

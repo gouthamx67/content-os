@@ -1,9 +1,19 @@
 import type { ImageGenerationProvider } from "../domain/types";
 import { ImageGenerationError } from "../errors";
+import {
+  aiHordeConfigFromEnv,
+  createAiHordeImageProvider,
+} from "./ai-horde-image-provider";
+import { createImageProviderChain } from "./image-provider-chain";
 import { localGraphicProvider } from "./local-graphic-provider";
+import {
+  createPollinationsImageProvider,
+  pollinationsConfigFromEnv,
+} from "./pollinations-image-provider";
 import type { ImageProviderAdapter } from "./provider";
 import {
-  getRemoteImageProvider,
+  createRemoteImageProvider,
+  remoteImageConfigFromEnv,
   remoteImageProvider,
 } from "./remote-image-provider";
 
@@ -29,7 +39,24 @@ export function getImageProvider(
   provider: ImageGenerationProvider,
 ): ImageProviderAdapter {
   if (provider === "REMOTE_IMAGE") {
-    return getRemoteImageProvider();
+    // One persisted enum, several transports. Order is the operator's stated
+    // preference: the paid OpenAI-compatible endpoint first (its quota or
+    // outage falls through), then community AI Horde, then keyless
+    // Pollinations. Only configured transports join the chain; with none the
+    // explicit unconfigured hole keeps the 503 behavior.
+    const adapters: ImageProviderAdapter[] = [];
+    const remote = remoteImageConfigFromEnv();
+    if (remote) adapters.push(createRemoteImageProvider(remote));
+    const horde = aiHordeConfigFromEnv();
+    if (horde) adapters.push(createAiHordeImageProvider(horde));
+    const pollinations = pollinationsConfigFromEnv();
+    if (pollinations) {
+      adapters.push(createPollinationsImageProvider(pollinations));
+    }
+    if (adapters.length === 0) return remoteImageProvider;
+    return adapters.length === 1
+      ? adapters[0]
+      : createImageProviderChain(adapters);
   }
 
   const adapter = IMAGE_PROVIDERS[provider];
