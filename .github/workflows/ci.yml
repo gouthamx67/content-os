@@ -65,6 +65,19 @@ jobs:
           sudo apt-get install -y ffmpeg
           npx -y playwright@1.56.0 install --with-deps chromium
 
+      # Ubuntu 24.04 restricts unprivileged user namespaces through AppArmor,
+      # which makes Chromium's own sandbox fail to start on the runner. Lift
+      # that restriction instead of disabling the sandbox in the test: the
+      # sandboxed launch path is the one production uses.
+      - name: Allow the Chromium sandbox
+        run: |
+          if sysctl -n kernel.apparmor_restrict_unprivileged_userns >/dev/null 2>&1; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          if sysctl -n kernel.unprivileged_userns_clone >/dev/null 2>&1; then
+            sudo sysctl -w kernel.unprivileged_userns_clone=1
+          fi
+
       - name: Emit contract from PSL
         run: npx prisma contract emit
 
@@ -127,6 +140,15 @@ jobs:
 
       - name: Install Chromium for playwright-core
         run: npx -y playwright@1.56.0 install --with-deps chromium
+
+      - name: Allow the Chromium sandbox
+        run: |
+          if sysctl -n kernel.apparmor_restrict_unprivileged_userns >/dev/null 2>&1; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          if sysctl -n kernel.unprivileged_userns_clone >/dev/null 2>&1; then
+            sudo sysctl -w kernel.unprivileged_userns_clone=1
+          fi
 
       - name: Apply migrations
         run: npx prisma db migrate
