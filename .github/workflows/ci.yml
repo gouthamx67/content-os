@@ -55,6 +55,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The unit/integration suite drives real Chromium, FFmpeg and audio
+      # binaries by design, so the build job needs the same tools the e2e job
+      # installs. Without them those tests fail with "ffmpeg ENOENT" or a
+      # missing browser rather than being silently skipped.
+      - name: Install FFmpeg and Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          npx -y playwright@1.56.0 install --with-deps chromium
+
       - name: Emit contract from PSL
         run: npx prisma contract emit
 
