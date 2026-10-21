@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { GRAPHIC_TEMPLATE_TYPES } from "../domain/types";
 import { validateDesignGraph } from "../domain/validation";
 import { hashRecipe } from "../serialization/hash-recipe";
+import { buildGenerationRecipe } from "../recipe/build-recipe";
 import { getGraphicTemplate } from "../templates/registry";
-import { sampleContext } from "./fixtures";
+import { fakeContextDeps, sampleContext } from "./fixtures";
 
 describe("graphic templates", () => {
   for (const type of GRAPHIC_TEMPLATE_TYPES) {
@@ -44,6 +45,35 @@ describe("graphic templates", () => {
     expect(() =>
       getGraphicTemplate("UNKNOWN" as (typeof GRAPHIC_TEMPLATE_TYPES)[number]),
     ).toThrow(/Unknown graphic template/i);
+  });
+
+  it("hashes a product hero that carries a source asset", async () => {
+    const deps = {
+      ...fakeContextDeps(),
+      listSourceAssetIds: async () => ["asset_1"],
+    };
+
+    const built = await buildGenerationRecipe(
+      {
+        templateType: "PRODUCT_HERO",
+        provider: "LOCAL_GRAPHIC",
+        prompt: "Portfolio hero card",
+        width: 1080,
+        height: 1080,
+        outputFormat: "PNG",
+        transparent: false,
+        context: {
+          projectId: "project_1",
+          userRequest: "Portfolio hero card",
+        },
+      },
+      deps,
+    );
+
+    expect(
+      built.designGraph.elements.some((element) => element.type === "IMAGE"),
+    ).toBe(true);
+    expect(built.recipeSha256).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it("draws brand content into the graph", () => {

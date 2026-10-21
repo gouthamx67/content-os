@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, Check, Pencil, RotateCcw, Sparkles } from "lucide-react";
+import { Archive, Check, Pencil, RotateCcw } from "lucide-react";
 import { Button } from "../ui/Button";
 
 export function ProjectActions({
@@ -25,11 +25,6 @@ export function ProjectActions({
   const [action, setAction] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
-
-  const [job, setJob] = useState<{
-    id: string;
-    status: string;
-  } | null>(null);
 
   async function rename() {
     if (!renameValue.trim() || renameValue.trim() === name) {
@@ -91,41 +86,6 @@ export function ProjectActions({
       router.refresh();
     } catch {
       setError("Unable to update project");
-    } finally {
-      setAction(null);
-
-      setLoading(false);
-    }
-  }
-
-  async function generate() {
-    setError(null);
-
-    setAction("generating");
-
-    setLoading(true);
-
-    try {
-      const response = await fetch(
-        `/api/projects/${projectId}/generate`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error ?? "Generation failed");
-
-        return;
-      }
-
-      setJob({ id: data.job.id, status: data.job.status });
-    } catch {
-      setError("Generation failed");
     } finally {
       setAction(null);
 
@@ -197,29 +157,11 @@ export function ProjectActions({
             </>
           )}
         </Button>
-
-        <Button
-          type="button"
-          onClick={generate}
-          disabled={loading}
-        >
-          <Sparkles size={14} />
-          {action === "generating" ? "Generating…" : "Generate content"}
-        </Button>
       </div>
 
       {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
-      {job ? (
-        <p className="text-sm text-[#b4b7bf]">
-          Generation job <span className="text-white">{job.id}</span>{" "}
-          is <span className="text-white">{job.status}</span>.
-        </p>
-      ) : null}
-
-      {action && action !== "generating" ? (
-        <p className="text-sm text-[#b4b7bf]">{action}…</p>
-      ) : null}
+      {action ? <p className="text-sm text-[#b4b7bf]">{action}…</p> : null}
     </div>
   );
 }

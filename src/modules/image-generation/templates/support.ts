@@ -175,6 +175,6 @@ export function imageElement(input: {
     height: input.height,
     zIndex: input.zIndex,
     assetRef: input.assetRef,
-    style: input.style,
+    ...(input.style === undefined ? {} : { style: input.style }),
   };
 }

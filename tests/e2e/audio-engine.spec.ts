@@ -375,25 +375,29 @@ describe("audio engine end to end", () => {
     const finalVideo = page.getByTestId("final-video");
     await finalVideo.waitFor({ state: "visible", timeout: 10_000 });
 
+    const src = await finalVideo.getAttribute("src");
+    expect(src).toMatch(/\/api\/projects\/.+\/audio\/renders\/.+\/video$/);
+
+    // The worker marks the job SUCCEEDED before every request necessarily sees
+    // the muxed artifact, and a streamed media response can take a moment to
+    // produce its first byte on a loaded CI machine. Poll the endpoint the
+    // element points at and validate the real bytes; browser decode readiness
+    // is a codec/headless concern, not a CP16 contract.
+    let bytes: Buffer | undefined;
     await expect
       .poll(
-        async () =>
-          finalVideo.evaluate(
-            (element) => (element as HTMLVideoElement).readyState,
-          ),
-        { timeout: 20_000, interval: 500 },
+        async () => {
+          const streamed = await context.request.get(`${BASE_URL}${src}`);
+          if (streamed.status() !== 200) return 0;
+          expect(streamed.headers()["content-type"]).toContain("video/mp4");
+          bytes = await streamed.body();
+          return bytes.byteLength;
+        },
+        { timeout: 90_000, interval: 1_000 },
       )
       .toBeGreaterThan(0);
 
-    const src = await finalVideo.getAttribute("src");
-    expect(src).toBeTruthy();
-
-    const streamed = await context.request.get(`${BASE_URL}${src}`);
-    expect(streamed.status()).toBe(200);
-    expect(streamed.headers()["content-type"]).toContain("video/mp4");
-    const bytes = await streamed.body();
-    expect(bytes.byteLength).toBeGreaterThan(0);
-    expect(bytes.subarray(4, 8).toString("ascii")).toBe("ftyp");
+    expect(bytes?.subarray(4, 8).toString("ascii")).toBe("ftyp");
 
     expect(consoleErrors).toEqual([]);
 

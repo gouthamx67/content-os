@@ -29,6 +29,9 @@ import {
   serializeContentIntentView,
 } from "../../../lib/content-intent-api";
 import { AppShell } from "../../../components/layout/AppShell";
+import { AdvancedSection } from "../../../components/projects/AdvancedSection";
+import { CreateContentPanel } from "../../../components/projects/CreateContentPanel";
+import { StoryboardVideoPanel } from "../../../components/projects/StoryboardVideoPanel";
 import { BrowserPanel } from "../../../components/browser/BrowserPanel";
 import { IntelligencePanel } from "../../../components/intelligence/IntelligencePanel";
 import {
@@ -121,6 +124,36 @@ export default async function ProjectDetailPage({
     contentRecommendationService.list(id, user.id),
   ]);
 
+  const latestStoryboard = [...storyboards].sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt),
+  )[0];
+  const latestDirection = latestStoryboard
+    ? directions.find(
+        (direction) => direction.id === latestStoryboard.directionId,
+      )
+    : undefined;
+  const initialContent =
+    latestStoryboard && latestDirection
+      ? {
+          storyboard: serializeStoryboard(latestStoryboard),
+          direction: serializeCreativeDirection(latestDirection),
+        }
+      : null;
+  const hasSources = sources.some((source) => source.status === "READY");
+  const hasIntelligence =
+    graph.product !== null ||
+    graph.features.length > 0 ||
+    graph.workflows.length > 0 ||
+    graph.problems.length > 0;
+  const hasProductUi = assets.some(
+    (asset) => asset.type === "SCREENSHOT" || asset.type === "UI_CAPTURE",
+  );
+  const videoBackgroundAsset = assets.find(
+    (asset) =>
+      ["SCREENSHOT", "UI_CAPTURE", "IMAGE"].includes(asset.type) &&
+      asset.uri?.startsWith("content-os-storage://"),
+  );
+
   return (
     <AppShell>
       <div className="p-5 sm:p-8">
@@ -158,91 +191,123 @@ export default async function ProjectDetailPage({
           />
         </div>
 
-        <div className="mt-8">
-          <SourceAssetForms
+        <div className="mt-6">
+          <CreateContentPanel
             projectId={project.id}
-            inputs={inputBundle.inputs.map(serializeInput)}
-            versions={inputBundle.versions}
-            assets={assets}
+            hasSources={hasSources}
+            hasIntelligence={hasIntelligence}
+            hasProductUi={hasProductUi}
+            initial={initialContent}
           />
         </div>
 
-        <div className="mt-8">
-          <IntentPanel
-            projectId={project.id}
-            initialIntents={intents.map(serializeContentIntentView)}
-            initialRegistry={contentIntentRegistry()}
-          />
-        </div>
+        {latestStoryboard ? (
+          <div className="mt-4">
+            <StoryboardVideoPanel
+              projectId={project.id}
+              storyboard={{
+                name: latestStoryboard.name,
+                durationMs:
+                  latestStoryboard.actualDurationMs ??
+                  latestStoryboard.targetDurationMs,
+                scenes: latestStoryboard.scenes.map((scene) => ({
+                  name: scene.name,
+                  startMs: scene.startMs,
+                  endMs: scene.endMs,
+                  textOverlays: scene.textOverlays,
+                  voiceoverPlan: scene.voiceoverPlan,
+                })),
+              }}
+              backgroundAssetId={videoBackgroundAsset?.id ?? null}
+            />
+          </div>
+        ) : null}
 
-        <div className="mt-8">
-          <CreativePanel
-            projectId={project.id}
-            intent={primaryIntent(intents)}
-            initialDirections={directions.map(serializeCreativeDirection)}
-            initialRegistry={creativeRegistry()}
-          />
-        </div>
+        <div className="mt-4 space-y-4">
+          <AdvancedSection
+            id="plan"
+            title="Edit the plan"
+            description="The request, all concepts and the full storyboard editor."
+          >
+            <IntentPanel
+              projectId={project.id}
+              initialIntents={intents.map(serializeContentIntentView)}
+              initialRegistry={contentIntentRegistry()}
+            />
 
-        <div className="mt-8">
-          <StoryboardPanel
-            projectId={project.id}
-            direction={selectedDirection(directions)}
-            initialStoryboards={storyboards.map(serializeStoryboard)}
-            initialRegistry={storyboardRegistry()}
-          />
-        </div>
+            <CreativePanel
+              projectId={project.id}
+              intent={primaryIntent(intents)}
+              initialDirections={directions.map(serializeCreativeDirection)}
+              initialRegistry={creativeRegistry()}
+            />
 
-        {/*
-          Suggestions sit after the panels that can change what the project knows.
-          Putting them first would show a list that is about to be invalidated by
-          the analysis the user has not run yet.
-        */}
-        <div className="mt-8">
-          <RecommendationsPanel
-            projectId={project.id}
-            initialRecommendations={recommendations.map(serializeOpportunity)}
-            initialRegistry={recommendationRegistry()}
-          />
-        </div>
+            <StoryboardPanel
+              projectId={project.id}
+              direction={selectedDirection(directions)}
+              initialStoryboards={storyboards.map(serializeStoryboard)}
+              initialRegistry={storyboardRegistry()}
+            />
+          </AdvancedSection>
 
-        <div className="mt-8">
-          <BrandPanel
-            projectId={project.id}
-            brand={brand.profile ? serializeBrandProfile(brand.profile) : null}
-            execution={brand.execution}
-            sourceStates={serializeBrandSourceStates(brand.sourceStates)}
-          />
-        </div>
+          <AdvancedSection
+            id="sources"
+            title="Sources, assets & insights"
+            description="Product links, screenshots, brand voice and what the project knows."
+          >
+            <SourceAssetForms
+              projectId={project.id}
+              inputs={inputBundle.inputs.map(serializeInput)}
+              versions={inputBundle.versions}
+              assets={assets}
+            />
 
-        <div className="mt-8">
-          <BrowserPanel
-            projectId={project.id}
-            initialSessions={browserSessions.map(serializeSession)}
-            sources={sources.map((source) => ({
-              id: source.id,
-              name: source.name,
-              uri: source.uri,
-            }))}
-          />
-        </div>
+            {/*
+              Suggestions sit after the panels that can change what the project
+              knows. Putting them first would show a list that is about to be
+              invalidated by the analysis the user has not run yet.
+            */}
+            <RecommendationsPanel
+              projectId={project.id}
+              initialRecommendations={recommendations.map(serializeOpportunity)}
+              initialRegistry={recommendationRegistry()}
+            />
 
-        <div className="mt-8">
-          <ImageGenerationWorkspace projectId={project.id} />
-        </div>
+            <BrandPanel
+              projectId={project.id}
+              brand={brand.profile ? serializeBrandProfile(brand.profile) : null}
+              execution={brand.execution}
+              sourceStates={serializeBrandSourceStates(brand.sourceStates)}
+            />
 
-        <div className="mt-8">
-          <WritingWorkspace projectId={project.id} />
-        </div>
+            <IntelligencePanel
+              projectId={project.id}
+              summary={summary}
+              graph={serializeGraph(graph)}
+              runs={runs}
+              snapshots={snapshots}
+            />
+          </AdvancedSection>
 
-        <div className="mt-8">
-          <IntelligencePanel
-            projectId={project.id}
-            summary={summary}
-            graph={serializeGraph(graph)}
-            runs={runs}
-            snapshots={snapshots}
-          />
+          <AdvancedSection
+            id="production"
+            title="Production tools"
+            description="Images, copy and the browser agent, for when the plan is ready."
+          >
+            <ImageGenerationWorkspace projectId={project.id} />
+
+            <WritingWorkspace projectId={project.id} />
+
+            <BrowserPanel
+              projectId={project.id}
+              initialSessions={browserSessions.map(serializeSession)}
+              sources={sources.map((source) => ({
+                id: source.id,
+                name: source.name,
+                uri: source.uri,
+              }))}
+            />
+          </AdvancedSection>
         </div>
       </div>
     </AppShell>

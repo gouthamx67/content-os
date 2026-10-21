@@ -217,7 +217,7 @@ from the authenticated asset endpoint. All POV rows were removed afterwards.
 | Pollinations | `…/pollinations-image-provider.test.ts` (5) | env config, keyless legacy GET path/query, prompt from graph, PNG normalization, sanitized failure |
 | Startup config | `src/lib/server-config.test.ts` (24) | endpoint validation incl. `IMAGE_LLM`, incomplete pairs, gate contract, honest capability details with fallback counts |
 
-Counts in this workspace's final runs: unit `npm test` **2110 passed / 174
+Counts in this workspace's final runs: unit `npm test` **2121 passed / 177
 files**; browser `npm run test:e2e` **102 passed / 102** (29 files). The four
 specs that previously failed on a React-dev eval console error now run against
 a production server with a build-once global setup and process-group teardown,
