@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SafeHttpFetcher } from "../ingestion/safe-http";
 import {
   buildGoogleNewsQuery,
+  isRelevantTrendArticle,
   isUsableTrendArticle,
   parseGoogleNewsRss,
   parseHackerNews,
@@ -22,6 +23,12 @@ const RSS = `<?xml version="1.0"?>
     <link>https://news.example.com/clickbait</link>
     <pubDate>Wed, 21 Oct 2026 12:00:00 GMT</pubDate>
     <description>Numbers without context.</description>
+  </item>
+  <item>
+    <title>CNN Redesigns Website Homepage, Showcases New Video Offerings</title>
+    <link>https://news.example.com/off-topic</link>
+    <pubDate>Wed, 21 Oct 2026 11:00:00 GMT</pubDate>
+    <description>A general media redesign.</description>
   </item>
   <item>
     <title>AI content is moving from volume to proof</title>
@@ -70,7 +77,7 @@ describe("parseGoogleNewsRss", () => {
   it("reads dated, attributed articles and strips HTML", () => {
     const articles = parseGoogleNewsRss(RSS);
 
-    expect(articles).toHaveLength(3);
+    expect(articles).toHaveLength(4);
     expect(articles[0]).toMatchObject({
       title: "Why short-form demos are changing SaaS launches",
       url: "https://news.example.com/demo-trend",
@@ -92,6 +99,27 @@ describe("buildGoogleNewsQuery", () => {
     expect(buildGoogleNewsQuery("SaaS social media trends", false)).toBe(
       "SaaS social media trends when:30d",
     );
+  });
+
+  it("requires a social or marketing signal in the title or summary", () => {
+    expect(
+      isRelevantTrendArticle({
+        title: "YouTube shares data on how creators are using AI",
+        url: "https://example.com/news",
+        source: "Social Media Today",
+        publishedAt: null,
+        summary: "",
+      }),
+    ).toBe(true);
+    expect(
+      isRelevantTrendArticle({
+        title: "Marcel Gets its First CEO as Publicis Competes With AI",
+        url: "https://example.com/off-topic",
+        source: "Adweek",
+        publishedAt: null,
+        summary: "",
+      }),
+    ).toBe(false);
   });
 
   it("filters clickbait titles before they reach the model", () => {
@@ -151,8 +179,11 @@ describe("WebTrendSource", () => {
       new Date("2026-10-22T12:00:00.000Z"),
     );
 
-    expect(first).toHaveLength(4);
+    expect(first).toHaveLength(3);
     expect(first.some((article) => article.url.endsWith("/clickbait"))).toBe(
+      false,
+    );
+    expect(first.some((article) => article.url.endsWith("/off-topic"))).toBe(
       false,
     );
     expect(first[0]?.publishedAt).toBe("2026-10-22T08:00:00.000Z");

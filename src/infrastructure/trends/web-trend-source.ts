@@ -24,6 +24,8 @@ const GOOGLE_NEWS_SOURCES = [
   "pewresearch.org",
 ];
 const CLICKBAIT_TITLE = /\b(shocking|domination|you won'?t believe|top \d+ .*statistics)\b/i;
+const SOCIAL_MARKETING_TERMS =
+  /\b(social|creator|influencer|content|marketing|advertis\w*|campaign|instagram|tiktok|youtube|linkedin|facebook|meta|reddit|threads|ads?)\b/i;
 const FETCH_OPTIONS = {
   maxBytes: 512 * 1024,
   maxRedirects: 2,
@@ -54,7 +56,12 @@ export class WebTrendSource implements TrendArticleSource {
       .flatMap((result) =>
         result.status === "fulfilled" ? result.value : [],
       )
-      .filter(isUsableTrendArticle);
+      .filter(
+        (article) =>
+          isUsableTrendArticle(article) &&
+          isRelevantTrendArticle(article) &&
+          isRecentTrendArticle(article, asOf),
+      );
 
     if (articles.length === 0) {
       throw new Error("No public trend source returned a usable article");
@@ -117,6 +124,21 @@ export function buildGoogleNewsQuery(
 
 export function isUsableTrendArticle(article: TrendArticle): boolean {
   return article.title.trim().length > 0 && !CLICKBAIT_TITLE.test(article.title);
+}
+
+export function isRelevantTrendArticle(article: TrendArticle): boolean {
+  return SOCIAL_MARKETING_TERMS.test(`${article.title} ${article.summary}`);
+}
+
+export function isRecentTrendArticle(
+  article: TrendArticle,
+  asOf: Date,
+  maxAgeDays = 45,
+): boolean {
+  if (!article.publishedAt) return false;
+  const published = Date.parse(article.publishedAt);
+  if (!Number.isFinite(published)) return false;
+  return published >= asOf.getTime() - maxAgeDays * 24 * 60 * 60 * 1000;
 }
 
 export function parseGoogleNewsRss(xml: string): TrendArticle[] {
