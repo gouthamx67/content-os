@@ -12,6 +12,7 @@ import {
   inputService,
   intelligenceService,
   projectService,
+  socialStrategyService,
   sourceService,
   storyboardService,
 } from "../../../infrastructure/services";
@@ -32,6 +33,7 @@ import { AppShell } from "../../../components/layout/AppShell";
 import { AdvancedSection } from "../../../components/projects/AdvancedSection";
 import { CreateContentPanel } from "../../../components/projects/CreateContentPanel";
 import { StoryboardVideoPanel } from "../../../components/projects/StoryboardVideoPanel";
+import { StrategyDeskPanel } from "../../../components/strategy/StrategyDeskPanel";
 import { BrowserPanel } from "../../../components/browser/BrowserPanel";
 import { IntelligencePanel } from "../../../components/intelligence/IntelligencePanel";
 import {
@@ -107,6 +109,7 @@ export default async function ProjectDetailPage({
     directions,
     storyboards,
     recommendations,
+    strategy,
   ] =
     await Promise.all([
     inputService.getBundle(id, user.id),
@@ -122,6 +125,7 @@ export default async function ProjectDetailPage({
     creativeDirectorService.list(id, user.id),
     storyboardService.list(id, user.id),
     contentRecommendationService.list(id, user.id),
+    socialStrategyService.get(user.id, id),
   ]);
 
   const latestStoryboard = [...storyboards].sort((a, b) =>
@@ -199,6 +203,10 @@ export default async function ProjectDetailPage({
             hasProductUi={hasProductUi}
             initial={initialContent}
           />
+        </div>
+
+        <div className="mt-4">
+          <StrategyDeskPanel projectId={project.id} initialStrategy={strategy} />
         </div>
 
         {latestStoryboard ? (

@@ -76,6 +76,9 @@ import { StoryboardService } from "../core/services/storyboard-service";
 import { AiStoryboardPlanner } from "./ai/storyboard-planner";
 import { ContentRecommendationService } from "../core/services/content-recommendation-service";
 import { RecommendationContextBuilder } from "../core/services/recommendation-context-builder";
+import { SocialStrategyService } from "../modules/strategy-engine/strategy-service";
+import { SocialTrendService } from "../modules/strategy-engine/trend-service";
+import { WebTrendSource } from "./trends/web-trend-source";
 import { ContentRecommendationValidator } from "../core/services/content-recommendation-validator";
 import { DeterministicContentRecommenderProvider } from "./recommendations/deterministic-content-recommender-provider";
 import { AiContentRecommendationRefiner } from "./ai/content-recommendation-interpreter";
@@ -188,6 +191,7 @@ const repositories = {
 const sourceStorage = new PostgresSourceStorageCoordinator();
 
 const http = new SafeHttpFetcher();
+const trendSource = new WebTrendSource(http);
 const storage = new LocalStorageProvider(
   process.env["CONTENT_OS_STORAGE_PATH"] ?? join(process.cwd(), ".content-os", "storage"),
 );
@@ -469,16 +473,18 @@ const storyboardService = new StoryboardService({
  * introduce a new opportunity, because an introduced one would have to invent its
  * own grounding.
  */
+const recommendationContextBuilder = new RecommendationContextBuilder({
+  intelligenceRepository: repositories.intelligence,
+  brandRepository: repositories.brand,
+  assetRepository: repositories.assets,
+  intentRepository: repositories.contentIntents,
+  storyboardRepository: repositories.storyboards,
+});
+
 const contentRecommendationService = new ContentRecommendationService({
   projectService,
   repository: repositories.recommendations,
-  contextBuilder: new RecommendationContextBuilder({
-    intelligenceRepository: repositories.intelligence,
-    brandRepository: repositories.brand,
-    assetRepository: repositories.assets,
-    intentRepository: repositories.contentIntents,
-    storyboardRepository: repositories.storyboards,
-  }),
+  contextBuilder: recommendationContextBuilder,
   validator: new ContentRecommendationValidator(),
   providers: [
     new DeterministicContentRecommenderProvider(),
@@ -1021,6 +1027,21 @@ const optimizationService = new OptimizationService({
   now: () => new Date().toISOString(),
 });
 
+const socialStrategyService = new SocialStrategyService({
+  projectService,
+  contextBuilder: recommendationContextBuilder,
+  analytics: analyticsService,
+  optimization: optimizationService,
+});
+
+const socialTrendService = new SocialTrendService({
+  projectService,
+  contextBuilder: recommendationContextBuilder,
+  source: trendSource,
+  ai: remoteAiConfig ? providers.ai : null,
+  now: () => new Date(),
+});
+
 const publishingServices = {
   publishing: publishingService,
   analytics: analyticsService,
@@ -1028,6 +1049,8 @@ const publishingServices = {
   repository: repositories.publishing,
   providers: publishingProviders,
   cryptoProblem: publishingCrypto.problem,
+  strategy: socialStrategyService,
+  trends: socialTrendService,
 };
 
 export const publishingWorkerHealth = new RenderWorkerHealth();

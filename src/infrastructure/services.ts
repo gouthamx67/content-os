@@ -96,6 +96,10 @@ export const analyticsService = container.services.publishing.analytics;
 
 export const optimizationService = container.services.publishing.optimization;
 
+export const socialStrategyService = container.services.publishing.strategy;
+
+export const socialTrendService = container.services.publishing.trends;
+
 export const publishingRepository = container.services.publishing.repository;
 
 export const publishingProviders = container.services.publishing.providers;
