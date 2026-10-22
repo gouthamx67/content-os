@@ -85,14 +85,52 @@ function compact(text: string, maxChars: number): string {
   return `${normalized.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
 }
 
+/**
+ * Splits display copy into at most `maxLines` lines that each fit the text box.
+ * `drawtext` does not wrap on its own, so an unwrapped sentence would run off
+ * the frame instead of being readable.
+ */
+function wrapLines(text: string, maxChars: number, maxLines: number): string[] {
+  const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (candidate.length <= maxChars) {
+      line = candidate;
+      continue;
+    }
+    if (line) lines.push(line);
+    line = word;
+    if (lines.length === maxLines - 1) break;
+  }
+
+  if (line && lines.length < maxLines) lines.push(line);
+
+  if (words.join(" ").length > lines.join(" ").length) {
+    const last = lines.length - 1;
+    if (last >= 0) lines[last] = compact(lines[last]!, maxChars);
+  }
+
+  return lines;
+}
+
+function cleanLine(text: string | null | undefined): string {
+  const normalized = (text ?? "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+  const lower = normalized.toLowerCase();
+  if (lower === "undefined" || lower === "null") return "";
+  return normalized;
+}
+
 function sceneLine(scene: StoryboardVideoScene): string {
   const overlay =
     scene.textOverlays
-      ?.map((entry) => entry.text)
-      .filter((text) => text.trim().length > 0)
+      ?.map((entry) => cleanLine(entry.text))
+      .filter(Boolean)
       .join(" ") ?? "";
-  const voice = scene.voiceoverPlan?.text ?? "";
-  return overlay || voice || scene.name;
+  return overlay || cleanLine(scene.voiceoverPlan?.text);
 }
 
 /**
@@ -134,15 +172,19 @@ function sceneKeyframes(
       toValue: 0,
       easing: "EASE_OUT",
     });
-  } else {
-    keyframes.push({
-      property: "OPACITY",
-      timeMs: endMs,
-      fromValue: 0,
-      toValue: 0,
-      easing: "LINEAR",
-    });
   }
+
+  // A keyframe interpolates until the next keyframe or the end of the
+  // composition. Without this final step the fade would ease toward zero for
+  // the rest of the video and the previous scene would stay faintly visible
+  // under every later scene.
+  keyframes.push({
+    property: "OPACITY",
+    timeMs: endMs,
+    fromValue: 0,
+    toValue: 0,
+    easing: "LINEAR",
+  });
 
   return keyframes;
 }
@@ -220,13 +262,13 @@ export function buildStoryboardVideoPlan(input: {
     const endMs = Math.min(durationMs, Math.max(startMs, scene.endMs));
     if (endMs <= startMs) continue;
 
+    const line = sceneLine(scene);
+    if (!line) continue;
+
     layers.push({
       name: `Scene · ${compact(scene.name, 40)}`,
       type: "TEXT",
-      textContent: `${compact(scene.name, sceneChars)}\n${compact(
-        sceneLine(scene),
-        sceneChars,
-      )}`,
+      textContent: wrapLines(line, sceneChars, 2).join("\n"),
       x: margin,
       y: sceneY,
       width: boxWidth,

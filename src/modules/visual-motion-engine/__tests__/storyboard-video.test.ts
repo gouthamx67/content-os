@@ -58,14 +58,24 @@ describe("storyboard video plan", () => {
     });
 
     const hook = plan.layers[3]!;
-    expect(hook.textContent).toContain("Opening hook");
     expect(hook.textContent).toContain("Start here");
-    expect(hook.keyframes?.map((entry) => entry.timeMs)).toEqual([0, 3_850]);
+    expect(hook.textContent).not.toContain("Opening hook");
+    expect(hook.keyframes?.map((entry) => entry.timeMs)).toEqual([
+      0, 3_850, 4_000,
+    ]);
+    expect(hook.keyframes?.at(-1)).toMatchObject({
+      fromValue: 0,
+      toValue: 0,
+    });
 
     const proof = plan.layers[4]!;
     expect(proof.keyframes?.map((entry) => entry.timeMs)).toEqual([
-      3_999, 4_000, 7_850,
+      3_999, 4_000, 7_850, 8_000,
     ]);
+    expect(proof.keyframes?.at(-1)).toMatchObject({
+      fromValue: 0,
+      toValue: 0,
+    });
   });
 
   it("supports landscape and square frames", () => {
